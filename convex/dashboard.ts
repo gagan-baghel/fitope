@@ -4,6 +4,7 @@ import { getAuthUserId } from "@convex-dev/auth/server";
 import { today, addDays, daysBetween } from "./lib/util";
 import { targetsOn } from "./profiles";
 import { programDayForDate } from "./programs";
+import { pickWorkoutOfDay } from "./workouts";
 import { trendSeries, readiness, bmi } from "./lib/fitness";
 
 /** One round trip for the whole home screen. */
@@ -46,7 +47,7 @@ export const home = query({
       .query("workouts")
       .withIndex("by_user_date", (q) => q.eq("userId", userId).eq("date", d))
       .collect();
-    let workout: any = dayWorkouts.find((w) => w.status !== "skipped") ?? dayWorkouts[0] ?? null;
+    let workout: any = pickWorkoutOfDay(dayWorkouts) ?? null;
     let plannedDay = null;
     if (!workout) {
       const planned = await programDayForDate(ctx, userId, d);
@@ -161,6 +162,36 @@ export const home = query({
       streak,
       weekDone: last7.length,
       weekTarget: profile?.daysPerWeek ?? 4,
+      /**
+       * Reminders that are due today and whose thing still is not logged. Rendered in-app —
+       * no push, no email, and they disappear the moment the activity is recorded.
+       */
+      dueReminders: (
+        await ctx.db
+          .query("reminders")
+          .withIndex("by_user", (q) => q.eq("userId", userId))
+          .collect()
+      )
+        .filter((r) => r.enabled && r.days.includes(new Date(d + "T00:00:00").getDay()))
+        .filter((r) => {
+          switch (r.kind) {
+            case "workout":
+              return !workout || (workout.status !== "completed" && workout.status !== "skipped");
+            case "meal":
+              return entries.length === 0;
+            case "water":
+              return water < (targets?.waterMl ?? 3000);
+            case "sleep":
+              return true;
+            case "weigh_in":
+              return !bodyRows.some((b) => b.date === d && b.weightKg != null);
+            case "photo":
+              return true;
+            default:
+              return true;
+          }
+        })
+        .map((r) => ({ _id: r._id, kind: r.kind, label: r.label, time: r.time })),
     };
   },
 });

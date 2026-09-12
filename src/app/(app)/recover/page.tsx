@@ -4,7 +4,6 @@ import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { useState } from "react";
 import {
-  Bar as BarMeter,
   Button,
   Card,
   ConfirmButton,
@@ -18,8 +17,8 @@ import {
 } from "@/components/ui";
 import { CheckinSheet, SleepSheet } from "@/components/quick-log";
 import { BarChart, Bar, ResponsiveContainer, XAxis, YAxis, Tooltip, ReferenceLine, LineChart, Line } from "recharts";
-import { BedDouble, HeartPulse, Moon, Plus, Trash2, TrendingUp } from "lucide-react";
-import { cn, hhmm, prettyDate, clockFromMinutes } from "@/lib/utils";
+import { BedDouble, HeartPulse, Moon, Plus, Trash2 } from "lucide-react";
+import { hhmm, prettyDate } from "@/lib/utils";
 
 export default function Recover() {
   const [days, setDays] = useState("14");

@@ -208,7 +208,7 @@ function AddFood() {
           ))}
           {myFoods?.length === 0 && (
             <p className="py-6 text-center text-[13px] text-muted">
-              Nothing yet. Custom foods are for the things only you eat — your mum's rajma, your gym's
+              Nothing yet. Custom foods are for the things only you eat — your mum&apos;s rajma, your gym&apos;s
               shake, a packaged product.
             </p>
           )}

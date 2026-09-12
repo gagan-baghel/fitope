@@ -95,7 +95,6 @@ export const deleteAccountData = mutation({
       "recipes",
       "mealTemplates",
       "reminders",
-      "achievements",
       "profiles",
     ]) {
       if (t === "workoutExercises") {

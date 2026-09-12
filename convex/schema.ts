@@ -317,12 +317,5 @@ export default defineSchema({
     enabled: v.boolean(),
   }).index("by_user", ["userId"]),
 
-  achievements: defineTable({
-    userId: v.id("users"),
-    key: v.string(),
-    label: v.string(),
-    unlockedAt: v.number(),
-  }).index("by_user", ["userId"]),
-
   seedMeta: defineTable({ key: v.string(), version: v.number(), count: v.number() }).index("by_key", ["key"]),
 });

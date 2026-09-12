@@ -1,6 +1,6 @@
 "use client";
 
-import { useAction, useConvexAuth, useMutation, useQuery } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { api } from "../../../../convex/_generated/api";
 import { useRouter } from "next/navigation";
@@ -27,19 +27,16 @@ import {
   Bell,
   ChevronRight,
   Download,
-  Flag,
   Info,
   LogOut,
-  Moon,
-  Palette,
   ShieldCheck,
   Sparkles,
-  Sun,
   Target,
   Trash2,
   User,
 } from "lucide-react";
 import { DAY_LABELS, cn, hhmm, titleCase } from "@/lib/utils";
+import { useUnits } from "@/lib/units";
 
 export default function Me() {
   const me = useQuery(api.profiles.me, {});
@@ -59,15 +56,14 @@ export default function Me() {
   const router = useRouter();
   const toast = useToast();
 
-  const [theme, setTheme] = useState("dark");
+  const [theme, setTheme] = useState(() =>
+    typeof document === "undefined" ? "dark" : (document.documentElement.dataset.theme ?? "dark")
+  );
   const [sheet, setSheet] = useState<null | "targets" | "profile" | "goal" | "reminder">(null);
   const [t, setT] = useState<any>(null);
   const [goalDraft, setGoalDraft] = useState<any>(null);
   const [reminderDraft, setReminderDraft] = useState<any>(null);
-
-  useEffect(() => {
-    setTheme(document.documentElement.dataset.theme ?? "dark");
-  }, []);
+  const u = useUnits();
 
   function applyTheme(v: string) {
     setTheme(v);
@@ -96,7 +92,12 @@ export default function Me() {
       {/* Snapshot */}
       <div className="grid grid-cols-3 gap-2.5">
         <Stat label="Goal" value={<span className="text-[15px]">{titleCase(p?.goal ?? "–")}</span>} />
-        <Stat label="Weight" value={me?.currentWeightKg?.toFixed(1) ?? "–"} unit="kg" sub={p?.targetWeightKg ? `target ${p.targetWeightKg}` : undefined} />
+        <Stat
+          label="Weight"
+          value={u.outWeight(me?.currentWeightKg) ?? "–"}
+          unit={u.weightUnit}
+          sub={p?.targetWeightKg ? `target ${u.outWeight(p.targetWeightKg)}` : undefined}
+        />
         <Stat label="Training" value={p?.daysPerWeek ?? "–"} unit="d/wk" />
       </div>
 
@@ -222,7 +223,16 @@ export default function Me() {
                     </div>
                   </div>
                   <button
-                    onClick={() => upsertReminder({ ...r, id: r._id, enabled: !r.enabled })}
+                    onClick={() =>
+                      upsertReminder({
+                        id: r._id,
+                        kind: r.kind,
+                        label: r.label,
+                        time: r.time,
+                        days: r.days,
+                        enabled: !r.enabled,
+                      })
+                    }
                     className={cn(
                       "h-6 w-11 rounded-full p-0.5 transition-colors",
                       r.enabled ? "bg-accent" : "bg-surface-3"
@@ -244,7 +254,7 @@ export default function Me() {
             </div>
           ) : (
             <div className="p-4 text-[13px] text-muted">
-              No reminders yet. They show as in-app nudges — nothing is sent anywhere else.
+              No reminders yet. Due reminders appear on your home screen and clear themselves once you log the thing — nothing is pushed or emailed.
             </div>
           )}
         </Card>
@@ -263,7 +273,7 @@ export default function Me() {
             ]}
           />
         </Field>
-        <Field label="Units">
+        <Field label="Body measurement units" hint="Training loads stay in kg — that is how plates are marked.">
           <Segmented
             value={p?.units ?? "metric"}
             onChange={(v) => saveProfile({ units: v })}
@@ -423,7 +433,7 @@ export default function Me() {
       </Sheet>
 
       {/* Profile sheet */}
-      <ProfileSheet open={sheet === "profile"} onClose={() => setSheet(null)} profile={p} />
+      <ProfileSheet key={sheet === "profile" ? "open" : "closed"} open={sheet === "profile"} onClose={() => setSheet(null)} profile={p} />
 
       {/* Goal sheet */}
       <Sheet
@@ -558,13 +568,13 @@ export default function Me() {
 }
 
 function ProfileSheet({ open, onClose, profile }: { open: boolean; onClose: () => void; profile: any }) {
+  const u = useUnits();
   const save = useMutation(api.profiles.saveProfile);
   const recompute = useMutation(api.profiles.recomputeTargets);
   const generate = useMutation(api.programs.generate);
   const toast = useToast();
   const [d, setD] = useState<any>(profile ?? {});
   const [busy, setBusy] = useState(false);
-  useEffect(() => setD(profile ?? {}), [profile, open]);
 
   return (
     <Sheet
@@ -620,11 +630,23 @@ function ProfileSheet({ open, onClose, profile }: { open: boolean; onClose: () =
           <Input value={d.name ?? ""} onChange={(e) => setD({ ...d, name: e.target.value })} />
         </Field>
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Height (cm)">
-            <Stepper value={d.heightCm} onChange={(v) => setD({ ...d, heightCm: v })} step={1} min={100} max={250} />
+          <Field label={`Height (${u.lengthUnit})`}>
+            <Stepper
+              value={u.outLength(d.heightCm)}
+              onChange={(v) => setD({ ...d, heightCm: u.inLength(v) })}
+              step={1}
+              min={30}
+              max={250}
+            />
           </Field>
-          <Field label="Target weight (kg)">
-            <Stepper value={d.targetWeightKg} onChange={(v) => setD({ ...d, targetWeightKg: v })} step={0.5} min={20} max={400} />
+          <Field label={`Target weight (${u.weightUnit})`}>
+            <Stepper
+              value={u.outWeight(d.targetWeightKg)}
+              onChange={(v) => setD({ ...d, targetWeightKg: u.inWeight(v) })}
+              step={u.imperial ? 1 : 0.5}
+              min={20}
+              max={900}
+            />
           </Field>
         </div>
         <Field label="Goal">

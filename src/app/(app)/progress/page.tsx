@@ -31,6 +31,7 @@ import {
 } from "recharts";
 import { Camera, ChevronRight, Plus, Ruler, Scale, Sparkles, Trophy } from "lucide-react";
 import { cn, prettyDate, titleCase } from "@/lib/utils";
+import { useUnits } from "@/lib/units";
 
 export default function Progress() {
   const [days, setDays] = useState("90");
@@ -39,14 +40,15 @@ export default function Progress() {
   const summary = useQuery(api.analytics.weeklySummary, {});
   const insights = useQuery(api.analytics.insights, {});
   const [logging, setLogging] = useState(false);
+  const u = useUnits();
 
   if (data === undefined || body === undefined) return <Skeleton className="h-96 w-full" />;
   if (!data) return null;
 
   const weightData = data.weight.points.map((p: any) => ({
     date: p.date.slice(5),
-    weight: p.value,
-    trend: p.trend,
+    weight: u.outWeight(p.value),
+    trend: u.outWeight(p.trend),
   }));
 
   return (
@@ -99,7 +101,7 @@ export default function Progress() {
             data.weight.slopePerWeek !== 0 ? (
               <Pill tone={data.weight.slopePerWeek < 0 ? "mint" : "amber"}>
                 {data.weight.slopePerWeek > 0 ? "+" : ""}
-                {data.weight.slopePerWeek} kg / week
+                {u.outWeight(data.weight.slopePerWeek)} {u.weightUnit} / week
               </Pill>
             ) : undefined
           }
@@ -134,7 +136,7 @@ export default function Progress() {
                   />
                   <Tooltip
                     contentStyle={{ background: "var(--surface-3)", border: "1px solid var(--line)", borderRadius: 12, fontSize: 12 }}
-                    formatter={(v: any, k: any) => [`${v} kg`, k === "trend" ? "Trend" : "Logged"]}
+                    formatter={(v: any, k: any) => [`${v} ${u.weightUnit}`, k === "trend" ? "Trend" : "Logged"]}
                   />
                   <Area type="monotone" dataKey="trend" stroke="var(--accent)" strokeWidth={2.5} fill="url(#wg)" />
                   <Line type="monotone" dataKey="weight" stroke="var(--muted)" strokeWidth={0} dot={{ r: 1.8, fill: "var(--muted)" }} />
@@ -142,11 +144,11 @@ export default function Progress() {
               </ResponsiveContainer>
             </div>
             <div className="mt-2 grid grid-cols-3 gap-2.5">
-              <Stat label="Now" value={body.latest?.weightKg?.toFixed(1) ?? "–"} unit="kg" />
+              <Stat label="Now" value={u.outWeight(body.latest?.weightKg) ?? "–"} unit={u.weightUnit} />
               <Stat
                 label="Change"
-                value={`${data.weight.change > 0 ? "+" : ""}${data.weight.change}`}
-                unit="kg"
+                value={`${data.weight.change > 0 ? "+" : ""}${u.outWeight(data.weight.change)}`}
+                unit={u.weightUnit}
                 tone={data.weight.change < 0 ? "var(--mint)" : data.weight.change > 0 ? "var(--amber)" : undefined}
               />
               <Stat label="Weigh-ins" value={data.weight.points.length} />
@@ -169,7 +171,7 @@ export default function Progress() {
                 <Ruler className="h-4 w-4 text-muted" />
                 <span className="flex-1 text-[13.5px] font-semibold capitalize">{m.key}</span>
                 <span className="tabular text-[12px] text-muted">
-                  {m.first} → {m.last} cm
+                  {u.outLength(m.first)} → {u.length(m.last)}
                 </span>
                 <Pill tone={m.delta < 0 ? "mint" : m.delta > 0 ? "sky" : "muted"}>
                   {m.delta > 0 ? "+" : ""}
@@ -340,6 +342,37 @@ export default function Progress() {
           </div>
         </section>
       )}
+
+      {/* Milestones */}
+      <section>
+        <SectionTitle>Milestones</SectionTitle>
+        <div className="grid grid-cols-2 gap-2.5">
+          {data.milestones.map((m: any) => (
+            <div
+              key={m.label}
+              className={cn(
+                "rounded-2xl border p-3.5",
+                m.unlocked ? "border-accent/25 bg-accent-soft/40" : "border-line bg-surface"
+              )}
+            >
+              <div className={cn("text-[13px] font-semibold", m.unlocked ? "text-ink" : "text-muted")}>{m.label}</div>
+              {m.next ? (
+                <>
+                  <BarMeter value={m.value} max={m.next} className="mt-2" height={5} />
+                  <div className="tabular mt-1.5 text-[11px] text-muted">
+                    {m.value} / {m.next} {m.unit}
+                  </div>
+                </>
+              ) : (
+                <div className="mt-1.5 text-[11px] text-accent">Top tier reached</div>
+              )}
+            </div>
+          ))}
+        </div>
+        <p className="mt-2 text-[11.5px] text-muted">
+          Counted from your own history. Nothing resets, nothing is lost by taking a week off.
+        </p>
+      </section>
 
       {/* PRs */}
       {data.prs.length > 0 && (

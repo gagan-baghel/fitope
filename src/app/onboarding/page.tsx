@@ -62,8 +62,59 @@ const EMPTY: Draft = {
 
 const STEPS = ["You", "Goal", "Training", "Schedule", "Kit", "Food", "Sleep", "Plan"];
 
-export default function Onboarding() {
+/** Waits for the profile query so the form can seed its state once, without a sync-in-effect. */
+export default function OnboardingPage() {
   const me = useQuery(api.profiles.me, {});
+  const router = useRouter();
+
+  useEffect(() => {
+    if (me?.profile?.onboardingComplete) router.replace("/home");
+  }, [me, router]);
+
+  if (me === undefined) {
+    return (
+      <main className="mx-auto max-w-lg space-y-4 px-5 py-10">
+        <div className="skeleton h-2 w-full rounded-full" />
+        <div className="skeleton h-10 w-2/3 rounded-2xl" />
+        <div className="skeleton h-64 w-full rounded-3xl" />
+      </main>
+    );
+  }
+  return <Onboarding me={me} />;
+}
+
+function draftFrom(me: any): Draft {
+  const p = me?.profile;
+  if (!p) {
+    return {
+      ...EMPTY,
+      name: me?.email ? me.email.split("@")[0].replace(/[._]/g, " ") : "",
+    };
+  }
+  return {
+    ...EMPTY,
+    name: p.name ?? "",
+    sex: (p.sex as any) ?? "",
+    birthYear: p.birthYear,
+    heightCm: p.heightCm,
+    startWeightKg: p.startWeightKg,
+    targetWeightKg: p.targetWeightKg,
+    goal: p.goal ?? "",
+    experience: p.experience ?? "",
+    activityLevel: p.activityLevel ?? "",
+    daysPerWeek: p.daysPerWeek ?? 4,
+    preferredDays: p.preferredDays ?? [1, 2, 4, 5],
+    sessionMinutes: p.sessionMinutes ?? 45,
+    equipment: p.equipment ?? [],
+    dietPreference: p.dietPreference ?? "",
+    allergies: p.allergies ?? [],
+    bedtime: p.bedtime ?? "23:00",
+    wakeTime: p.wakeTime ?? "07:00",
+    units: p.units ?? "metric",
+  };
+}
+
+function Onboarding({ me }: { me: any }) {
   const save = useMutation(api.profiles.saveProfile);
   const complete = useMutation(api.profiles.completeOnboarding);
   const generate = useMutation(api.programs.generate);
@@ -72,42 +123,9 @@ export default function Onboarding() {
   const router = useRouter();
   const toast = useToast();
 
-  const [step, setStep] = useState(0);
-  const [d, setD] = useState<Draft>(EMPTY);
+  const [step, setStep] = useState<number>(me?.profile?.onboardingStep ?? 0);
+  const [d, setD] = useState<Draft>(() => draftFrom(me));
   const [busy, setBusy] = useState(false);
-  const [hydrated, setHydrated] = useState(false);
-
-  useEffect(() => {
-    if (me === undefined || hydrated) return;
-    if (me?.profile) {
-      const p = me.profile;
-      setD((prev) => ({
-        ...prev,
-        name: p.name ?? "",
-        sex: (p.sex as any) ?? "",
-        birthYear: p.birthYear,
-        heightCm: p.heightCm,
-        startWeightKg: p.startWeightKg,
-        targetWeightKg: p.targetWeightKg,
-        goal: p.goal ?? "",
-        experience: p.experience ?? "",
-        activityLevel: p.activityLevel ?? "",
-        daysPerWeek: p.daysPerWeek ?? 4,
-        preferredDays: p.preferredDays ?? [1, 2, 4, 5],
-        sessionMinutes: p.sessionMinutes ?? 45,
-        equipment: p.equipment ?? [],
-        dietPreference: p.dietPreference ?? "",
-        allergies: p.allergies ?? [],
-        bedtime: p.bedtime ?? "23:00",
-        wakeTime: p.wakeTime ?? "07:00",
-        units: p.units ?? "metric",
-      }));
-      setStep(p.onboardingStep ?? 0);
-      if (p.onboardingComplete) router.replace("/home");
-    }
-    else if (me?.email) setD((prev) => ({ ...prev, name: me.email!.split("@")[0].replace(/[._]/g, " ") }));
-    setHydrated(true);
-  }, [me, hydrated, router]);
 
   const set = (patch: Partial<Draft>) => setD((prev) => ({ ...prev, ...patch }));
 
@@ -402,7 +420,7 @@ export default function Onboarding() {
               </Field>
             </div>
             <Card className="bg-surface-2 p-4">
-              <div className="text-[13px] text-muted">That's a target of</div>
+              <div className="text-[13px] text-muted">That&apos;s a target of</div>
               <div className="text-[28px] font-bold text-accent">{preview.sleepLabel}</div>
             </Card>
           </Step>

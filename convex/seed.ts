@@ -237,7 +237,11 @@ export const loadSampleHistory = mutation({
             });
           const ex = await ctx.db.get(item.exerciseId);
           const bodyweight = !ex || ex.equipment.every((e: string) => ["bodyweight", "pull-up bar", "parallel bars"].includes(e));
-          const base = bodyweight ? 0 : 20 + Math.round(rand() * 30);
+          // Plausible loads per movement, so demo data doesn't show 70 kg biceps curls.
+          const LOADS: Record<string, number> = {
+            hinge: 80, squat: 70, push: 45, pull: 45, carry: 30, core: 15, isolation: 14, conditioning: 0,
+          };
+          const base = bodyweight ? 0 : Math.round(((LOADS[ex!.pattern] ?? 30) * (0.85 + rand() * 0.3)) / 2.5) * 2.5;
           const progression = base ? base * (1 + (i / days) * 0.18) : 0;
           for (let s = 0; s < item.sets; s++) {
             const reps = 6 + Math.round(rand() * 6);

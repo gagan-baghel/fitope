@@ -3,7 +3,7 @@
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../../../../convex/_generated/api";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   Button,
   Card,
@@ -137,6 +137,7 @@ export default function ProgramEditor() {
       </Button>
 
       <DayEditor
+        key={editing?._id ?? (editing ? "new" : "closed")}
         day={editing}
         onClose={() => setEditing(null)}
         onSave={async (d) => {
@@ -182,7 +183,6 @@ function DayEditor({
   const [picker, setPicker] = useState(false);
   const exercises = useQuery(api.exercises.byIds, d?.items?.length ? { ids: d.items.map((i: Item) => i.exerciseId) } : "skip");
 
-  useEffect(() => setD(day), [day]);
   if (!d) return null;
   const nameOf = (exId: any) => (exercises ?? []).find((e: any) => e._id === exId)?.name ?? "Exercise";
 

@@ -112,12 +112,25 @@ function scheme(goal: string, compound: boolean) {
 
 const EQUIPMENT_ALWAYS = ["bodyweight"];
 
+/**
+ * Same movement pattern + same kit + overlapping primary muscle means it is effectively the
+ * same exercise twice (pull-ups and chin-ups in one session, say). Used to spread a day out.
+ */
+function isNearDuplicate(a: Doc<"exercises">, b: Doc<"exercises">) {
+  if (a.pattern !== b.pattern) return false;
+  const sameKit = a.equipment.length === b.equipment.length && a.equipment.every((x) => b.equipment.includes(x));
+  if (!sameKit) return false;
+  return a.primaryMuscles.some((m) => b.primaryMuscles.includes(m));
+}
+
 function pickExercise(
   pool: Doc<"exercises">[],
   slot: Slot,
   equipment: string[],
   used: Set<string>,
-  experience: string
+  experience: string,
+  /** What today already contains, so a day doesn't end up with pull-ups and chin-ups. */
+  dayPicks: Doc<"exercises">[] = []
 ) {
   const allowed = new Set([...equipment, ...EQUIPMENT_ALWAYS]);
   const rank = (e: Doc<"exercises">) => {
@@ -131,6 +144,7 @@ function pickExercise(
     if (experience === "beginner" && e.difficulty === "advanced") s -= 6;
     if (experience === "advanced" && e.difficulty === "advanced") s += 2;
     if (used.has(e._id)) s -= 25;
+    if (dayPicks.some((p) => isNearDuplicate(p, e))) s -= 30;
     return s;
   };
   const candidates = pool
@@ -204,10 +218,12 @@ export const generate = mutation({
       const day = split[i];
       const slots = SLOTS[day.key].slice(0, maxExercises);
       const items = [];
+      const dayPicks: Doc<"exercises">[] = [];
       for (const slot of slots) {
-        const ex = pickExercise(pool, slot, equipment, used, experience);
+        const ex = pickExercise(pool, slot, equipment, used, experience, dayPicks);
         if (!ex) continue;
         used.add(ex._id);
+        dayPicks.push(ex);
         const s = scheme(goal, !!slot.compound);
         items.push({
           exerciseId: ex._id,

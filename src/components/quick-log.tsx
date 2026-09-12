@@ -5,6 +5,7 @@ import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Button, Field, Input, Segmented, Sheet, Stepper, Textarea, useToast } from "@/components/ui";
 import { todayStr } from "@/lib/utils";
+import { useUnits } from "@/lib/units";
 
 export function WeightSheet({
   open,
@@ -19,7 +20,8 @@ export function WeightSheet({
 }) {
   const log = useMutation(api.tracking.logBody);
   const toast = useToast();
-  const [weight, setWeight] = useState<number | undefined>(initial);
+  const u = useUnits();
+  const [weight, setWeight] = useState<number | undefined>(u.outWeight(initial));
   const [bf, setBf] = useState<number | undefined>();
   const [m, setM] = useState<Record<string, number | undefined>>({});
   const [showMeasure, setShowMeasure] = useState(false);
@@ -32,10 +34,14 @@ export function WeightSheet({
     try {
       await log({
         date: date ?? todayStr(),
-        weightKg: weight,
+        weightKg: u.inWeight(weight),
         bodyFatPct: bf,
         measurements: Object.keys(m).length
-          ? (Object.fromEntries(Object.entries(m).filter(([, v]) => v != null)) as any)
+          ? (Object.fromEntries(
+              Object.entries(m)
+                .filter(([, v]) => v != null)
+                .map(([k, v]) => [k, u.inLength(v as number)])
+            ) as any)
           : undefined,
       });
       toast({ message: "Body log saved" });
@@ -59,8 +65,11 @@ export function WeightSheet({
       }
     >
       <div className="space-y-4">
-        <Field label="Weight (kg)" hint="Weigh at the same time of day — first thing after waking is the most consistent.">
-          <Stepper value={weight} onChange={setWeight} step={0.1} min={20} max={400} suffix="kg" />
+        <Field
+          label={`Weight (${u.weightUnit})`}
+          hint="Weigh at the same time of day — first thing after waking is the most consistent."
+        >
+          <Stepper value={weight} onChange={setWeight} step={u.weightStep} min={20} max={900} suffix={u.weightUnit} />
         </Field>
         <Field label="Body fat % (optional)">
           <Stepper value={bf} onChange={setBf} step={0.5} min={2} max={70} suffix="%" />
@@ -74,7 +83,7 @@ export function WeightSheet({
         {showMeasure && (
           <div className="grid grid-cols-2 gap-3">
             {FIELDS.map((f) => (
-              <Field key={f} label={f[0].toUpperCase() + f.slice(1) + " (cm)"}>
+              <Field key={f} label={`${f[0].toUpperCase()}${f.slice(1)} (${u.lengthUnit})`}>
                 <Stepper
                   value={m[f]}
                   onChange={(v) => setM((prev) => ({ ...prev, [f]: v }))}

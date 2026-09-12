@@ -64,7 +64,14 @@ consistency score, and a readiness score built from sleep, soreness, energy, str
 training load.
 
 **Analytics.** Weekly volume, strength curves, muscle-group balance, protein and fiber adherence,
-sleep averages, plus deterministic written insights that read the data and say something specific.
+sleep averages, derived milestones, plus deterministic written insights that read the data and say
+something specific.
+
+**Reminders** are in-app only: a due reminder shows on the home screen and disappears the moment
+the thing it is nudging you about is logged. Nothing is pushed or emailed.
+
+**Units.** Body weight and measurements can be shown in kg/cm or lb/in; training loads stay in kg
+because that is how plates are marked.
 
 ## Design notes
 

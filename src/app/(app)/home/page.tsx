@@ -32,8 +32,19 @@ import {
   TrendingUp,
   Check,
   HeartPulse,
+  Bell,
 } from "lucide-react";
-import { cn, hhmm, kg } from "@/lib/utils";
+import { cn, hhmm } from "@/lib/utils";
+import { useUnits } from "@/lib/units";
+
+const REMINDER_LINKS: Record<string, string> = {
+  workout: "/train",
+  meal: "/eat/add?meal=auto",
+  water: "/eat",
+  sleep: "/recover",
+  weigh_in: "/progress",
+  photo: "/progress/photos",
+};
 
 export default function Home() {
   const data = useQuery(api.dashboard.home, {});
@@ -45,6 +56,7 @@ export default function Home() {
   const toast = useToast();
   const [sheet, setSheet] = useState<null | "weight" | "sleep" | "checkin">(null);
   const [starting, setStarting] = useState(false);
+  const u = useUnits();
 
   if (data === undefined) {
     return (
@@ -100,6 +112,24 @@ export default function Home() {
           </Link>
         </div>
       </header>
+
+      {/* Reminders that are due and still unlogged */}
+      {data.dueReminders?.length > 0 && (
+        <div className="animate-rise space-y-2">
+          {data.dueReminders.map((r: any) => (
+            <Link
+              key={r._id}
+              href={REMINDER_LINKS[r.kind] ?? "/home"}
+              className="flex items-center gap-3 rounded-2xl border border-amber/25 bg-amber/[0.07] px-4 py-3"
+            >
+              <Bell className="h-4 w-4 shrink-0 text-amber" />
+              <span className="flex-1 text-[13.5px] font-semibold">{r.label}</span>
+              <span className="tabular text-[12px] text-muted">{r.time}</span>
+              <ChevronRight className="h-4 w-4 text-muted" />
+            </Link>
+          ))}
+        </div>
+      )}
 
       {/* Today's session */}
       <TodayCard data={data} onStart={begin} starting={starting} />
@@ -191,8 +221,8 @@ export default function Home() {
         <button onClick={() => setSheet("weight")} className="card p-4 text-left transition-transform active:scale-[0.98]">
           <Scale className="mb-2 h-[18px] w-[18px] text-accent" />
           <div className="tabular text-[19px] font-bold leading-none">
-            {data.weight ? data.weight.latest.toFixed(1) : "–"}
-            <span className="ml-0.5 text-[11px] font-medium text-muted">kg</span>
+            {data.weight ? (u.outWeight(data.weight.latest) ?? 0).toFixed(1) : "–"}
+            <span className="ml-0.5 text-[11px] font-medium text-muted">{u.weightUnit}</span>
           </div>
           <div className="mt-1 flex items-center gap-1 text-[11px] text-muted">
             {data.weight?.changeWeek != null ? (
@@ -202,7 +232,7 @@ export default function Home() {
                 ) : (
                   <TrendingUp className="h-3 w-3 text-amber" />
                 )}
-                {Math.abs(data.weight.changeWeek).toFixed(1)} kg / wk
+                {Math.abs(u.outWeight(data.weight.changeWeek) ?? 0).toFixed(1)} {u.weightUnit} / wk
               </>
             ) : (
               "Trend needs a week"
@@ -218,7 +248,7 @@ export default function Home() {
                 height={5}
               />
               <div className="mt-2.5 py-2 text-[11px] font-semibold text-accent">
-                Goal {data.weight.target} kg
+                Goal {u.weight(data.weight.target, 0)}
               </div>
             </>
           ) : (
@@ -259,7 +289,7 @@ export default function Home() {
             )}
             {!data.checkin && (
               <button onClick={() => setSheet("checkin")} className="mt-2.5 flex items-center gap-1 text-[12.5px] font-semibold text-accent">
-                <HeartPulse className="h-3.5 w-3.5" /> Add today's check-in
+                <HeartPulse className="h-3.5 w-3.5" /> Add today&apos;s check-in
               </button>
             )}
           </div>
