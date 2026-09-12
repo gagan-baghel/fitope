@@ -211,8 +211,8 @@
   border-radius: 999px;
   background: var(--hero-cta-bg);
   color: var(--hero-cta-ink);
-  padding: 0.7rem 1.15rem;
-  font-size: 13.5px;
+  padding: 0.55rem 1rem;
+  font-size: 13px;
   font-weight: 600;
   transition: transform 0.15s ease;
 }

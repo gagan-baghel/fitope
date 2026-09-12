@@ -13,7 +13,7 @@ export function Card({
   ...rest
 }: React.HTMLAttributes<HTMLDivElement> & { as?: any }) {
   return (
-    <As className={cn("card p-5", className)} {...rest}>
+    <As className={cn("card p-4", className)} {...rest}>
       {children}
     </As>
   );
@@ -447,11 +447,11 @@ export function EmptyState({
   className?: string;
 }) {
   return (
-    <div className={cn("flex flex-col items-center rounded-[24px] border border-dashed border-line px-6 py-10 text-center", className)}>
-      {icon && <div className="mb-3 grid h-12 w-12 place-items-center rounded-2xl bg-surface-2 text-muted">{icon}</div>}
-      <div className="text-[15px] font-semibold text-ink">{title}</div>
-      {body && <p className="mt-1.5 max-w-xs text-[13px] leading-relaxed text-muted">{body}</p>}
-      {action && <div className="mt-4">{action}</div>}
+    <div className={cn("flex flex-col items-center rounded-[22px] border border-dashed border-line px-6 py-7 text-center", className)}>
+      {icon && <div className="mb-2.5 grid h-10 w-10 place-items-center rounded-2xl bg-surface-2 text-muted">{icon}</div>}
+      <div className="text-[14px] font-semibold text-ink">{title}</div>
+      {body && <p className="mt-1.5 max-w-xs text-[12.5px] leading-relaxed text-muted">{body}</p>}
+      {action && <div className="mt-3.5">{action}</div>}
     </div>
   );
 }

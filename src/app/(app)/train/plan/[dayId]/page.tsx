@@ -79,35 +79,35 @@ export default function PlanDay() {
     <div className="-mt-5 pb-44">
       {/* Hero */}
       <header
-        className="relative -mx-4 overflow-hidden px-4 pb-8 pt-6 sm:-mx-6 sm:rounded-b-[32px] sm:px-6"
+        className="relative -mx-4 overflow-hidden px-4 pb-6 pt-5 sm:-mx-6 sm:rounded-b-[28px] sm:px-6"
         style={{ background: "var(--tile-3)", color: "var(--tile-ink)" }}
       >
-        <div className="hero-blob -right-14 -top-16 h-56 w-56" />
-        <div className="hero-blob-2 -bottom-20 right-10 h-44 w-44" />
+        <div className="hero-blob -right-12 -top-14 h-44 w-44" />
+        <div className="hero-blob-2 -bottom-16 right-8 h-36 w-36" />
         <div className="relative">
           <div className="flex items-center justify-between">
             <button
               onClick={() => router.push("/train")}
-              className="hero-chip grid h-10 w-10 place-items-center rounded-full backdrop-blur"
+              className="hero-chip grid h-9 w-9 place-items-center rounded-full backdrop-blur"
               aria-label="Back"
             >
-              <ArrowLeft className="h-5 w-5" />
+              <ArrowLeft className="h-4 w-4" />
             </button>
             <button
               onClick={() => router.push(`/train/programs/${program._id}`)}
-              className="hero-chip grid h-10 w-10 place-items-center rounded-full backdrop-blur"
+              className="hero-chip grid h-9 w-9 place-items-center rounded-full backdrop-blur"
               aria-label="Edit plan"
             >
-              <MoreHorizontal className="h-5 w-5" />
+              <MoreHorizontal className="h-4 w-4" />
             </button>
           </div>
-          <div className="mt-10 flex items-end justify-between gap-4">
+          <div className="mt-6 flex items-end justify-between gap-4">
             <div className="min-w-0">
-              <div className="text-[12.5px] font-medium opacity-70">{program.name}</div>
-              <h1 className="mt-1 text-[30px] font-bold leading-[1.05] tracking-tight">{day.title}</h1>
-              <p className="mt-1.5 text-[13px] capitalize opacity-75">{day.focus}</p>
+              <div className="text-[12px] font-medium opacity-70">{program.name}</div>
+              <h1 className="mt-1 text-[23px] font-bold leading-[1.1] tracking-tight">{day.title}</h1>
+              <p className="mt-1 text-[12.5px] capitalize opacity-75">{day.focus}</p>
             </div>
-            <MinutesRing minutes={totalMinutes} progress={0.75} size={68} track="rgba(0,0,0,0.10)" />
+            <MinutesRing minutes={totalMinutes} progress={0.75} size={56} track="rgba(0,0,0,0.10)" />
           </div>
         </div>
       </header>
