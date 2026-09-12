@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "dev:convex": "CONVEX_AGENT_MODE=anonymous convex dev",
-    "build": "next build",
+    "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint",
     "check": "tsx scripts/check-fitness-math.ts",
