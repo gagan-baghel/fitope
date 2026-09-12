@@ -306,7 +306,7 @@ function ExerciseBlock({
         <div className="space-y-1.5">
           {we.sets.map((s: any, i: number) => (
             <SetRow
-              key={s._id}
+              key={`${s._id}:${s.weightKg ?? ""}:${s.reps ?? ""}:${s.completed}`}
               set={s}
               index={i}
               readOnly={readOnly}
@@ -367,13 +367,9 @@ function SetRow({
   onToggle: (id: any, patch: any) => Promise<void>;
   onDelete: () => void;
 }) {
+  // Remounted by its key whenever the server values change, so no prop-syncing effect.
   const [weight, setWeight] = useState<string>(set.weightKg?.toString() ?? "");
   const [reps, setReps] = useState<string>(set.reps?.toString() ?? "");
-
-  useEffect(() => {
-    setWeight(set.weightKg?.toString() ?? "");
-    setReps(set.reps?.toString() ?? "");
-  }, [set.weightKg, set.reps]);
 
   const commit = (patch: any) => onToggle(set._id, patch);
 
@@ -411,10 +407,12 @@ function SetRow({
         ) : (
           <button
             onClick={() => {
+              // Commit whatever is currently typed — tapping the tick straight after typing
+              // must not lose the value just because the field never blurred.
               const patch: any = { completed: !set.completed };
               if (!set.completed) {
-                if (reps === "") patch.reps = Number(set.targetReps?.split("-")[0] ?? 10);
-                if (weight === "" && set.weightKg == null) patch.weightKg = 0;
+                patch.reps = reps === "" ? Number(set.targetReps?.split("-")[0] ?? 10) : Number(reps);
+                patch.weightKg = weight === "" ? (set.weightKg ?? 0) : Number(weight);
               }
               commit(patch);
             }}
@@ -435,7 +433,7 @@ function SetRow({
 }
 
 function RestTimer({ rest, onDone }: { rest: { total: number; endsAt: number }; onDone: () => void }) {
-  const [left, setLeft] = useState(Math.ceil((rest.endsAt - Date.now()) / 1000));
+  const [left, setLeft] = useState(rest.total);
   useEffect(() => {
     const i = setInterval(() => {
       const l = Math.ceil((rest.endsAt - Date.now()) / 1000);
@@ -472,14 +470,21 @@ function RestTimer({ rest, onDone }: { rest: { total: number; endsAt: number }; 
 }
 
 function useElapsed(startedAt?: number, completedAt?: number) {
-  const [, tick] = useState(0);
+  const [now, setNow] = useState<number | null>(null);
   useEffect(() => {
     if (!startedAt || completedAt) return;
-    const i = setInterval(() => tick((n) => n + 1), 1000);
-    return () => clearInterval(i);
+    // First paint lands on the next tick rather than synchronously inside the effect.
+    const first = setTimeout(() => setNow(Date.now()), 0);
+    const i = setInterval(() => setNow(Date.now()), 1000);
+    return () => {
+      clearTimeout(first);
+      clearInterval(i);
+    };
   }, [startedAt, completedAt]);
   if (!startedAt) return null;
-  const ms = (completedAt ?? Date.now()) - startedAt;
+  const end = completedAt ?? now;
+  if (!end) return null;
+  const ms = end - startedAt;
   const mins = Math.floor(ms / 60000);
   return `${mins}:${String(Math.floor((ms % 60000) / 1000)).padStart(2, "0")}`;
 }

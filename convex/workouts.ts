@@ -6,6 +6,12 @@ import { e1rm } from "./lib/fitness";
 import { programDayForDate } from "./programs";
 import { Doc, Id } from "./_generated/dataModel";
 
+const STATUS_RANK: Record<string, number> = { in_progress: 0, planned: 1, completed: 2, skipped: 3 };
+
+export function pickWorkoutOfDay<T extends { status: string }>(workouts: T[]): T | undefined {
+  return [...workouts].sort((a, b) => (STATUS_RANK[a.status] ?? 9) - (STATUS_RANK[b.status] ?? 9))[0];
+}
+
 async function hydrate(ctx: any, workout: Doc<"workouts">) {
   const wes = (
     await ctx.db
@@ -65,7 +71,8 @@ export const forDate = query({
       .query("workouts")
       .withIndex("by_user_date", (q) => q.eq("userId", userId).eq("date", d))
       .collect();
-    const workout = workouts.find((w) => w.status !== "skipped") ?? workouts[0];
+    // An unfinished session always wins over an already-completed one on the same day.
+    const workout = pickWorkoutOfDay(workouts);
     if (workout) return await hydrate(ctx, workout);
 
     // Nothing logged yet: show what the active program prescribes for this weekday.

@@ -186,9 +186,51 @@ export const overview = query({
       strength,
       prs: await Promise.all(prs.slice(0, 10).map(async (p) => ({ ...p, exercise: await ctx.db.get(p.exerciseId) }))),
       targets,
+      milestones: milestones({
+        workouts: done.length,
+        sets: completedSets.length,
+        volume: done.reduce((a, w) => a + (w.totalVolumeKg ?? 0), 0),
+        loggedNutritionDays: nutritionDays.length,
+        prs: prs.length,
+        weighIns: weightPoints.length,
+      }),
     };
   },
 });
+
+/**
+ * Milestones are derived, never stored: they can't drift out of sync with the data,
+ * and nothing is lost if a user deletes history. Framed as "what you've done", not streak pressure.
+ */
+function milestones(c: {
+  workouts: number;
+  sets: number;
+  volume: number;
+  loggedNutritionDays: number;
+  prs: number;
+  weighIns: number;
+}) {
+  const ladder = (value: number, steps: number[], label: (n: number) => string, unit: string) => {
+    const reached = [...steps].reverse().find((s) => value >= s);
+    const next = steps.find((s) => s > value);
+    return {
+      label: reached ? label(reached) : label(steps[0]),
+      unlocked: !!reached,
+      value,
+      next: next ?? null,
+      progress: next ? Math.min(1, value / next) : 1,
+      unit,
+    };
+  };
+  return [
+    ladder(c.workouts, [1, 10, 25, 50, 100, 200], (n) => `${n} sessions logged`, "sessions"),
+    ladder(c.sets, [10, 100, 500, 1000, 5000], (n) => `${n} sets completed`, "sets"),
+    ladder(Math.round(c.volume / 1000), [1, 25, 100, 500, 1000], (n) => `${n} tonnes moved`, "t"),
+    ladder(c.loggedNutritionDays, [1, 7, 30, 90, 180], (n) => `${n} days of food logged`, "days"),
+    ladder(c.prs, [1, 5, 15, 30], (n) => `${n} personal records`, "PRs"),
+    ladder(c.weighIns, [1, 10, 50, 150], (n) => `${n} weigh-ins`, "weigh-ins"),
+  ];
+}
 
 function weekKey(date: string) {
   const d = new Date(date + "T00:00:00");

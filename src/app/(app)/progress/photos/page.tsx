@@ -4,9 +4,9 @@ import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../../../convex/_generated/api";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
-import { Button, Card, ConfirmButton, EmptyState, Pill, Segmented, SectionTitle, Sheet, Skeleton, useToast } from "@/components/ui";
+import { Button, Card, ConfirmButton, EmptyState, Pill, SectionTitle, Segmented, Sheet, Skeleton, useToast } from "@/components/ui";
 import { ArrowLeft, Camera, Lock, Trash2, Upload } from "lucide-react";
-import { cn, prettyDate, todayStr } from "@/lib/utils";
+import { prettyDate, todayStr } from "@/lib/utils";
 
 const POSES = [
   { value: "front", label: "Front" },
