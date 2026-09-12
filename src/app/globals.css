@@ -1,26 +1,238 @@
 @import "tailwindcss";
 
+/* ---------------------------------------------------------------------------
+   FitOpe design tokens. Dark is the default identity; light is a first-class
+   alternative, not an afterthought.
+--------------------------------------------------------------------------- */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: dark;
+  --bg: #080a09;
+  --bg-grad: radial-gradient(1200px 600px at 80% -10%, #16241a 0%, transparent 60%),
+    radial-gradient(900px 500px at -10% 10%, #101b22 0%, transparent 55%);
+  --surface: #111412;
+  --surface-2: #191d1a;
+  --surface-3: #232823;
+  --line: #262b26;
+  --ink: #f1f4ef;
+  --ink-2: #c3c9bf;
+  --muted: #7f877c;
+  --accent: #c9f24e;
+  --accent-soft: #1e2a12;
+  --accent-ink: #0b0f07;
+  --mint: #4fd1a5;
+  --sky: #62b9f5;
+  --amber: #ffbe4d;
+  --rose: #ff7a7a;
+  --violet: #b79bff;
+  --shadow: 0 24px 60px -30px rgba(0, 0, 0, 0.85);
+}
+
+[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f2f4ef;
+  --bg-grad: radial-gradient(1000px 500px at 85% -10%, #e2f3c9 0%, transparent 60%),
+    radial-gradient(800px 450px at -5% 5%, #dcecf5 0%, transparent 55%);
+  --surface: #ffffff;
+  --surface-2: #f7f9f4;
+  --surface-3: #eef1ea;
+  --line: #e3e7de;
+  --ink: #101410;
+  --ink-2: #3b423a;
+  --muted: #767d73;
+  --accent: #8fd117;
+  --accent-soft: #eaf7cd;
+  --accent-ink: #0d1206;
+  --mint: #18a97c;
+  --sky: #2b8ed6;
+  --amber: #d8890a;
+  --rose: #e05656;
+  --violet: #7a5cf0;
+  --shadow: 0 20px 45px -28px rgba(20, 30, 15, 0.35);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-bg: var(--bg);
+  --color-ground: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-line: var(--line);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-ink: var(--accent-ink);
+  --color-mint: var(--mint);
+  --color-sky: var(--sky);
+  --color-amber: var(--amber);
+  --color-rose: var(--rose);
+  --color-violet: var(--violet);
+  --radius-xl2: 1.25rem;
+  --radius-card: 1.75rem;
+  --font-sans: var(--font-geist-sans, ui-sans-serif), -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html,
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-geist-sans, ui-sans-serif), -apple-system, BlinkMacSystemFont, "Segoe UI",
+      system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    background-image: var(--bg-grad);
+    background-attachment: fixed;
+    min-height: 100dvh;
+  }
+
+  ::selection {
+    background: var(--accent);
+    color: var(--accent-ink);
+  }
+
+  /* Buttons and inputs inherit typography but NOT colour — colour comes from utilities. */
+  input,
+  textarea,
+  select,
+  button {
+    font: inherit;
+  }
+
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type="number"] {
+    -moz-appearance: textfield;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: 8px;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Scrollbars stay out of the way but remain usable on desktop. */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
 }
+::-webkit-scrollbar-thumb {
+  background: var(--surface-3);
+  border-radius: 99px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  scrollbar-width: none;
+}
+
+@utility card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+}
+
+@utility tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Motion: quick, physical, never showy. Respects reduced-motion. */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes pop {
+  0% {
+    transform: scale(0.94);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.02);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+@keyframes sheetUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-rise {
+  animation: rise 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.animate-pop {
+  animation: pop 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.animate-sheet {
+  animation: sheetUp 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.animate-fade {
+  animation: fade 0.25s ease both;
+}
+
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: var(--surface-2);
+}
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+  animation: shimmer 1.4s infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+

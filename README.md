@@ -1,36 +1,83 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# FitOpe
 
-## Getting Started
+A personal fitness, nutrition, sleep and body-transformation tracker. Training with real
+progression, Indian food logging in katoris and rotis, sleep and recovery, and analytics built
+from what you actually logged.
 
-First, run the development server:
+Next.js (App Router) + Convex + Tailwind v4.
+
+## Run it
+
+```bash
+npm install
+```
+
+Two processes, two terminals:
+
+```bash
+npm run dev:convex
+```
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+`dev:convex` uses Convex's anonymous local backend (no account needed) and writes
+`NEXT_PUBLIC_CONVEX_URL` into `.env.local` on first run. To use a hosted Convex project instead,
+run `npx convex login && npx convex dev`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Auth needs three deployment env vars. Generate them once:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npx @convex-dev/auth
+```
 
-## Learn More
+or set them by hand with `npx convex env set JWT_PRIVATE_KEY …`, `JWKS`, and
+`SITE_URL=http://localhost:3000`.
 
-To learn more about Next.js, take a look at the following resources:
+The shared exercise and food libraries seed themselves on first sign-in; `npm run seed` forces it.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npm run check   # asserts the nutrition/strength math and the seed data
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## What's in it
 
-## Deploy on Vercel
+**Onboarding** collects only what changes the maths — age, height, weight, goal, experience,
+activity, schedule, equipment, diet, sleep window — and every step is skippable. It ends by showing
+the calorie and macro estimate it derived, labelled as an estimate, before anything is saved.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+**Training.** A generator turns the profile into a 2–6 day split from a 105-exercise library,
+picking movements that match the equipment you actually have. Sessions are logged set by set with
+the previous session's weights prefilled, a rest timer, per-exercise history, and estimated-1RM
+personal records. Plans are fully editable: reorder, retitle, change sets/reps/rest, duplicate,
+activate, or build one from scratch. Partial and skipped sessions are first-class.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+**Nutrition.** 265 Indian foods with real serving units — roti, katori, bowl, glass, piece — and
+raw vs cooked kept distinct where it matters. Custom foods, multi-ingredient recipes with automatic
+per-serving maths, saved meals, recents, favourites, repeat-yesterday, and a free-text quick add.
+Protein and fiber are the two macros given visual priority.
+
+**Body, sleep and recovery.** Weight with an exponentially-weighted trend line (so a heavy dinner
+does not read as fat gain), tape measurements, private progress photos, manual sleep logging with a
+consistency score, and a readiness score built from sleep, soreness, energy, stress and recent
+training load.
+
+**Analytics.** Weekly volume, strength curves, muscle-group balance, protein and fiber adherence,
+sleep averages, plus deterministic written insights that read the data and say something specific.
+
+## Design notes
+
+- Data model separates *planned* from *performed*. Program days are templates; workouts, exercises
+  and sets are what happened.
+- Meal entries snapshot their nutrients. Editing a food later never rewrites history.
+- Targets are versioned by `effectiveFrom`, so changing a goal does not retroactively alter whether
+  past days "hit target".
+- Everything is scoped by `userId` and every mutation re-checks ownership.
+- The insight engine (`convex/analytics.ts`) is deliberately deterministic. It is the seam an AI
+  coaching layer plugs into later — the data it reads is already shaped for that.
+
+## Not a medical device
+
+Calorie, macro and readiness figures are estimates from public formulas and composition tables.
+The app does not diagnose, treat or advise on health conditions.
