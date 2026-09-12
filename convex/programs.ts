@@ -313,6 +313,115 @@ export const activeProgram = query({
   },
 });
 
+/** Everything the plan-day detail screen needs in one round trip. */
+export const dayDetail = query({
+  args: { id: v.id("programDays") },
+  handler: async (ctx, { id }) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) return null;
+    const day = await ctx.db.get(id);
+    if (!day || day.userId !== userId) return null;
+    const program = await ctx.db.get(day.programId);
+    if (!program) return null;
+
+    const items = await Promise.all(
+      day.items.map(async (i) => {
+        const exercise = await ctx.db.get(i.exerciseId);
+        const prev = await ctx.db
+          .query("sets")
+          .withIndex("by_user_exercise", (q) => q.eq("userId", userId).eq("exerciseId", i.exerciseId))
+          .order("desc")
+          .take(20);
+        const done = prev.filter((s) => s.completed);
+        const last = done[0];
+        return {
+          ...i,
+          exercise,
+          lastDone: last
+            ? `${last.weightKg ? `${last.weightKg} kg × ` : ""}${last.reps ?? 0} reps on ${last.date}`
+            : null,
+        };
+      })
+    );
+
+    // Rough session length: working time plus prescribed rest.
+    const totalMinutes = Math.max(
+      10,
+      Math.round(day.items.reduce((a, i) => a + i.sets * (i.restSec + 40), 0) / 60)
+    );
+
+    const levels = items.map((i) => i.exercise?.difficulty).filter(Boolean) as string[];
+    const level = levels.includes("advanced")
+      ? "Advanced"
+      : levels.includes("intermediate")
+        ? "Intermediate"
+        : "Starter";
+    const gearSet = new Set(items.flatMap((i) => i.exercise?.equipment ?? []));
+    gearSet.delete("bodyweight");
+    const gear =
+      gearSet.size === 0 ? "Bodyweight" : gearSet.size <= 2 ? [...gearSet].join(" + ") : "Full gym";
+
+    // Short, readable target label — "Chest +2" rather than a truncated CSV.
+    const muscles = [...new Set(items.flatMap((i) => i.exercise?.primaryMuscles ?? []))];
+    const target =
+      muscles.length === 0
+        ? day.focus
+        : muscles.length <= 2
+          ? muscles.join(" & ")
+          : `${muscles[0]} +${muscles.length - 1}`;
+
+    const past = (
+      await ctx.db
+        .query("workouts")
+        .withIndex("by_user_date", (q) => q.eq("userId", userId))
+        .order("desc")
+        .take(60)
+    )
+      .filter((w) => w.programDayId === id && w.status === "completed")
+      .slice(0, 3);
+
+    const history = await Promise.all(
+      past.map(async (w) => {
+        const sets = (
+          await ctx.db
+            .query("sets")
+            .withIndex("by_workout", (q) => q.eq("workoutId", w._id))
+            .collect()
+        ).filter((s) => s.completed);
+        const byExercise = new Map<string, string[]>();
+        for (const s of sets.sort((a, b) => a.index - b.index)) {
+          const ex = await ctx.db.get(s.exerciseId);
+          const name = ex?.name ?? "Exercise";
+          if (!byExercise.has(name)) byExercise.set(name, []);
+          byExercise.get(name)!.push(`${s.weightKg ?? 0}×${s.reps ?? 0}`);
+        }
+        return {
+          _id: w._id,
+          date: w.date,
+          durationMin: w.durationMin,
+          totalVolumeKg: w.totalVolumeKg,
+          setCount: sets.length,
+          lines: [...byExercise.entries()].map(([n, v]) => `${n} — ${v.join("  ")}`),
+        };
+      })
+    );
+
+    return {
+      day,
+      program,
+      items,
+      totalMinutes,
+      level,
+      gear,
+      target,
+      history,
+      title: day.title,
+      focus: day.focus,
+      weekday: day.weekday,
+    };
+  },
+});
+
 export const setActive = mutation({
   args: { id: v.id("programs") },
   handler: async (ctx, { id }) => {

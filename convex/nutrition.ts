@@ -36,8 +36,20 @@ export const day = query({
       .withIndex("by_user_date", (q) => q.eq("userId", userId).eq("date", d))
       .collect();
     const targets = await targetsOn(ctx, userId, d);
+    // Join each entry's food category so the UI can pick a matching thumbnail.
+    const categories = new Map<string, string>();
+    for (const e of entries) {
+      if (!e.foodId || categories.has(e.foodId)) continue;
+      const f = await ctx.db.get(e.foodId);
+      if (f) categories.set(e.foodId, f.category);
+    }
+    const withCategory = entries.map((e) => ({
+      ...e,
+      category: e.foodId ? categories.get(e.foodId) : e.recipeId ? "recipe" : undefined,
+    }));
+
     const byMeal = MEALS.map((meal) => {
-      const rows = entries.filter((e) => e.meal === meal).sort((a, b) => a.at - b.at);
+      const rows = withCategory.filter((e) => e.meal === meal).sort((a, b) => a.at - b.at);
       return { meal, entries: rows, totals: sum(rows) };
     });
     return {

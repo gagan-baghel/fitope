@@ -31,6 +31,7 @@ import {
 } from "lucide-react";
 import { cn, prettyDate } from "@/lib/utils";
 import { ExercisePicker } from "@/components/exercise-picker";
+import { MediaTile } from "@/components/ui/media";
 
 export default function Session() {
   const { id } = useParams<{ id: string }>();
@@ -258,8 +259,11 @@ function ExerciseBlock({
   return (
     <Card className="p-0">
       <div className="flex items-start gap-3 p-4 pb-3">
-        <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-surface-2 text-[12px] font-bold text-muted">
-          {index + 1}
+        <div className="relative shrink-0">
+          <MediaTile muscles={ex?.primaryMuscles} category={ex?.category} size={44} radius={14} />
+          <span className="absolute -left-1.5 -top-1.5 grid h-5 w-5 place-items-center rounded-full bg-ink text-[10px] font-bold text-ground">
+            {index + 1}
+          </span>
         </div>
         <div className="min-w-0 flex-1">
           <button onClick={() => setInfo(true)} className="text-left">

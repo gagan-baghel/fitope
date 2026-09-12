@@ -5,24 +5,18 @@ import { api } from "../../../../convex/_generated/api";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import {
-  Button,
-  Card,
-  Bar,
-  Pill,
-  Ring,
-  SectionTitle,
-  Skeleton,
-  EmptyState,
-  useToast,
-} from "@/components/ui";
+import { Bar, Button, Card, Pill, Ring, SectionTitle, Skeleton, useToast } from "@/components/ui";
+import { CircleAction, MediaTile, MinutesRing, RowCard } from "@/components/ui/media";
 import { CheckinSheet, SleepSheet, WeightSheet } from "@/components/quick-log";
 import {
   ArrowRight,
-  BedDouble,
+  Bell,
+  Camera,
+  Check,
   ChevronRight,
   Droplets,
   Flame,
+  HeartPulse,
   Moon,
   Play,
   Plus,
@@ -30,9 +24,7 @@ import {
   Sparkles,
   TrendingDown,
   TrendingUp,
-  Check,
-  HeartPulse,
-  Bell,
+  UtensilsCrossed,
 } from "lucide-react";
 import { cn, hhmm } from "@/lib/utils";
 import { useUnits } from "@/lib/units";
@@ -50,7 +42,6 @@ export default function Home() {
   const data = useQuery(api.dashboard.home, {});
   const insights = useQuery(api.analytics.insights, {});
   const logWater = useMutation(api.nutrition.logWater);
-  const undoWater = useMutation(api.nutrition.undoWater);
   const startWorkout = useMutation(api.workouts.start);
   const router = useRouter();
   const toast = useToast();
@@ -61,8 +52,8 @@ export default function Home() {
   if (data === undefined) {
     return (
       <div className="space-y-4">
-        <Skeleton className="h-16 w-full" />
-        <Skeleton className="h-40 w-full" />
+        <Skeleton className="h-14 w-full" />
+        <Skeleton className="h-48 w-full" />
         <Skeleton className="h-64 w-full" />
       </div>
     );
@@ -73,8 +64,9 @@ export default function Home() {
   const n = data.nutrition;
   const kcalLeft = Math.max(0, (t?.kcal ?? 0) - n.kcal);
   const hour = new Date().getHours();
-  const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
   const firstName = (data.profile?.name ?? "").split(" ")[0];
+  const planned = data.plannedDay;
+  const w = data.workout;
 
   async function begin() {
     setStarting(true);
@@ -88,39 +80,37 @@ export default function Home() {
   }
 
   return (
-    <div className="space-y-5">
-      {/* Header */}
-      <header className="flex items-start justify-between gap-4 pt-1">
-        <div>
-          <div className="text-[13px] text-muted">{greeting}</div>
-          <h1 className="text-[26px] font-bold leading-tight tracking-tight">
-            {firstName || "Let's go"}
-          </h1>
+    <div className="space-y-6">
+      {/* Welcome row — avatar, greeting, streak pill */}
+      <header className="flex items-center gap-3 pt-1">
+        <Link
+          href="/me"
+          className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-ink text-[17px] font-bold text-ground"
+        >
+          {(firstName || "?").slice(0, 1).toUpperCase()}
+        </Link>
+        <div className="min-w-0 flex-1">
+          <div className="text-[12.5px] text-muted">
+            {hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening"}
+          </div>
+          <div className="truncate text-[19px] font-bold leading-tight tracking-tight">
+            {firstName || "Welcome"}
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          {data.streak > 0 && (
-            <div className="flex items-center gap-1.5 rounded-full border border-amber/25 bg-amber/10 px-3 py-1.5">
-              <Flame className="h-4 w-4 text-amber" />
-              <span className="tabular text-[13px] font-bold text-amber">{data.streak}</span>
-            </div>
-          )}
-          <Link
-            href="/me"
-            className="grid h-10 w-10 place-items-center rounded-full border border-line bg-surface text-[14px] font-bold"
-          >
-            {(firstName || "?").slice(0, 1).toUpperCase()}
-          </Link>
+        <div className="flex items-center gap-1.5 rounded-full border border-line bg-surface px-3.5 py-2 shadow-[var(--shadow)]">
+          <Flame className="h-4 w-4 text-amber" />
+          <span className="tabular text-[14px] font-bold">{data.streak}</span>
         </div>
       </header>
 
-      {/* Reminders that are due and still unlogged */}
+      {/* Due reminders */}
       {data.dueReminders?.length > 0 && (
-        <div className="animate-rise space-y-2">
+        <div className="space-y-2">
           {data.dueReminders.map((r: any) => (
             <Link
               key={r._id}
               href={REMINDER_LINKS[r.kind] ?? "/home"}
-              className="flex items-center gap-3 rounded-2xl border border-amber/25 bg-amber/[0.07] px-4 py-3"
+              className="flex items-center gap-3 rounded-2xl border border-amber/30 bg-amber/[0.09] px-4 py-3"
             >
               <Bell className="h-4 w-4 shrink-0 text-amber" />
               <span className="flex-1 text-[13.5px] font-semibold">{r.label}</span>
@@ -131,11 +121,136 @@ export default function Home() {
         </div>
       )}
 
-      {/* Today's session */}
-      <TodayCard data={data} onStart={begin} starting={starting} />
+      {/* Hero carousel */}
+      <div className="no-scrollbar -mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 sm:-mx-6 sm:px-6">
+        <HeroCard
+          tone="var(--tile-3)"
+          chip={w?.status === "completed" ? "Completed" : planned ? "Today" : "Rest day"}
+          chipIcon={w?.status === "completed" ? Check : Play}
+          eyebrow={planned?.programName ?? (w ? "Logged session" : "No session scheduled")}
+          title={w?.title ?? planned?.title ?? "Recovery day"}
+          meta={
+            w?.status === "completed"
+              ? `${w.setsDone} sets · ${w.durationMin ?? 0} min`
+              : planned
+                ? `${planned.items.length} exercises · ~${planned.estMinutes} min`
+                : "Mobility or a walk still counts"
+          }
+          action={
+            w?.status === "completed" ? (
+              <Link href={`/train/session/${w._id}`} className="hero-cta">
+                Review <ArrowRight className="h-4 w-4" />
+              </Link>
+            ) : (
+              <button onClick={begin} disabled={starting} className="hero-cta">
+                <Play className="h-4 w-4" /> {w?.status === "in_progress" ? "Continue" : "Start workout"}
+              </button>
+            )
+          }
+          ring={
+            <MinutesRing
+              minutes={planned?.estMinutes ?? w?.durationMin ?? 0}
+              progress={w?.status === "completed" ? 1 : 0.35}
+              size={62}
+              track="rgba(0,0,0,0.10)"
+            />
+          }
+        />
 
-      {/* Fuel */}
-      <Card className="animate-rise">
+        <HeroCard
+          tone="var(--tile-2)"
+          chip="Fuel"
+          chipIcon={UtensilsCrossed}
+          eyebrow={`${n.kcal} of ${t?.kcal ?? "–"} kcal`}
+          title={`${kcalLeft} kcal left`}
+          meta={`Protein ${Math.round(n.protein)} / ${t?.protein ?? 0} g · Fiber ${Math.round(n.fiber)} / ${t?.fiber ?? 0} g`}
+          action={
+            <Link href="/eat/add?meal=auto" className="hero-cta">
+              <Plus className="h-4 w-4" /> Log food
+            </Link>
+          }
+          ring={
+            <Ring value={n.kcal} max={t?.kcal ?? 2000} size={62} stroke={6} color="var(--ink)" track="rgba(0,0,0,0.08)">
+              <span className="tabular text-[13px] font-bold">{Math.round(((n.kcal / (t?.kcal || 1)) * 100))}%</span>
+            </Ring>
+          }
+        />
+
+        <HeroCard
+          tone="var(--tile-1)"
+          chip="Readiness"
+          chipIcon={HeartPulse}
+          eyebrow={data.readiness.reasons[0] ?? "Based on your logs"}
+          title={`${data.readiness.score} / 100`}
+          meta={data.readiness.advice}
+          action={
+            <Link href="/recover" className="hero-cta">
+              Recovery <ArrowRight className="h-4 w-4" />
+            </Link>
+          }
+          ring={
+            <Ring value={data.readiness.score} max={100} size={62} stroke={6} color="var(--ink)" track="rgba(0,0,0,0.08)">
+              <span className="tabular text-[13px] font-bold">{data.readiness.score}</span>
+            </Ring>
+          }
+        />
+      </div>
+
+      {/* Quick actions row */}
+      <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 sm:-mx-6 sm:px-6">
+        <CircleAction icon={UtensilsCrossed} label="Food" onClick={() => router.push("/eat/add?meal=auto")} />
+        <CircleAction
+          icon={Droplets}
+          label="+250 ml"
+          onClick={async () => {
+            await logWater({ ml: 250 });
+            toast({ message: "250 ml logged" });
+          }}
+        />
+        <CircleAction icon={Scale} label="Weigh in" onClick={() => setSheet("weight")} />
+        <CircleAction icon={Moon} label="Sleep" onClick={() => setSheet("sleep")} />
+        <CircleAction icon={HeartPulse} label="Check-in" onClick={() => setSheet("checkin")} active={!!data.checkin} />
+        <CircleAction icon={Camera} label="Photo" onClick={() => router.push("/progress/photos")} />
+      </div>
+
+      {/* Today's plan — reference list rows */}
+      {(planned?.items?.length || (w as any)?.setsTotal) && (
+        <section>
+          <SectionTitle
+            action={
+              <Link href="/train" className="text-[12.5px] font-semibold text-muted hover:text-ink">
+                See all
+              </Link>
+            }
+          >
+            Today&apos;s plan
+          </SectionTitle>
+          <div className="space-y-2">
+            {(planned?.items ?? []).slice(0, 4).map((i: any, idx: number) => (
+              <RowCard
+                key={idx}
+                onClick={begin}
+                tile={<MediaTile muscles={i.exercise?.primaryMuscles} category={i.exercise?.category} />}
+                title={i.exercise?.name ?? "Exercise"}
+                subtitle={`${i.sets} sets × ${i.reps} · ${i.exercise?.difficulty ?? "all levels"}`}
+                trailing={<MinutesRing minutes={Math.max(2, Math.round((i.sets * (i.restSec + 40)) / 60))} progress={0} />}
+              />
+            ))}
+            {!planned && w && (
+              <RowCard
+                href={`/train/session/${w._id}`}
+                tile={<MediaTile category="cardio" />}
+                title={w.title}
+                subtitle={`${w.setsDone}/${w.setsTotal} sets logged`}
+                trailing={<MinutesRing minutes={w.durationMin ?? 0} progress={w.setsTotal ? w.setsDone / w.setsTotal : 0} />}
+              />
+            )}
+          </div>
+        </section>
+      )}
+
+      {/* Macros */}
+      <Card>
         <SectionTitle
           action={
             <Link href="/eat" className="flex items-center gap-1 text-[12.5px] font-semibold text-muted hover:text-ink">
@@ -145,179 +260,91 @@ export default function Home() {
         >
           Fuel today
         </SectionTitle>
-        <div className="flex items-center gap-5">
-          <Ring value={n.kcal} max={t?.kcal ?? 2000} size={128} stroke={13}>
-            <div className="text-center">
-              <div className="tabular text-[26px] font-bold leading-none">{kcalLeft}</div>
-              <div className="mt-1 text-[10.5px] font-semibold uppercase tracking-wider text-muted">
-                kcal left
-              </div>
+        <div className="grid grid-cols-4 gap-2">
+          {(
+            [
+              ["Protein", n.protein, t?.protein ?? 0, "var(--mint)"],
+              ["Fiber", n.fiber, t?.fiber ?? 0, "var(--energy)"],
+              ["Carbs", n.carbs, t?.carbs ?? 0, "var(--sky)"],
+              ["Fat", n.fat, t?.fat ?? 0, "var(--amber)"],
+            ] as const
+          ).map(([label, value, target, color]) => (
+            <div key={label} className="rounded-2xl bg-surface-2 p-3 text-center">
+              <Ring value={value} max={target || 1} size={54} stroke={5} color={color} track="var(--surface-3)">
+                <span className="tabular text-[13px] font-bold">{Math.round(value)}</span>
+              </Ring>
+              <div className="mt-1.5 text-[11px] font-semibold text-ink">{label}</div>
+              <div className="tabular text-[10.5px] text-muted">of {Math.round(target)} g</div>
             </div>
-          </Ring>
-          <div className="min-w-0 flex-1 space-y-3">
-            <MacroRow label="Protein" value={n.protein} target={t?.protein ?? 0} color="var(--accent)" emphasis />
-            <MacroRow label="Fiber" value={n.fiber} target={t?.fiber ?? 0} color="var(--mint)" emphasis />
-            <MacroRow label="Carbs" value={n.carbs} target={t?.carbs ?? 0} color="var(--sky)" />
-            <MacroRow label="Fat" value={n.fat} target={t?.fat ?? 0} color="var(--amber)" />
-          </div>
-        </div>
-        <div className="mt-4 flex items-center gap-2">
-          <Button size="sm" className="flex-1" onClick={() => router.push("/eat/add?meal=auto")}>
-            <Plus className="h-4 w-4" /> Log food
-          </Button>
-          <span className="tabular text-[12px] text-muted">
-            {n.kcal} / {t?.kcal ?? "–"} kcal · {data.mealCount} items
-          </span>
+          ))}
         </div>
       </Card>
 
       {/* Water / sleep / weight */}
       <div className="grid grid-cols-3 gap-3">
-        <Card className="p-4">
-          <Droplets className="mb-2 h-[18px] w-[18px] text-sky" />
-          <div className="tabular text-[19px] font-bold leading-none">
-            {(data.water / 1000).toFixed(1)}
-            <span className="ml-0.5 text-[11px] font-medium text-muted">L</span>
-          </div>
-          <div className="mt-1 text-[11px] text-muted">of {((t?.waterMl ?? 3000) / 1000).toFixed(1)} L</div>
-          <Bar value={data.water} max={t?.waterMl ?? 3000} color="var(--sky)" className="mt-2.5" height={5} />
-          <div className="mt-2.5 flex gap-1.5">
-            <button
-              onClick={() => logWater({ ml: 250 })}
-              className="flex-1 rounded-lg bg-surface-2 py-2 text-[11px] font-semibold text-sky transition-colors hover:bg-surface-3"
-            >
-              +250 ml
-            </button>
-            <button
-              onClick={() => undoWater({})}
-              className="rounded-lg bg-surface-2 px-2 py-2 text-[11px] font-semibold text-muted transition-colors hover:bg-surface-3"
-              aria-label="Undo last water log"
-            >
-              ↺
-            </button>
-          </div>
-        </Card>
-
-        <button onClick={() => setSheet("sleep")} className="card p-4 text-left transition-transform active:scale-[0.98]">
-          <Moon className="mb-2 h-[18px] w-[18px] text-violet" />
-          <div className="tabular text-[19px] font-bold leading-none">
-            {data.sleepMinutes ? hhmm(data.sleepMinutes) : "–"}
-          </div>
-          <div className="mt-1 text-[11px] text-muted">
-            {data.sleepMinutes ? `of ${hhmm(t?.sleepMinutes ?? 480)}` : "Not logged"}
-          </div>
-          <Bar
-            value={data.sleepMinutes ?? 0}
-            max={t?.sleepMinutes ?? 480}
-            color="var(--violet)"
-            className="mt-2.5"
-            height={5}
-          />
-          <div className="mt-2.5 flex items-center gap-1 py-2 text-[11px] font-semibold text-violet">
-            <BedDouble className="h-3.5 w-3.5" /> {data.sleepMinutes ? "Update" : "Log"}
-          </div>
-        </button>
-
-        <button onClick={() => setSheet("weight")} className="card p-4 text-left transition-transform active:scale-[0.98]">
-          <Scale className="mb-2 h-[18px] w-[18px] text-accent" />
-          <div className="tabular text-[19px] font-bold leading-none">
-            {data.weight ? (u.outWeight(data.weight.latest) ?? 0).toFixed(1) : "–"}
-            <span className="ml-0.5 text-[11px] font-medium text-muted">{u.weightUnit}</span>
-          </div>
-          <div className="mt-1 flex items-center gap-1 text-[11px] text-muted">
-            {data.weight?.changeWeek != null ? (
-              <>
-                {data.weight.changeWeek <= 0 ? (
-                  <TrendingDown className="h-3 w-3 text-mint" />
-                ) : (
-                  <TrendingUp className="h-3 w-3 text-amber" />
-                )}
-                {Math.abs(u.outWeight(data.weight.changeWeek) ?? 0).toFixed(1)} {u.weightUnit} / wk
-              </>
-            ) : (
-              "Trend needs a week"
-            )}
-          </div>
-          {data.weight?.target && data.weight?.start ? (
-            <>
-              <Bar
-                value={Math.abs(data.weight.start - data.weight.latest)}
-                max={Math.abs(data.weight.start - data.weight.target) || 1}
-                color="var(--accent)"
-                className="mt-2.5"
-                height={5}
-              />
-              <div className="mt-2.5 py-2 text-[11px] font-semibold text-accent">
-                Goal {u.weight(data.weight.target, 0)}
-              </div>
-            </>
-          ) : (
-            <div className="mt-2.5 py-2 text-[11px] font-semibold text-accent">Log weight</div>
-          )}
-        </button>
-      </div>
-
-      {/* Readiness */}
-      <Card className="animate-rise">
-        <SectionTitle
-          action={
-            <Link href="/recover" className="flex items-center gap-1 text-[12.5px] font-semibold text-muted hover:text-ink">
-              Recovery <ChevronRight className="h-3.5 w-3.5" />
-            </Link>
+        <MiniStat
+          icon={Droplets}
+          tint="var(--tile-3)"
+          value={`${(data.water / 1000).toFixed(1)}L`}
+          label={`of ${((t?.waterMl ?? 3000) / 1000).toFixed(1)} L`}
+          bar={{ value: data.water, max: t?.waterMl ?? 3000, color: "var(--sky)" }}
+          onClick={() => logWater({ ml: 250 })}
+          cta="+250 ml"
+        />
+        <MiniStat
+          icon={Moon}
+          tint="var(--tile-1)"
+          value={data.sleepMinutes ? hhmm(data.sleepMinutes) : "–"}
+          label={data.sleepMinutes ? `of ${hhmm(t?.sleepMinutes ?? 480)}` : "Not logged"}
+          bar={{ value: data.sleepMinutes ?? 0, max: t?.sleepMinutes ?? 480, color: "var(--violet)" }}
+          onClick={() => setSheet("sleep")}
+          cta={data.sleepMinutes ? "Update" : "Log sleep"}
+        />
+        <MiniStat
+          icon={Scale}
+          tint="var(--tile-2)"
+          value={data.weight ? `${(u.outWeight(data.weight.latest) ?? 0).toFixed(1)}` : "–"}
+          label={
+            data.weight?.changeWeek != null
+              ? `${data.weight.changeWeek <= 0 ? "↓" : "↑"} ${Math.abs(u.outWeight(data.weight.changeWeek) ?? 0).toFixed(1)} ${u.weightUnit}/wk`
+              : u.weightUnit
           }
-        >
-          Readiness
-        </SectionTitle>
-        <div className="flex items-center gap-4">
-          <Ring
-            value={data.readiness.score}
-            max={100}
-            size={78}
-            stroke={9}
-            color={data.readiness.score >= 70 ? "var(--mint)" : data.readiness.score >= 45 ? "var(--amber)" : "var(--rose)"}
-          >
-            <span className="tabular text-[20px] font-bold">{data.readiness.score}</span>
-          </Ring>
-          <div className="min-w-0 flex-1">
-            <p className="text-[13.5px] font-medium leading-snug text-ink">{data.readiness.advice}</p>
-            {data.readiness.reasons.length > 0 && (
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                {data.readiness.reasons.slice(0, 3).map((r) => (
-                  <Pill key={r}>{r}</Pill>
-                ))}
-              </div>
-            )}
-            {!data.checkin && (
-              <button onClick={() => setSheet("checkin")} className="mt-2.5 flex items-center gap-1 text-[12.5px] font-semibold text-accent">
-                <HeartPulse className="h-3.5 w-3.5" /> Add today&apos;s check-in
-              </button>
-            )}
-          </div>
-        </div>
-      </Card>
+          bar={
+            data.weight?.target && data.weight?.start
+              ? {
+                  value: Math.abs(data.weight.start - data.weight.latest),
+                  max: Math.abs(data.weight.start - data.weight.target) || 1,
+                  color: "var(--mint)",
+                }
+              : undefined
+          }
+          onClick={() => setSheet("weight")}
+          cta={data.weight?.target ? `Goal ${u.weight(data.weight.target, 0)}` : "Log weight"}
+        />
+      </div>
 
       {/* Insights */}
       {insights && insights.length > 0 && (
-        <section className="animate-rise">
+        <section>
           <SectionTitle
             action={
-              <Link href="/progress" className="flex items-center gap-1 text-[12.5px] font-semibold text-muted hover:text-ink">
-                All analytics <ChevronRight className="h-3.5 w-3.5" />
+              <Link href="/progress" className="text-[12.5px] font-semibold text-muted hover:text-ink">
+                Analytics
               </Link>
             }
           >
             What your data says
           </SectionTitle>
           <div className="space-y-2.5">
-            {insights.slice(0, 3).map((i, idx) => (
+            {insights.slice(0, 3).map((i: any, idx: number) => (
               <div
                 key={idx}
                 className={cn(
-                  "rounded-2xl border p-4",
+                  "rounded-[20px] border p-4",
                   i.tone === "good"
-                    ? "border-mint/25 bg-mint/[0.06]"
+                    ? "border-mint/30 bg-mint/[0.07]"
                     : i.tone === "warn"
-                      ? "border-amber/25 bg-amber/[0.06]"
+                      ? "border-amber/30 bg-amber/[0.07]"
                       : "border-line bg-surface"
                 )}
               >
@@ -325,7 +352,7 @@ export default function Home() {
                   <Sparkles
                     className={cn("h-4 w-4", i.tone === "good" ? "text-mint" : i.tone === "warn" ? "text-amber" : "text-muted")}
                   />
-                  <div className="text-[14px] font-semibold">{i.title}</div>
+                  <div className="text-[14px] font-bold">{i.title}</div>
                 </div>
                 <p className="mt-1.5 text-[13px] leading-relaxed text-ink-2">{i.detail}</p>
               </div>
@@ -345,142 +372,79 @@ export default function Home() {
   );
 }
 
-function MacroRow({
-  label,
-  value,
-  target,
-  color,
-  emphasis,
+/**
+ * The reference's signature card: pastel ground, meta chip, oversized title,
+ * a decorative disc where its photo cut-out sits, and one clear action.
+ */
+function HeroCard({
+  tone,
+  chip,
+  chipIcon: ChipIcon,
+  eyebrow,
+  title,
+  meta,
+  action,
+  ring,
 }: {
-  label: string;
-  value: number;
-  target: number;
-  color: string;
-  emphasis?: boolean;
+  tone: string;
+  chip: string;
+  chipIcon?: any;
+  eyebrow: string;
+  title: string;
+  meta: string;
+  action: React.ReactNode;
+  ring?: React.ReactNode;
 }) {
   return (
-    <div>
-      <div className="mb-1 flex items-baseline justify-between">
-        <span className={cn("text-[12px] font-semibold", emphasis ? "text-ink" : "text-muted")}>{label}</span>
-        <span className="tabular text-[12px] text-muted">
-          <span className={cn(emphasis && "font-bold text-ink")}>{Math.round(value)}</span> / {Math.round(target)} g
-        </span>
+    <article
+      className="relative w-[86%] shrink-0 snap-start overflow-hidden rounded-[28px] p-5 text-[color:var(--tile-ink)] shadow-[var(--shadow)] sm:w-[420px]"
+      style={{ background: tone }}
+    >
+      <div className="hero-blob -right-10 -top-12 h-44 w-44" />
+      <div className="hero-blob-2 -bottom-16 -right-4 h-40 w-40" />
+      <div className="relative">
+        <div className="flex items-start justify-between gap-3">
+          <span className="hero-chip">
+            {ChipIcon && <ChipIcon className="h-3.5 w-3.5" />}
+            {chip}
+          </span>
+          {ring}
+        </div>
+        <div className="mt-4 text-[12px] font-medium opacity-70">{eyebrow}</div>
+        <h2 className="mt-0.5 text-[26px] font-bold leading-[1.1] tracking-tight">{title}</h2>
+        <p className="mt-1.5 line-clamp-2 text-[12.5px] leading-snug opacity-75">{meta}</p>
+        <div className="mt-4">{action}</div>
       </div>
-      <Bar value={value} max={target} color={color} height={emphasis ? 7 : 5} />
-    </div>
+    </article>
   );
 }
 
-function TodayCard({ data, onStart, starting }: { data: any; onStart: () => void; starting: boolean }) {
-  const w = data.workout;
-  const planned = data.plannedDay;
-
-  if (w && w.status === "completed") {
-    return (
-      <Card className="animate-rise border-accent/30 bg-gradient-to-br from-accent-soft to-surface">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <Pill tone="accent" className="mb-2">
-              <Check className="h-3 w-3" /> Done
-            </Pill>
-            <h2 className="text-[22px] font-bold leading-tight tracking-tight">{w.title}</h2>
-            <p className="mt-1 text-[13px] text-muted">
-              {w.setsDone} sets · {w.exerciseCount} exercises
-              {w.durationMin ? ` · ${w.durationMin} min` : ""}
-              {w.totalVolumeKg ? ` · ${(w.totalVolumeKg / 1000).toFixed(1)}t volume` : ""}
-            </p>
-          </div>
-        </div>
-        <Link
-          href={`/train/session/${w._id}`}
-          className="mt-4 flex items-center justify-between rounded-2xl bg-surface-2 px-4 py-3 text-[13.5px] font-semibold"
-        >
-          Review session <ArrowRight className="h-4 w-4" />
-        </Link>
-      </Card>
-    );
-  }
-
-  if (w && (w.status === "in_progress" || w.status === "planned")) {
-    return (
-      <Card className="animate-rise border-accent/40">
-        <Pill tone="accent" className="mb-2">
-          In progress
-        </Pill>
-        <h2 className="text-[22px] font-bold leading-tight tracking-tight">{w.title}</h2>
-        <p className="mt-1 text-[13px] text-muted">
-          {w.setsDone} of {w.setsTotal} sets logged
-        </p>
-        <Bar value={w.setsDone} max={w.setsTotal || 1} className="mt-3" />
-        <Link href={`/train/session/${w._id}`} className="mt-4 block">
-          <Button size="lg" className="w-full">
-            <Play className="h-4 w-4" /> Continue session
-          </Button>
-        </Link>
-      </Card>
-    );
-  }
-
-  if (w && w.status === "skipped") {
-    return (
-      <Card className="animate-rise">
-        <Pill className="mb-2">Rest day</Pill>
-        <h2 className="text-[20px] font-bold tracking-tight">Session skipped</h2>
-        <p className="mt-1 text-[13px] text-muted">
-          {w.notes ? `“${w.notes}”` : "Rest is part of the plan. Nothing to make up for."}
-        </p>
-        <Button variant="soft" size="md" className="mt-4 w-full" onClick={onStart} loading={starting}>
-          Train anyway
-        </Button>
-      </Card>
-    );
-  }
-
-  if (planned) {
-    return (
-      <Card className="animate-rise overflow-hidden border-accent/25 bg-gradient-to-br from-surface-2 to-surface p-0">
-        <div className="p-5">
-          <div className="mb-2 flex items-center gap-2">
-            <Pill tone="accent">Today</Pill>
-            <span className="text-[12px] text-muted">{planned.programName}</span>
-          </div>
-          <h2 className="text-[24px] font-bold leading-tight tracking-tight">{planned.title}</h2>
-          <p className="mt-1 text-[13px] capitalize text-muted">
-            {planned.focus} · {planned.items.length} exercises · ~{planned.estMinutes} min
-          </p>
-          <div className="no-scrollbar mt-4 flex gap-2 overflow-x-auto">
-            {planned.items.slice(0, 5).map((i: any, idx: number) => (
-              <div key={idx} className="shrink-0 rounded-xl border border-line bg-surface px-3 py-2">
-                <div className="max-w-[128px] truncate text-[12px] font-semibold">{i.exercise?.name}</div>
-                <div className="tabular text-[11px] text-muted">
-                  {i.sets} × {i.reps}
-                </div>
-              </div>
-            ))}
-          </div>
-          <Button size="lg" className="mt-4 w-full" onClick={onStart} loading={starting}>
-            <Play className="h-4 w-4" /> Start workout
-          </Button>
-        </div>
-      </Card>
-    );
-  }
-
+function MiniStat({
+  icon: Icon,
+  tint,
+  value,
+  label,
+  bar,
+  onClick,
+  cta,
+}: {
+  icon: any;
+  tint: string;
+  value: string;
+  label: string;
+  bar?: { value: number; max: number; color: string };
+  onClick: () => void;
+  cta: string;
+}) {
   return (
-    <Card className="animate-rise">
-      <Pill className="mb-2">Rest day</Pill>
-      <h2 className="text-[20px] font-bold tracking-tight">No session scheduled</h2>
-      <p className="mt-1 text-[13px] text-muted">
-        Your plan has today off. A walk, mobility work, or an unplanned session all still count.
-      </p>
-      <div className="mt-4 flex gap-2">
-        <Button variant="soft" className="flex-1" onClick={onStart} loading={starting}>
-          <Play className="h-4 w-4" /> Freestyle session
-        </Button>
-        <Link href="/train">
-          <Button variant="ghost">Plan</Button>
-        </Link>
-      </div>
-    </Card>
+    <button onClick={onClick} className="card p-3.5 text-left transition-transform active:scale-[0.98]">
+      <span className="grid h-8 w-8 place-items-center rounded-xl" style={{ background: tint }}>
+        <Icon className="h-4 w-4" style={{ color: "var(--tile-ink)" }} />
+      </span>
+      <div className="tabular mt-2.5 text-[18px] font-bold leading-none">{value}</div>
+      <div className="mt-1 truncate text-[11px] text-muted">{label}</div>
+      {bar && <Bar value={bar.value} max={bar.max} color={bar.color} className="mt-2.5" height={4} />}
+      <div className="mt-2 truncate text-[11px] font-semibold text-ink">{cta}</div>
+    </button>
   );
 }

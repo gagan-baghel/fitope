@@ -21,6 +21,7 @@ import {
 import { ArrowLeft, Clock, CookingPot, Plus, Search, Star, Utensils, Zap } from "lucide-react";
 import { cn, titleCase, todayStr } from "@/lib/utils";
 import { CreateFood } from "@/components/create-food";
+import { FoodTile } from "@/components/ui/media";
 
 const MEALS = [
   { value: "breakfast", label: "Breakfast" },
@@ -263,22 +264,23 @@ function FoodRow({ food, onOpen, onQuick }: { food: any; onOpen: () => void; onQ
   const s = food.servings[0];
   const per = Math.round((food.per100.kcal * s.grams) / 100);
   return (
-    <div className="flex items-center gap-2 rounded-2xl border border-line bg-surface px-4 py-3 transition-colors hover:border-accent/30">
+    <div className="flex items-center gap-3 rounded-[20px] border border-line bg-surface p-3 transition-colors hover:border-ink/15">
+      <FoodTile category={food.category} />
       <button onClick={onOpen} className="min-w-0 flex-1 text-left">
         <div className="flex items-center gap-2">
           <span className={cn("h-2 w-2 shrink-0 rounded-full", food.veg ? "bg-mint" : "bg-rose")} />
-          <span className="truncate text-[13.5px] font-semibold">{food.name}</span>
+          <span className="truncate text-[14.5px] font-bold">{food.name}</span>
           {food.state === "raw" && <Pill tone="amber">raw</Pill>}
           {food.ownerUserId && <Pill tone="violet">mine</Pill>}
         </div>
-        <div className="tabular mt-0.5 text-[11.5px] text-muted">
-          {per} kcal per {s.label === "g" ? "100 g" : `1 ${s.label}`} · P {Math.round(food.per100.protein)} · Fiber{" "}
-          {Math.round(food.per100.fiber)} /100 g
+        <div className="tabular mt-0.5 truncate text-[12px] text-muted">
+          {per} kcal · {s.label === "g" || s.label === "ml" ? `100 ${s.label}` : `1 ${s.label}`} · P{" "}
+          {Math.round((food.per100.protein * s.grams) / 100)} g
         </div>
       </button>
       <button
         onClick={onQuick}
-        className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-surface-2 text-muted transition-colors hover:bg-accent hover:text-accent-ink"
+        className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-surface-2 text-ink transition-colors hover:bg-ink hover:text-ground"
         aria-label={`Quick add ${food.name}`}
       >
         <Plus className="h-4 w-4" />
@@ -365,6 +367,15 @@ function FoodSheet({
     >
       {food && (
         <div className="space-y-4">
+          <div className="flex items-center gap-3">
+            <FoodTile category={food.category} size={64} radius={20} />
+            <div className="min-w-0">
+              <div className="truncate text-[15px] font-bold">{food.name}</div>
+              <div className="text-[12px] text-muted">
+                {food.per100.kcal} kcal · P {food.per100.protein} g per 100 g
+              </div>
+            </div>
+          </div>
           <div className="flex flex-wrap gap-2">
             <Pill tone={food.veg ? "mint" : "rose"}>{food.veg ? "Veg" : "Non-veg"}</Pill>
             <Pill>{titleCase(food.category)}</Pill>
