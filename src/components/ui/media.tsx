@@ -88,8 +88,8 @@ export function foodTileFor(category?: string) {
 /** Square thumbnail for a food row. */
 export function FoodTile({
   category,
-  size = 46,
-  radius = 14,
+  size = 40,
+  radius = 13,
   className,
 }: {
   category?: string;
@@ -125,8 +125,8 @@ export function tileFor(muscles?: string[], category?: string) {
 export function MediaTile({
   muscles,
   category,
-  size = 52,
-  radius = 16,
+  size = 44,
+  radius = 14,
   className,
   label,
 }: {
@@ -161,7 +161,7 @@ export function MediaTile({
 export function MinutesRing({
   minutes,
   progress = 0.72,
-  size = 44,
+  size = 38,
   label = "Mins",
   color = "var(--ink)",
   track = "var(--surface-3)",
@@ -231,14 +231,14 @@ export function RowCard({
       {leading}
       {tile}
       <div className="min-w-0 flex-1">
-        <div className="truncate text-[15px] font-bold leading-tight">{title}</div>
-        {subtitle && <div className="mt-0.5 truncate text-[12.5px] text-muted">{subtitle}</div>}
+        <div className="truncate text-[14px] font-bold leading-tight">{title}</div>
+        {subtitle && <div className="mt-0.5 truncate text-[12px] text-muted">{subtitle}</div>}
       </div>
       {trailing}
     </>
   );
   const cls = cn(
-    "flex w-full items-center gap-3 rounded-[20px] border border-line bg-surface p-3 text-left transition-all",
+    "flex w-full items-center gap-2.5 rounded-2xl border border-line bg-surface p-2.5 text-left transition-all",
     onClick || href ? "active:scale-[0.99] hover:border-ink/15" : "",
     className
   );
@@ -268,13 +268,13 @@ export function MetaCell({
   label: string;
 }) {
   return (
-    <div className="flex items-center gap-3 rounded-2xl border border-line bg-surface-2 px-3.5 py-3">
-      <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-surface text-ink">
-        <Icon className="h-[17px] w-[17px]" strokeWidth={1.9} />
+    <div className="flex items-center gap-2.5 rounded-2xl border border-line bg-surface-2 px-3 py-2.5">
+      <div className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-surface text-ink">
+        <Icon className="h-4 w-4" strokeWidth={1.9} />
       </div>
       <div className="min-w-0">
-        <div className="truncate text-[14px] font-bold leading-tight">{value}</div>
-        <div className="text-[11.5px] text-muted">{label}</div>
+        <div className="truncate text-[13px] font-bold leading-tight">{value}</div>
+        <div className="text-[11px] text-muted">{label}</div>
       </div>
     </div>
   );
@@ -303,16 +303,16 @@ export function CircleAction({
   active?: boolean;
 }) {
   return (
-    <button onClick={onClick} className="flex w-16 shrink-0 flex-col items-center gap-1.5">
+    <button onClick={onClick} className="flex w-14 shrink-0 flex-col items-center gap-1">
       <span
         className={cn(
-          "grid h-14 w-14 place-items-center rounded-full border transition-all active:scale-95",
+          "grid h-12 w-12 place-items-center rounded-full border transition-all active:scale-95",
           active ? "border-transparent bg-ink text-ground" : "border-line bg-surface text-ink"
         )}
       >
-        <Icon className="h-5 w-5" strokeWidth={1.9} />
+        <Icon className="h-[18px] w-[18px]" strokeWidth={1.9} />
       </span>
-      <span className="w-full truncate text-center text-[10.5px] font-medium text-muted">{label}</span>
+      <span className="w-full truncate text-center text-[10px] font-medium text-muted">{label}</span>
     </button>
   );
 }

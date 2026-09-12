@@ -81,34 +81,34 @@ export default function Eat() {
       </header>
 
       <section
-        className="relative overflow-hidden rounded-[28px] p-5 shadow-[var(--shadow)]"
+        className="relative overflow-hidden rounded-[22px] p-4 shadow-[var(--shadow)]"
         style={{ background: over > 0 ? "var(--tile-4)" : "var(--tile-2)", color: "var(--tile-ink)" }}
       >
-        <div className="hero-blob -right-14 -top-16 h-52 w-52" />
-        <div className="relative flex items-center gap-5">
+        <div className="hero-blob -right-10 -top-12 h-40 w-40" />
+        <div className="relative flex items-center gap-4">
           <Ring
             value={day.totals.kcal}
             max={t?.kcal ?? 2000}
-            size={116}
-            stroke={10}
+            size={92}
+            stroke={8}
             color="var(--tile-ink)"
             track="rgba(0,0,0,0.10)"
           >
             <div className="text-center">
-              <div className="tabular text-[26px] font-bold leading-none">{over > 0 ? `+${over}` : left}</div>
-              <div className="mt-1 text-[10px] font-semibold uppercase tracking-wider opacity-65">
+              <div className="tabular text-[20px] font-bold leading-none">{over > 0 ? `+${over}` : left}</div>
+              <div className="mt-1 text-[9px] font-semibold uppercase tracking-wider opacity-65">
                 {over > 0 ? "kcal over" : "kcal left"}
               </div>
             </div>
           </Ring>
-          <div className="min-w-0 flex-1 space-y-2.5">
+          <div className="min-w-0 flex-1 space-y-2">
             <Macro label="Protein" value={day.totals.protein} target={t?.protein ?? 0} color="var(--tile-ink)" emphasis />
             <Macro label="Fiber" value={day.totals.fiber} target={t?.fiber ?? 0} color="var(--tile-ink)" emphasis />
             <Macro label="Carbs" value={day.totals.carbs} target={t?.carbs ?? 0} color="rgba(0,0,0,0.45)" />
             <Macro label="Fat" value={day.totals.fat} target={t?.fat ?? 0} color="rgba(0,0,0,0.45)" />
           </div>
         </div>
-        <div className="relative mt-4 flex flex-wrap items-center gap-2 hero-rule border-t pt-3.5 text-[12px] opacity-75">
+        <div className="relative mt-3 flex flex-wrap items-center gap-2 hero-rule border-t pt-3 text-[11.5px] opacity-75">
           <span className="tabular">
             {day.totals.kcal} of {t?.kcal ?? "–"} kcal
           </span>

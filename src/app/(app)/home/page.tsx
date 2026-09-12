@@ -80,26 +80,26 @@ export default function Home() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* Welcome row — avatar, greeting, streak pill */}
-      <header className="flex items-center gap-3 pt-1">
+      <header className="flex items-center gap-2.5 pt-1">
         <Link
           href="/me"
-          className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-ink text-[17px] font-bold text-ground"
+          className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-ink text-[15px] font-bold text-ground"
         >
           {(firstName || "?").slice(0, 1).toUpperCase()}
         </Link>
         <div className="min-w-0 flex-1">
-          <div className="text-[12.5px] text-muted">
+          <div className="text-[11.5px] text-muted">
             {hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening"}
           </div>
-          <div className="truncate text-[19px] font-bold leading-tight tracking-tight">
+          <div className="truncate text-[17px] font-bold leading-tight tracking-tight">
             {firstName || "Welcome"}
           </div>
         </div>
-        <div className="flex items-center gap-1.5 rounded-full border border-line bg-surface px-3.5 py-2 shadow-[var(--shadow)]">
-          <Flame className="h-4 w-4 text-amber" />
-          <span className="tabular text-[14px] font-bold">{data.streak}</span>
+        <div className="flex items-center gap-1.5 rounded-full border border-line bg-surface px-3 py-1.5 shadow-[var(--shadow)]">
+          <Flame className="h-3.5 w-3.5 text-amber" />
+          <span className="tabular text-[13px] font-bold">{data.streak}</span>
         </div>
       </header>
 
@@ -151,7 +151,7 @@ export default function Home() {
             <MinutesRing
               minutes={planned?.estMinutes ?? w?.durationMin ?? 0}
               progress={w?.status === "completed" ? 1 : 0.35}
-              size={62}
+              size={50}
               track="rgba(0,0,0,0.10)"
             />
           }
@@ -170,7 +170,7 @@ export default function Home() {
             </Link>
           }
           ring={
-            <Ring value={n.kcal} max={t?.kcal ?? 2000} size={62} stroke={6} color="var(--ink)" track="rgba(0,0,0,0.08)">
+            <Ring value={n.kcal} max={t?.kcal ?? 2000} size={50} stroke={5} color="var(--ink)" track="rgba(0,0,0,0.08)">
               <span className="tabular text-[13px] font-bold">{Math.round(((n.kcal / (t?.kcal || 1)) * 100))}%</span>
             </Ring>
           }
@@ -189,7 +189,7 @@ export default function Home() {
             </Link>
           }
           ring={
-            <Ring value={data.readiness.score} max={100} size={62} stroke={6} color="var(--ink)" track="rgba(0,0,0,0.08)">
+            <Ring value={data.readiness.score} max={100} size={50} stroke={5} color="var(--ink)" track="rgba(0,0,0,0.08)">
               <span className="tabular text-[13px] font-bold">{data.readiness.score}</span>
             </Ring>
           }
@@ -269,8 +269,8 @@ export default function Home() {
               ["Fat", n.fat, t?.fat ?? 0, "var(--amber)"],
             ] as const
           ).map(([label, value, target, color]) => (
-            <div key={label} className="rounded-2xl bg-surface-2 p-3 text-center">
-              <Ring value={value} max={target || 1} size={54} stroke={5} color={color} track="var(--surface-3)">
+            <div key={label} className="rounded-2xl bg-surface-2 p-2.5 text-center">
+              <Ring value={value} max={target || 1} size={46} stroke={4} color={color} track="var(--surface-3)">
                 <span className="tabular text-[13px] font-bold">{Math.round(value)}</span>
               </Ring>
               <div className="mt-1.5 text-[11px] font-semibold text-ink">{label}</div>
@@ -397,11 +397,11 @@ function HeroCard({
 }) {
   return (
     <article
-      className="relative w-[86%] shrink-0 snap-start overflow-hidden rounded-[28px] p-5 text-[color:var(--tile-ink)] shadow-[var(--shadow)] sm:w-[420px]"
+      className="relative w-[82%] shrink-0 snap-start overflow-hidden rounded-[24px] p-4 text-[color:var(--tile-ink)] shadow-[var(--shadow)] sm:w-[380px]"
       style={{ background: tone }}
     >
-      <div className="hero-blob -right-10 -top-12 h-44 w-44" />
-      <div className="hero-blob-2 -bottom-16 -right-4 h-40 w-40" />
+      <div className="hero-blob -right-8 -top-10 h-36 w-36" />
+      <div className="hero-blob-2 -bottom-12 -right-3 h-32 w-32" />
       <div className="relative">
         <div className="flex items-start justify-between gap-3">
           <span className="hero-chip">
@@ -410,10 +410,10 @@ function HeroCard({
           </span>
           {ring}
         </div>
-        <div className="mt-4 text-[12px] font-medium opacity-70">{eyebrow}</div>
-        <h2 className="mt-0.5 text-[26px] font-bold leading-[1.1] tracking-tight">{title}</h2>
-        <p className="mt-1.5 line-clamp-2 text-[12.5px] leading-snug opacity-75">{meta}</p>
-        <div className="mt-4">{action}</div>
+        <div className="mt-3 text-[11.5px] font-medium opacity-70">{eyebrow}</div>
+        <h2 className="mt-0.5 text-[20px] font-bold leading-[1.15] tracking-tight">{title}</h2>
+        <p className="mt-1 line-clamp-2 text-[12px] leading-snug opacity-75">{meta}</p>
+        <div className="mt-3">{action}</div>
       </div>
     </article>
   );
@@ -437,14 +437,14 @@ function MiniStat({
   cta: string;
 }) {
   return (
-    <button onClick={onClick} className="card p-3.5 text-left transition-transform active:scale-[0.98]">
-      <span className="grid h-8 w-8 place-items-center rounded-xl" style={{ background: tint }}>
-        <Icon className="h-4 w-4" style={{ color: "var(--tile-ink)" }} />
+    <button onClick={onClick} className="card p-3 text-left transition-transform active:scale-[0.98]">
+      <span className="grid h-7 w-7 place-items-center rounded-lg" style={{ background: tint }}>
+        <Icon className="h-3.5 w-3.5" style={{ color: "var(--tile-ink)" }} />
       </span>
-      <div className="tabular mt-2.5 text-[18px] font-bold leading-none">{value}</div>
-      <div className="mt-1 truncate text-[11px] text-muted">{label}</div>
-      {bar && <Bar value={bar.value} max={bar.max} color={bar.color} className="mt-2.5" height={4} />}
-      <div className="mt-2 truncate text-[11px] font-semibold text-ink">{cta}</div>
+      <div className="tabular mt-2 text-[16px] font-bold leading-none">{value}</div>
+      <div className="mt-1 truncate text-[10.5px] text-muted">{label}</div>
+      {bar && <Bar value={bar.value} max={bar.max} color={bar.color} className="mt-2" height={4} />}
+      <div className="mt-1.5 truncate text-[10.5px] font-semibold text-ink">{cta}</div>
     </button>
   );
 }
