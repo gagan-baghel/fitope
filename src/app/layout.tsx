@@ -13,18 +13,18 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#080a09",
+  themeColor: "#eef1f5",
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
 };
 
 /** Applies the saved theme before paint so there is no flash. */
-const themeScript = `try{var t=localStorage.getItem("fitope-theme")||"dark";document.documentElement.dataset.theme=t}catch(e){}`;
+const themeScript = `try{var t=localStorage.getItem("fitope-theme")||"light";document.documentElement.dataset.theme=t}catch(e){}`;
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" data-theme="dark" className={geist.variable} suppressHydrationWarning>
+    <html lang="en" data-theme="light" className={geist.variable} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>

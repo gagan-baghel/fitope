@@ -88,7 +88,7 @@ export default function Progress() {
           <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
             <Stat label="Sessions" value={summary.workouts} sub={`${summary.minutes} min`} />
             <Stat label="Volume" value={(summary.volume / 1000).toFixed(1)} unit="t" />
-            <Stat label="Avg protein" value={summary.avgProtein} unit="g" tone="var(--accent)" />
+            <Stat label="Avg protein" value={summary.avgProtein} unit="g" tone="var(--data)" />
             <Stat label="Avg sleep" value={`${Math.floor(summary.avgSleep / 60)}h ${summary.avgSleep % 60}m`} />
           </div>
         </Card>
@@ -122,8 +122,8 @@ export default function Progress() {
                 <AreaChart data={weightData} margin={{ top: 6, right: 6, left: -20, bottom: 0 }}>
                   <defs>
                     <linearGradient id="wg" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="var(--accent)" stopOpacity={0.28} />
-                      <stop offset="100%" stopColor="var(--accent)" stopOpacity={0} />
+                      <stop offset="0%" stopColor="var(--data)" stopOpacity={0.3} />
+                      <stop offset="100%" stopColor="var(--data)" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid stroke="var(--line)" vertical={false} />
@@ -138,7 +138,7 @@ export default function Progress() {
                     contentStyle={{ background: "var(--surface-3)", border: "1px solid var(--line)", borderRadius: 12, fontSize: 12 }}
                     formatter={(v: any, k: any) => [`${v} ${u.weightUnit}`, k === "trend" ? "Trend" : "Logged"]}
                   />
-                  <Area type="monotone" dataKey="trend" stroke="var(--accent)" strokeWidth={2.5} fill="url(#wg)" />
+                  <Area type="monotone" dataKey="trend" stroke="var(--data)" strokeWidth={2.5} fill="url(#wg)" />
                   <Line type="monotone" dataKey="weight" stroke="var(--muted)" strokeWidth={0} dot={{ r: 1.8, fill: "var(--muted)" }} />
                 </AreaChart>
               </ResponsiveContainer>
@@ -151,7 +151,7 @@ export default function Progress() {
                 unit={u.weightUnit}
                 tone={data.weight.change < 0 ? "var(--mint)" : data.weight.change > 0 ? "var(--amber)" : undefined}
               />
-              <Stat label="Weigh-ins" value={data.weight.points.length} />
+              <Stat label="Logs" value={data.weight.points.length} sub="weigh-ins" />
             </div>
             <p className="mt-2 text-[11.5px] text-muted">
               The filled line is your trend weight — an exponentially weighted average. Dots are the
@@ -212,7 +212,7 @@ export default function Progress() {
                           contentStyle={{ background: "var(--surface-3)", border: "1px solid var(--line)", borderRadius: 12, fontSize: 12 }}
                           formatter={(v: any) => [`${v} kg`, "est. 1RM"]}
                         />
-                        <Line type="monotone" dataKey="value" stroke="var(--accent)" strokeWidth={2} dot={false} />
+                        <Line type="monotone" dataKey="value" stroke="var(--data)" strokeWidth={2} dot={false} />
                         <YAxis hide domain={["dataMin - 5", "dataMax + 5"]} />
                         <XAxis dataKey="date" hide />
                       </LineChart>
@@ -245,7 +245,7 @@ export default function Progress() {
                   contentStyle={{ background: "var(--surface-3)", border: "1px solid var(--line)", borderRadius: 12, fontSize: 12 }}
                   formatter={(v: any) => [`${v} sets`, "Logged"]}
                 />
-                <Bar dataKey="sets" fill="var(--accent)" radius={[0, 6, 6, 0]} barSize={12} />
+                <Bar dataKey="sets" fill="var(--data)" radius={[0, 6, 6, 0]} barSize={12} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -270,7 +270,7 @@ export default function Progress() {
         ) : (
           <>
             <div className="grid grid-cols-3 gap-2.5">
-              <Stat label="Protein hit" value={data.nutrition.proteinAdherence} unit="%" tone="var(--accent)" sub={`avg ${data.nutrition.avgProtein} g`} />
+              <Stat label="Protein hit" value={data.nutrition.proteinAdherence} unit="%" tone="var(--data)" sub={`avg ${data.nutrition.avgProtein} g`} />
               <Stat label="Fiber hit" value={data.nutrition.fiberAdherence} unit="%" tone="var(--mint)" sub={`avg ${data.nutrition.avgFiber} g`} />
               <Stat label="Calories in range" value={data.nutrition.kcalAdherence} unit="%" sub={`avg ${data.nutrition.avgKcal}`} />
             </div>
@@ -286,7 +286,7 @@ export default function Progress() {
                     cursor={{ fill: "var(--surface-2)" }}
                     contentStyle={{ background: "var(--surface-3)", border: "1px solid var(--line)", borderRadius: 12, fontSize: 12 }}
                   />
-                  <Bar dataKey="protein" fill="var(--accent)" radius={[3, 3, 0, 0]} />
+                  <Bar dataKey="protein" fill="var(--data)" radius={[3, 3, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>

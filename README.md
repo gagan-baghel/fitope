@@ -73,6 +73,25 @@ the thing it is nudging you about is logged. Nothing is pushed or emailed.
 **Units.** Body weight and measurements can be shown in kg/cm or lb/in; training loads stay in kg
 because that is how plates are marked.
 
+## Design language
+
+Taken from the supplied references and applied throughout:
+
+- **Light-first**, cool paper ground with white cards, generous corner radii and soft
+  elevation. Dark is fully supported and swaps the palette rather than dimming it.
+- **Near-black primary actions** — the reference's "Join" button — with lime reserved for
+  the dark theme's CTA and for data series.
+- **Pastel media tiles.** Every workout, exercise and food row carries a coloured thumbnail
+  with a category glyph, derived deterministically from muscle group or food category. No
+  stock photography is used, since none is licensed for this build; the tiles do the same
+  scanning job down a list.
+- **Circular minute badges** on every row, and a **pastel hero card** (chip, oversized
+  title, one action, decorative discs) as the top of Home, Train, Nutrition and the plan
+  detail screen.
+- **Plan detail** follows the reference's structure: hero, goal chips, a four-cell
+  "Session details" grid, numbered exercise rows, and a sticky primary action.
+- **Bottom nav** is a floating white pill with a dark active item, label included.
+
 ## Design notes
 
 - Data model separates *planned* from *performed*. Program days are templates; workouts, exercises

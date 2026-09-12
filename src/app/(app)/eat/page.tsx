@@ -17,6 +17,7 @@ import {
   Stepper,
   useToast,
 } from "@/components/ui";
+import { FoodTile, RowCard } from "@/components/ui/media";
 import {
   ChevronLeft,
   ChevronRight,
@@ -79,35 +80,48 @@ export default function Eat() {
         </div>
       </header>
 
-      <Card>
-        <div className="flex items-center gap-5">
-          <Ring value={day.totals.kcal} max={t?.kcal ?? 2000} size={124} stroke={13} color={over > 0 ? "var(--amber)" : "var(--accent)"}>
+      <section
+        className="relative overflow-hidden rounded-[28px] p-5 shadow-[var(--shadow)]"
+        style={{ background: over > 0 ? "var(--tile-4)" : "var(--tile-2)", color: "var(--tile-ink)" }}
+      >
+        <div className="hero-blob -right-14 -top-16 h-52 w-52" />
+        <div className="relative flex items-center gap-5">
+          <Ring
+            value={day.totals.kcal}
+            max={t?.kcal ?? 2000}
+            size={116}
+            stroke={10}
+            color="var(--tile-ink)"
+            track="rgba(0,0,0,0.10)"
+          >
             <div className="text-center">
-              <div className="tabular text-[25px] font-bold leading-none">{over > 0 ? `+${over}` : left}</div>
-              <div className="mt-1 text-[10px] font-semibold uppercase tracking-wider text-muted">
+              <div className="tabular text-[26px] font-bold leading-none">{over > 0 ? `+${over}` : left}</div>
+              <div className="mt-1 text-[10px] font-semibold uppercase tracking-wider opacity-65">
                 {over > 0 ? "kcal over" : "kcal left"}
               </div>
             </div>
           </Ring>
           <div className="min-w-0 flex-1 space-y-2.5">
-            <Macro label="Protein" value={day.totals.protein} target={t?.protein ?? 0} color="var(--accent)" emphasis />
-            <Macro label="Fiber" value={day.totals.fiber} target={t?.fiber ?? 0} color="var(--mint)" emphasis />
-            <Macro label="Carbs" value={day.totals.carbs} target={t?.carbs ?? 0} color="var(--sky)" />
-            <Macro label="Fat" value={day.totals.fat} target={t?.fat ?? 0} color="var(--amber)" />
+            <Macro label="Protein" value={day.totals.protein} target={t?.protein ?? 0} color="var(--tile-ink)" emphasis />
+            <Macro label="Fiber" value={day.totals.fiber} target={t?.fiber ?? 0} color="var(--tile-ink)" emphasis />
+            <Macro label="Carbs" value={day.totals.carbs} target={t?.carbs ?? 0} color="rgba(0,0,0,0.45)" />
+            <Macro label="Fat" value={day.totals.fat} target={t?.fat ?? 0} color="rgba(0,0,0,0.45)" />
           </div>
         </div>
-        <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-line pt-3.5 text-[12px] text-muted">
+        <div className="relative mt-4 flex flex-wrap items-center gap-2 hero-rule border-t pt-3.5 text-[12px] opacity-75">
           <span className="tabular">
             {day.totals.kcal} of {t?.kcal ?? "–"} kcal
           </span>
           {day.estimatedCount > 0 && (
-            <Pill tone="amber">{day.estimatedCount} estimated</Pill>
+            <span className="hero-inset rounded-full px-2.5 py-1 text-[11px] font-semibold">
+              {day.estimatedCount} estimated
+            </span>
           )}
-          <Link href="/eat/foods" className="ml-auto font-semibold text-accent">
+          <Link href="/eat/foods" className="ml-auto font-bold underline-offset-2 hover:underline">
             My foods & recipes
           </Link>
         </div>
-      </Card>
+      </section>
 
       {/* Water */}
       <Card className="py-4">
@@ -170,34 +184,31 @@ export default function Eat() {
                 <Plus className="h-4 w-4" /> Log {Meta.label.toLowerCase()}
               </Link>
             ) : (
-              <Card className="divide-y divide-line p-0">
+              <div className="space-y-2">
                 {m.entries.map((e: any) => (
-                  <button
+                  <RowCard
                     key={e._id}
                     onClick={() => {
                       setEditing(e);
                       setQty(e.qty);
                     }}
-                    className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-surface-2"
-                  >
-                    <div className="min-w-0 flex-1">
-                      <div className="truncate text-[13.5px] font-semibold">{e.name}</div>
-                      <div className="tabular text-[11.5px] text-muted">
-                        {e.qty} {e.unitLabel}
-                        {e.grams ? ` · ${e.grams} g` : ""} · P {e.nutrients.protein} · C {e.nutrients.carbs} · F{" "}
-                        {e.nutrients.fat}
+                    tile={<FoodTile category={e.category} />}
+                    title={e.name}
+                    subtitle={`${e.qty} ${e.unitLabel}${e.grams ? ` · ${e.grams} g` : ""} · P ${e.nutrients.protein} · C ${e.nutrients.carbs} · F ${e.nutrients.fat}`}
+                    trailing={
+                      <div className="flex items-center gap-2">
+                        <span className="tabular text-[15px] font-bold">{e.nutrients.kcal}</span>
+                        <Pencil className="h-3.5 w-3.5 text-muted" />
                       </div>
-                    </div>
-                    <div className="tabular shrink-0 text-[13.5px] font-bold">{e.nutrients.kcal}</div>
-                    <Pencil className="h-3.5 w-3.5 shrink-0 text-muted" />
-                  </button>
+                    }
+                  />
                 ))}
-                <div className="flex items-center justify-between px-4 py-2.5 text-[11.5px] text-muted">
+                <div className="flex items-center justify-between px-2 text-[11.5px] text-muted">
                   <span>
                     P {Math.round(m.totals.protein)} g · Fiber {Math.round(m.totals.fiber)} g
                   </span>
                   <button
-                    className="flex items-center gap-1 font-semibold text-accent"
+                    className="flex items-center gap-1 font-semibold text-ink"
                     onClick={async () => {
                       const n = await repeat({ fromDate: date, meal: m.meal, toDate: todayStr() });
                       toast({ message: `Copied ${n} items to today` });
@@ -206,7 +217,7 @@ export default function Eat() {
                     <Copy className="h-3 w-3" /> Repeat today
                   </button>
                 </div>
-              </Card>
+              </div>
             )}
           </section>
         );
@@ -349,12 +360,21 @@ function Macro({
   return (
     <div>
       <div className="mb-1 flex items-baseline justify-between">
-        <span className={cn("text-[12px] font-semibold", emphasis ? "text-ink" : "text-muted")}>{label}</span>
-        <span className="tabular text-[12px] text-muted">
-          <span className={cn(emphasis && "font-bold text-ink")}>{Math.round(value)}</span> / {Math.round(target)} g
+        <span className={cn("text-[12px] font-semibold", emphasis ? "" : "opacity-60")}>{label}</span>
+        <span className="tabular text-[12px] opacity-70">
+          <span className={cn(emphasis && "font-bold opacity-100")}>{Math.round(value)}</span> / {Math.round(target)} g
         </span>
       </div>
-      <Bar value={value} max={target} color={color} height={emphasis ? 7 : 5} />
+      <div className="h-[7px] w-full overflow-hidden rounded-full bg-[color:var(--hero-rule)]">
+        <div
+          className="h-full rounded-full"
+          style={{
+            width: `${target > 0 ? Math.min(100, (value / target) * 100) : 0}%`,
+            background: color,
+            transition: "width 600ms cubic-bezier(0.22,1,0.36,1)",
+          }}
+        />
+      </div>
     </div>
   );
 }

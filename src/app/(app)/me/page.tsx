@@ -57,7 +57,7 @@ export default function Me() {
   const toast = useToast();
 
   const [theme, setTheme] = useState(() =>
-    typeof document === "undefined" ? "dark" : (document.documentElement.dataset.theme ?? "dark")
+    typeof document === "undefined" ? "light" : (document.documentElement.dataset.theme ?? "light")
   );
   const [sheet, setSheet] = useState<null | "targets" | "profile" | "goal" | "reminder">(null);
   const [t, setT] = useState<any>(null);
