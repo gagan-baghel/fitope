@@ -609,3 +609,17 @@ export function Stepper({
     </div>
   );
 }
+
+/* ---------------------------------- Logo ---------------------------------- */
+
+/** The FitOpe mark on a white tile — the black "F" stays legible in dark mode too. */
+export function Logo({ size = 40, className }: { size?: number; className?: string }) {
+  return (
+    <span
+      className={cn("grid shrink-0 place-items-center rounded-[28%] bg-white shadow-sm ring-1 ring-black/5", className)}
+      style={{ width: size, height: size }}
+    >
+      <img src="/brand/mark.png" alt="FitOpe" width={size * 0.64} height={size * 0.64} className="object-contain" />
+    </span>
+  );
+}

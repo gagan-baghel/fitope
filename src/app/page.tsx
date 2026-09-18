@@ -4,7 +4,7 @@ import { useConvexAuth, useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
-import { Dumbbell } from "lucide-react";
+import { Logo } from "@/components/ui";
 
 /** Single gate: signed out -> marketing/sign-in, onboarding incomplete -> onboarding, else home. */
 export default function Gate() {
@@ -30,9 +30,7 @@ export default function Gate() {
   return (
     <div className="grid min-h-dvh place-items-center">
       <div className="flex animate-pop flex-col items-center gap-4">
-        <div className="grid h-16 w-16 place-items-center rounded-3xl bg-accent text-accent-ink">
-          <Dumbbell className="h-8 w-8" strokeWidth={2.5} />
-        </div>
+        <Logo size={72} />
         <div className="text-sm text-muted">Loading your day…</div>
       </div>
     </div>

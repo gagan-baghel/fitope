@@ -11,7 +11,7 @@ export default function manifest(): MetadataRoute.Manifest {
     display: "standalone",
     display_override: ["standalone", "minimal-ui"],
     orientation: "portrait",
-    background_color: "#eef1f5",
+    background_color: "#ffffff", // splash: the icon art is on white
     theme_color: "#eef1f5",
     categories: ["health", "fitness", "lifestyle"],
     icons: [
