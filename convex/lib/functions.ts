@@ -9,6 +9,7 @@
  */
 import { mutation as rawMutation, query as rawQuery, MutationCtx } from "../_generated/server";
 import { getAuthUserId } from "@convex-dev/auth/server";
+import { ConvexError } from "convex/values";
 import { Id } from "../_generated/dataModel";
 import { LIMITS, guardArgs } from "./guard";
 
@@ -48,14 +49,28 @@ export const MINUTE = 60_000;
 export const HOUR = 60 * MINUTE;
 export const DAY = 24 * HOUR;
 
+/**
+ * Production Convex redacts error messages. Our deliberate `throw new Error("…")` messages are
+ * written for users, so pass those through as ConvexError; anything else (TypeError, runtime
+ * faults) stays redacted.
+ */
+function expose(e: unknown): never {
+  if (e instanceof Error && e.constructor === Error) throw new ConvexError(e.message);
+  throw e;
+}
+
 export const mutation = ((def: any) =>
   rawMutation({
     ...def,
     handler: async (ctx: MutationCtx, args: any) => {
-      guardPayload(args);
-      const userId = await getAuthUserId(ctx);
-      if (userId) await throttle(ctx, userId, "write", { max: LIMITS.writesPerMinute, windowMs: MINUTE });
-      return def.handler(ctx, args);
+      try {
+        guardPayload(args);
+        const userId = await getAuthUserId(ctx);
+        if (userId) await throttle(ctx, userId, "write", { max: LIMITS.writesPerMinute, windowMs: MINUTE });
+        return await def.handler(ctx, args);
+      } catch (e) {
+        expose(e);
+      }
     },
   })) as typeof rawMutation;
 
@@ -63,7 +78,11 @@ export const query = ((def: any) =>
   rawQuery({
     ...def,
     handler: async (ctx: any, args: any) => {
-      guardPayload(args);
-      return def.handler(ctx, args);
+      try {
+        guardPayload(args);
+        return await def.handler(ctx, args);
+      } catch (e) {
+        expose(e);
+      }
     },
   })) as typeof rawQuery;

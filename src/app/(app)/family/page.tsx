@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import { Bar, Button, Card, ConfirmButton, Input, Sheet, Skeleton, useToast } from "@/components/ui";
 import { Avatar, NudgeSheet, dayProgress, usePush } from "@/components/family";
 import { FAMILY_LIMITS, formatCode, normalizeCode, randomToken } from "../../../../convex/lib/family";
-import { cn, hhmm } from "@/lib/utils";
+import { cn, errorText, hhmm } from "@/lib/utils";
 import { useUnits } from "@/lib/units";
 import {
   Bell,
@@ -357,7 +357,7 @@ function InviteSheet({ open, onClose, invites }: { open: boolean; onClose: () =>
       const r = await create({ password: usePw ? password : undefined });
       setMade({ code: r.code, password: usePw ? password : undefined });
     } catch (e: any) {
-      toast({ message: e.message?.replace(/^.*Error: /, "").split("\n")[0], tone: "var(--rose)" });
+      toast({ message: errorText(e), tone: "var(--rose)" });
     } finally {
       setBusy(false);
     }

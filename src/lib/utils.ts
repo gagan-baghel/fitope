@@ -56,3 +56,11 @@ export const clockFromMinutes = (m: number) => {
 
 export const timeOf = (ts: number) =>
   new Date(ts).toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit" });
+
+/**
+ * The user-facing text of a failed Convex call. Server messages arrive as ConvexError `data`
+ * (production redacts plain messages); anything else gets the fallback.
+ */
+export function errorText(e: any, fallback = "Something went wrong — try again") {
+  return typeof e?.data === "string" ? e.data : fallback;
+}

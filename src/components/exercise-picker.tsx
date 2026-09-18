@@ -1,5 +1,6 @@
 "use client";
 
+import { errorText } from "@/lib/utils";
 import { useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
@@ -148,7 +149,7 @@ export function CreateExercise({
               setName("");
               setMuscles([]);
             } catch (e: any) {
-              toast({ message: e.message, tone: "var(--rose)" });
+              toast({ message: errorText(e), tone: "var(--rose)" });
             } finally {
               setBusy(false);
             }

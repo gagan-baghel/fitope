@@ -18,7 +18,7 @@ import {
   Plus,
   Trophy,
 } from "lucide-react";
-import { cn, prettyDate, todayStr } from "@/lib/utils";
+import { cn, prettyDate, todayStr, errorText } from "@/lib/utils";
 
 const DAY_LETTERS = ["S", "M", "T", "W", "T", "F", "S"];
 const FILTERS = [
@@ -52,7 +52,7 @@ export default function Train() {
       const id = await start(programDayId ? { programDayId } : {});
       router.push(`/train/session/${id}`);
     } catch (e: any) {
-      toast({ message: e.message, tone: "var(--rose)" });
+      toast({ message: errorText(e), tone: "var(--rose)" });
       setBusy(false);
     }
   }
