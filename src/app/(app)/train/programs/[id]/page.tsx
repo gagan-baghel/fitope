@@ -52,7 +52,7 @@ export default function ProgramEditor() {
   return (
     <div className="space-y-4">
       <header className="flex items-center gap-3 pt-1">
-        <button onClick={() => router.push("/train/programs")} className="rounded-xl p-1.5 text-muted hover:bg-surface-2 hover:text-ink">
+        <button onClick={() => router.push("/train/programs")} className="-m-1.5 rounded-xl p-3 text-muted hover:bg-surface-2 hover:text-ink">
           <ArrowLeft className="h-5 w-5" />
         </button>
         <div className="min-w-0 flex-1">
@@ -102,14 +102,17 @@ export default function ProgramEditor() {
           </div>
           <div className="mt-3 space-y-1.5">
             {day.items.map((it: Item, i: number) => (
-              <div key={i} className="flex items-center gap-3 rounded-xl bg-surface-2 px-3.5 py-2.5">
-                <span className="w-4 text-[11px] font-bold text-muted">{i + 1}</span>
-                <span className="min-w-0 flex-1 truncate text-[13px] font-semibold">
-                  {(exMap.get(it.exerciseId) as any)?.name ?? "Exercise"}
-                </span>
-                <span className="tabular text-[12px] text-muted">
-                  {it.sets} × {it.reps} · {it.restSec}s
-                </span>
+              <div key={i} className="flex items-center gap-3 rounded-xl bg-surface-2 px-3 py-2.5 sm:px-3.5">
+                <span className="w-4 shrink-0 text-[11px] font-bold text-muted">{i + 1}</span>
+                {/* Scheme drops under the name on phones so the name is never cut. */}
+                <div className="flex min-w-0 flex-1 flex-col sm:flex-row sm:items-center sm:gap-3">
+                  <span className="min-w-0 text-[13px] font-semibold leading-snug sm:flex-1 sm:truncate">
+                    {(exMap.get(it.exerciseId) as any)?.name ?? "Exercise"}
+                  </span>
+                  <span className="tabular shrink-0 text-[12px] text-muted">
+                    {it.sets} × {it.reps} · {it.restSec}s
+                  </span>
+                </div>
               </div>
             ))}
             {day.items.length === 0 && <p className="text-[13px] text-muted">No exercises in this session yet.</p>}
@@ -252,7 +255,7 @@ function DayEditor({
               {d.items.map((it: Item, i: number) => (
                 <div key={i} className="rounded-2xl border border-line bg-surface-2 p-3">
                   <div className="flex items-center gap-2">
-                    <span className="min-w-0 flex-1 truncate text-[13.5px] font-semibold">{nameOf(it.exerciseId)}</span>
+                    <span className="line-clamp-2 min-w-0 flex-1 text-[13.5px] font-semibold leading-snug">{nameOf(it.exerciseId)}</span>
                     <button onClick={() => move(i, -1)} className="rounded-lg p-1 text-muted hover:text-ink" aria-label="Move up">
                       <ArrowUp className="h-3.5 w-3.5" />
                     </button>
@@ -267,7 +270,7 @@ function DayEditor({
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>
                   </div>
-                  <div className="mt-2 grid grid-cols-3 gap-2">
+                  <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
                     <Field label="Sets">
                       <Stepper value={it.sets} onChange={(v) => patchItem(i, { sets: v ?? 3 })} step={1} min={1} max={12} />
                     </Field>

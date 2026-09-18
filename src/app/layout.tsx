@@ -9,14 +9,23 @@ export const metadata: Metadata = {
   title: "FitOpe — train, eat, recover",
   description:
     "A personal fitness companion for training, Indian nutrition tracking, sleep, recovery and long-term body transformation.",
+  applicationName: "FitOpe",
   appleWebApp: { capable: true, title: "FitOpe", statusBarStyle: "black-translucent" },
+  formatDetection: { telephone: false },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#eef1f5",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#eef1f5" },
+    { media: "(prefers-color-scheme: dark)", color: "#080a09" },
+  ],
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
+  /* The default (`resizes-visual`) lets the on-screen keyboard overlay the page,
+     which hides the Save button of every bottom sheet. Resizing the content box
+     instead keeps the sheet — and its `92dvh` cap — above the keyboard. */
+  interactiveWidget: "resizes-content",
 };
 
 /** Applies the saved theme before paint so there is no flash. */

@@ -6,8 +6,9 @@ import { useConvexAuth, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useEffect } from "react";
 import { cn } from "@/lib/utils";
-import { Activity, Apple, Dumbbell, House, Moon, TrendingUp, User } from "lucide-react";
+import { Activity, Apple, Dumbbell, House, Moon, TrendingUp, User, Users } from "lucide-react";
 import { Skeleton } from "@/components/ui";
+import { NudgeBanner } from "@/components/family";
 
 const TABS = [
   { href: "/home", label: "Home", icon: House },
@@ -31,9 +32,21 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     if (me && !me.profile?.onboardingComplete) router.replace("/onboarding");
   }, [me, router]);
 
+  // An invite link opened while signed out is resumed once the user is set up.
+  useEffect(() => {
+    if (!me?.profile?.onboardingComplete) return;
+    try {
+      const code = localStorage.getItem("fitope-join");
+      if (code) {
+        localStorage.removeItem("fitope-join");
+        router.replace(`/family?join=${code}`);
+      }
+    } catch {}
+  }, [me, router]);
+
   if (isLoading || !isAuthenticated || me === undefined) {
     return (
-      <div className="mx-auto max-w-lg space-y-4 p-5">
+      <div className="mx-auto max-w-lg space-y-4 px-5 pt-[calc(var(--safe-top)_+_1.25rem)] pb-5">
         <Skeleton className="h-24 w-full" />
         <Skeleton className="h-56 w-full" />
         <Skeleton className="h-40 w-full" />
@@ -43,6 +56,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="lg:flex">
+      <NudgeBanner />
       {/* Desktop rail */}
       <aside className="sticky top-0 hidden h-dvh w-60 shrink-0 flex-col border-r border-line px-4 py-6 lg:flex">
         <Link href="/home" className="mb-8 flex items-center gap-2.5 px-2">
@@ -68,6 +82,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </Link>
             );
           })}
+          <Link
+            href="/family"
+            className={cn(
+              "flex items-center gap-3 rounded-2xl px-3.5 py-2.5 text-[14px] font-medium transition-colors",
+              pathname.startsWith("/family") ? "bg-surface-2 text-ink" : "text-muted hover:bg-surface-2/60 hover:text-ink"
+            )}
+          >
+            <Users className={cn("h-[18px] w-[18px]", pathname.startsWith("/family") && "text-accent")} />
+            Family
+          </Link>
           <Link
             href="/timeline"
             className={cn(
@@ -99,12 +123,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </aside>
 
       <div className="min-w-0 flex-1">
-        <div className="mx-auto max-w-2xl px-4 pb-32 pt-5 sm:px-6 lg:max-w-3xl lg:pb-12">{children}</div>
+        <div className="mx-auto max-w-2xl px-4 pb-32 pt-[calc(var(--safe-top)_+_1.25rem)] sm:px-6 lg:max-w-3xl lg:pb-12">
+          {children}
+        </div>
       </div>
 
       {/* Mobile floating nav */}
-      <nav className="fixed inset-x-0 bottom-0 z-40 px-4 pb-[max(12px,env(safe-area-inset-bottom))] lg:hidden">
-        <div className="mx-auto flex max-w-md items-center justify-between gap-1 rounded-[26px] border border-line bg-surface/95 p-1.5 shadow-[var(--shadow)] backdrop-blur-xl">
+      <nav className="fixed inset-x-0 bottom-0 z-40 px-3 pb-[max(12px,var(--safe-bottom))] sm:px-4 lg:hidden">
+        <div className="mx-auto flex max-w-md items-center justify-between gap-0.5 rounded-[26px] border border-line bg-surface/95 p-1.5 shadow-[var(--shadow)] backdrop-blur-xl">
           {TABS.map((t) => {
             const active = pathname.startsWith(t.href);
             return (
@@ -113,24 +139,26 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 href={t.href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "flex flex-1 flex-col items-center gap-1 rounded-[20px] px-1 py-2.5 transition-all",
+                  "flex min-w-0 flex-1 flex-col items-center gap-0.5 rounded-[20px] px-0.5 py-2.5 transition-all",
                   active ? "bg-ink text-ground" : "text-muted active:scale-95"
                 )}
               >
-                <t.icon className="h-[19px] w-[19px]" strokeWidth={active ? 2.4 : 2} />
-                <span className="text-[10px] font-semibold tracking-tight">{t.label}</span>
+                <t.icon className="h-[19px] w-[19px] shrink-0" strokeWidth={active ? 2.4 : 2} />
+                <span className="w-full truncate text-center text-[9.5px] font-semibold tracking-tight">
+                  {t.label}
+                </span>
               </Link>
             );
           })}
           <Link
             href="/me"
             className={cn(
-              "flex flex-1 flex-col items-center gap-1 rounded-[20px] px-1 py-2.5 transition-all",
+              "flex min-w-0 flex-1 flex-col items-center gap-0.5 rounded-[20px] px-0.5 py-2.5 transition-all",
               pathname.startsWith("/me") ? "bg-ink text-ground" : "text-muted active:scale-95"
             )}
           >
-            <User className="h-[19px] w-[19px]" />
-            <span className="text-[10px] font-semibold tracking-tight">Me</span>
+            <User className="h-[19px] w-[19px] shrink-0" />
+            <span className="w-full truncate text-center text-[9.5px] font-semibold tracking-tight">Me</span>
           </Link>
         </div>
       </nav>

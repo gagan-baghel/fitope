@@ -231,10 +231,11 @@ export function RowCard({
       {leading}
       {tile}
       <div className="min-w-0 flex-1">
-        <div className="truncate text-[14px] font-bold leading-tight">{title}</div>
-        {subtitle && <div className="mt-0.5 truncate text-[12px] text-muted">{subtitle}</div>}
+        {/* Two lines before clipping: at 320px a single line cuts ordinary exercise names. */}
+        <div className="line-clamp-2 break-words text-[14px] font-bold leading-tight">{title}</div>
+        {subtitle && <div className="mt-0.5 line-clamp-2 text-[12px] leading-snug text-muted">{subtitle}</div>}
       </div>
-      {trailing}
+      {trailing && <div className="shrink-0">{trailing}</div>}
     </>
   );
   const cls = cn(

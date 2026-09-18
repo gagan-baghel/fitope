@@ -6,6 +6,8 @@ import assert from "node:assert/strict";
 import { bmr, computeTargets, e1rm, trendSeries, linearSlopePerWeek, readiness, bmi } from "../convex/lib/fitness";
 import { SEED_FOODS } from "../convex/data/foods";
 import { SEED_EXERCISES } from "../convex/data/exercises";
+import { isQuiet, normalizeCode, randomToken } from "../convex/lib/family";
+import { guardArgs } from "../convex/lib/guard";
 
 /* Mifflin-St Jeor, published worked example */
 assert.equal(Math.round(bmr({ weightKg: 80, heightCm: 180, age: 30, sex: "male" })), 1780);
@@ -79,5 +81,26 @@ for (const e of SEED_EXERCISES) {
   assert.ok(e.primaryMuscles.length > 0, `${e.name}: no primary muscle`);
   assert.ok(e.instructions.length >= 2, `${e.name}: needs cues`);
 }
+
+/* family: quiet hours wrap past midnight, codes are unambiguous and normalise */
+assert.equal(isQuiet(23 * 60 + 30), true);
+assert.equal(isQuiet(3 * 60), true);
+assert.equal(isQuiet(7 * 60), false);
+assert.equal(isQuiet(14 * 60), false);
+assert.equal(isQuiet(14 * 60, "13:00", "15:00"), true); // daytime sleeper
+assert.equal(isQuiet(16 * 60, "13:00", "15:00"), false);
+const code = randomToken(8);
+assert.match(code, /^[A-HJ-NP-Z2-9]{8}$/);
+assert.equal(normalizeCode(" ab2c-d3ef "), "AB2CD3EF");
+
+/* security guard: sizes, numbers and dates are policed before any handler runs */
+assert.doesNotThrow(() => guardArgs({ date: "2026-09-18", ml: 250, items: [{ q: "dal" }] }));
+assert.throws(() => guardArgs({ date: "2026-13-01" }), /YYYY-MM-DD/);
+assert.throws(() => guardArgs({ fromDate: "'; drop" }), /YYYY-MM-DD/);
+assert.throws(() => guardArgs({ note: "x".repeat(2001) }), /too long/);
+assert.throws(() => guardArgs({ ids: Array(201).fill("a") }), /too many/);
+assert.throws(() => guardArgs({ ml: Infinity }), /number/);
+assert.throws(() => guardArgs({ ml: NaN }), /number/);
+assert.throws(() => guardArgs({ a: { b: { c: { d: { e: { f: { g: 1 } } } } } } }), /nested/);
 
 console.log(`✓ fitness math, ${SEED_FOODS.length} foods and ${SEED_EXERCISES.length} exercises all check out`);

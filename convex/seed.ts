@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { mutation } from "./_generated/server";
+import { mutation, throttle, DAY } from "./lib/functions";
 import { requireUser, today, addDays, norm } from "./lib/util";
 import { SEED_EXERCISES } from "./data/exercises";
 import { SEED_FOODS } from "./data/foods";
@@ -13,6 +13,7 @@ const LIBRARY_VERSION = 1;
 export const ensureLibrary = mutation({
   args: {},
   handler: async (ctx) => {
+    await requireUser(ctx);
     const meta = await ctx.db
       .query("seedMeta")
       .withIndex("by_key", (q) => q.eq("key", "library"))
@@ -66,6 +67,9 @@ export const loadSampleHistory = mutation({
     // The server runs in UTC; shift generated wall-clock times into the user's zone.
     const tz = (tzOffsetMinutes ?? 0) * 60000;
     const userId = await requireUser(ctx);
+    // Each run writes ~1,000 rows; it is a one-time demo, not something to loop on.
+    await throttle(ctx, userId, "sample", { max: 3, windowMs: DAY });
+    if ((weeks ?? 6) < 1 || (weeks ?? 6) > 12) throw new Error("Weeks must be 1–12");
     const profile = await ctx.db
       .query("profiles")
       .withIndex("by_user", (q) => q.eq("userId", userId))

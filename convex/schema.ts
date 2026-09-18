@@ -21,6 +21,15 @@ export const measurementFields = v.object({
   calves: v.optional(v.number()),
 });
 
+/** What a family member lets the rest of the circle see. Photos are never shareable. */
+export const shareFields = v.object({
+  meals: v.boolean(),
+  water: v.boolean(),
+  workouts: v.boolean(),
+  sleep: v.boolean(),
+  body: v.boolean(),
+});
+
 export default defineSchema({
   ...authTables,
 
@@ -296,7 +305,9 @@ export default defineSchema({
     storageId: v.id("_storage"),
     weightKg: v.optional(v.number()),
     notes: v.optional(v.string()),
-  }).index("by_user_date", ["userId", "date"]),
+  })
+    .index("by_user_date", ["userId", "date"])
+    .index("by_storage", ["storageId"]),
 
   checkins: defineTable({
     userId: v.id("users"),
@@ -318,4 +329,73 @@ export default defineSchema({
   }).index("by_user", ["userId"]),
 
   seedMeta: defineTable({ key: v.string(), version: v.number(), count: v.number() }).index("by_key", ["key"]),
+
+  /* ------------------------------- Family ------------------------------- */
+
+  /** A family group. A user belongs to at most one circle. */
+  circles: defineTable({
+    name: v.string(),
+    ownerId: v.id("users"),
+    createdAt: v.number(),
+  }),
+
+  /** Membership + that member's own privacy choices. Every family read is gated on this row. */
+  circleMembers: defineTable({
+    circleId: v.id("circles"),
+    userId: v.id("users"),
+    role: v.union(v.literal("owner"), v.literal("member")),
+    status: v.union(v.literal("pending"), v.literal("active")),
+    shares: shareFields,
+    paused: v.boolean(),
+    mutedUserIds: v.array(v.id("users")),
+    timezone: v.string(), // IANA, so "today" and quiet hours are the member's own
+    joinedAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_circle", ["circleId"]),
+
+  /** Code alone → owner approves. Code + password → instant join. */
+  circleInvites: defineTable({
+    circleId: v.id("circles"),
+    code: v.string(),
+    createdBy: v.id("users"),
+    passwordHash: v.optional(v.string()), // "salt:hash", PBKDF2-SHA256
+    expiresAt: v.number(),
+    maxUses: v.number(),
+    uses: v.number(),
+    failedAttempts: v.number(),
+    revoked: v.boolean(),
+  })
+    .index("by_code", ["code"])
+    .index("by_circle", ["circleId"]),
+
+  nudges: defineTable({
+    circleId: v.id("circles"),
+    fromId: v.id("users"),
+    toId: v.id("users"),
+    kind: v.string(), // water | eat | protein | move | workout | sleep | cheer
+    message: v.optional(v.string()),
+    createdAt: v.number(),
+    seenAt: v.optional(v.number()),
+  })
+    .index("by_to", ["toId", "createdAt"])
+    .index("by_from_to", ["fromId", "toId", "createdAt"])
+    .index("by_circle", ["circleId"]),
+
+  /** Per-user fixed-window counters behind `throttle()` in lib/functions. */
+  rateLimits: defineTable({
+    key: v.string(), // `${userId}:${bucket}`
+    windowStart: v.number(),
+    count: v.number(),
+  }).index("by_key", ["key"]),
+
+  pushSubscriptions: defineTable({
+    userId: v.id("users"),
+    endpoint: v.string(),
+    p256dh: v.string(),
+    auth: v.string(),
+    createdAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_endpoint", ["endpoint"]),
 });

@@ -1,7 +1,7 @@
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { mutation, query } from "./lib/functions";
 import { getAuthUserId } from "@convex-dev/auth/server";
-import { requireUser, norm } from "./lib/util";
+import { requireUser, norm, visibleTo } from "./lib/util";
 
 /** Library rows (no owner) plus the caller's own custom exercises. */
 export const list = query({
@@ -45,19 +45,20 @@ export const list = query({
     if (category) rows = rows.filter((r) => r.category === category);
     if (muscle) rows = rows.filter((r) => [...r.primaryMuscles, ...r.secondaryMuscles].includes(muscle));
     if (equipment) rows = rows.filter((r) => r.equipment.includes(equipment));
-    return rows.slice(0, limit ?? 300);
+    return rows.slice(0, Math.min(limit ?? 300, 300));
   },
 });
 
 export const get = query({
   args: { id: v.id("exercises") },
-  handler: async (ctx, { id }) => await ctx.db.get(id),
+  handler: async (ctx, { id }) => visibleTo(await ctx.db.get(id), await getAuthUserId(ctx)),
 });
 
 export const byIds = query({
   args: { ids: v.array(v.id("exercises")) },
   handler: async (ctx, { ids }) => {
-    const out = await Promise.all(ids.map((id) => ctx.db.get(id)));
+    const userId = await getAuthUserId(ctx);
+    const out = await Promise.all(ids.map(async (id) => visibleTo(await ctx.db.get(id), userId)));
     return out.filter(Boolean);
   },
 });
@@ -120,7 +121,7 @@ export const history = query({
     }
     return [...byDate.values()]
       .sort((a, b) => (a.date < b.date ? 1 : -1))
-      .slice(0, limit ?? 10)
+      .slice(0, Math.min(limit ?? 10, 50))
       .map((d) => ({
         date: d.date,
         sets: d.sets.sort((a, b) => a.index - b.index),

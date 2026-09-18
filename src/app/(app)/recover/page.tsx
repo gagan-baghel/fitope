@@ -39,9 +39,9 @@ export default function Recover() {
 
   return (
     <div className="space-y-5">
-      <header className="flex items-center justify-between pt-1">
-        <h1 className="text-[26px] font-bold tracking-tight">Recovery</h1>
-        <div className="flex gap-2">
+      <header className="flex min-w-0 items-center justify-between gap-3 pt-1">
+        <h1 className="min-w-0 text-[22px] font-bold tracking-tight sm:text-[26px]">Recovery</h1>
+        <div className="flex shrink-0 gap-1.5">
           <Button size="sm" variant="soft" onClick={() => setSheet("checkin")}>
             <HeartPulse className="h-4 w-4" /> Check in
           </Button>
@@ -53,7 +53,9 @@ export default function Recover() {
 
       {/* Readiness */}
       <Card>
-        <div className="flex items-center gap-5">
+        {/* Stacks on phones — side by side the ring leaves the advice column
+            too narrow to read on a 320px screen. */}
+        <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:gap-5 sm:text-left">
           <Ring
             value={readiness!.score}
             max={100}
@@ -68,7 +70,7 @@ export default function Recover() {
           </Ring>
           <div className="min-w-0 flex-1">
             <p className="text-[14px] font-medium leading-snug">{readiness!.advice}</p>
-            <div className="mt-2.5 flex flex-wrap gap-1.5">
+            <div className="mt-2.5 flex flex-wrap justify-center gap-1.5 sm:justify-start">
               {readiness!.reasons.map((r: string) => (
                 <Pill key={r}>{r}</Pill>
               ))}

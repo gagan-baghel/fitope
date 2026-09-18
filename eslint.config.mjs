@@ -17,6 +17,25 @@ const eslintConfig = defineConfig([
       "@next/next/no-img-element": "off",
     },
   },
+  {
+    // Every public Convex function must go through lib/functions (arg guard + write throttle).
+    files: ["convex/**/*.ts"],
+    ignores: ["convex/lib/functions.ts", "convex/_generated/**"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          paths: [
+            {
+              name: "./_generated/server",
+              importNames: ["mutation", "query", "action"],
+              message: "Import mutation/query from ./lib/functions so the security guard applies.",
+            },
+          ],
+        },
+      ],
+    },
+  },
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:

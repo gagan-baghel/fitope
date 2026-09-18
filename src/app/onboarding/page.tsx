@@ -188,7 +188,7 @@ function Onboarding({ me }: { me: any }) {
       <header className="mb-6">
         <div className="mb-4 flex items-center gap-3">
           {step > 0 && (
-            <button onClick={() => setStep(step - 1)} className="rounded-xl p-1.5 text-muted hover:bg-surface-2 hover:text-ink">
+            <button onClick={() => setStep(step - 1)} className="-m-1.5 rounded-xl p-3 text-muted hover:bg-surface-2 hover:text-ink">
               <ArrowLeft className="h-5 w-5" />
             </button>
           )}
@@ -324,7 +324,7 @@ function Onboarding({ me }: { me: any }) {
               />
             </Field>
             <Field label="Preferred days">
-              <div className="flex gap-2">
+              <div className="flex gap-1.5">
                 {DAY_LABELS.map((l, i) => (
                   <button
                     key={i}
@@ -337,7 +337,7 @@ function Onboarding({ me }: { me: any }) {
                       })
                     }
                     className={cn(
-                      "h-11 flex-1 rounded-xl border text-[13px] font-semibold transition-all",
+                      "h-10 flex-1 rounded-xl border text-[12px] font-semibold transition-all",
                       d.preferredDays.includes(i)
                         ? "border-accent bg-accent text-accent-ink"
                         : "border-line bg-surface-2 text-muted"
@@ -465,7 +465,7 @@ function Onboarding({ me }: { me: any }) {
       </div>
 
       {step < STEPS.length - 1 && (
-        <footer className="sticky bottom-0 -mx-5 mt-6 bg-gradient-to-t from-bg via-bg to-transparent px-5 pb-2 pt-4">
+        <footer className="sticky bottom-0 -mx-5 mt-6 bg-gradient-to-t from-bg via-bg to-transparent px-5 pt-4 pb-[max(0.5rem,var(--safe-bottom))]">
           <div className="flex gap-3">
             <Button variant="ghost" size="lg" onClick={() => persist(step + 1)}>
               Skip

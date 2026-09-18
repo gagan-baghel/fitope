@@ -171,7 +171,7 @@ export function CreateFood({
                 <option key={u} value={u} />
               ))}
             </datalist>
-            <Stepper value={newGrams} onChange={setNewGrams} step={10} max={2000} suffix="g" className="w-32" />
+            <Stepper value={newGrams} onChange={setNewGrams} step={10} max={2000} suffix="g" className="w-28 sm:w-32" />
             <Button
               variant="soft"
               size="icon"
