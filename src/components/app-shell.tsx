@@ -44,7 +44,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     } catch {}
   }, [me, router]);
 
-  if (isLoading || !isAuthenticated || me === undefined) {
+  // Only auth gates rendering: the profile and the page's own queries load in parallel
+  // instead of one after the other (each hop is a full round trip to the backend).
+  if (isLoading || !isAuthenticated) {
     return (
       <div className="mx-auto max-w-lg space-y-4 px-5 pt-[calc(var(--safe-top)_+_1.25rem)] pb-5">
         <Skeleton className="h-24 w-full" />
