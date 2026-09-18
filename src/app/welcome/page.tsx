@@ -29,7 +29,7 @@ export default function Welcome() {
   const mode = chosen ?? (invited ? "signUp" : "signIn");
 
   useEffect(() => {
-    if (isAuthenticated) router.replace("/");
+    if (isAuthenticated) router.replace("/home");
   }, [isAuthenticated, router]);
 
   async function submit(e: React.FormEvent<HTMLFormElement>) {
@@ -40,7 +40,8 @@ export default function Welcome() {
     form.set("email", String(form.get("email") ?? "").trim().toLowerCase());
     try {
       await signIn("password", form);
-      router.replace("/");
+      // New accounts go straight to onboarding instead of bouncing through Home.
+      router.replace(mode === "signUp" ? "/onboarding" : "/home");
     } catch (err: any) {
       const msg = String(err?.message ?? "");
       toast({
