@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Button, Field, Input, Segmented, Sheet, Stepper, Textarea, useToast } from "@/components/ui";
-import { todayStr } from "@/lib/utils";
+import { todayStr, errorText } from "@/lib/utils";
 import { useUnits } from "@/lib/units";
 
 export function WeightSheet({
@@ -47,7 +47,7 @@ export function WeightSheet({
       toast({ message: "Body log saved" });
       onClose();
     } catch (e: any) {
-      toast({ message: e.message, tone: "var(--rose)" });
+      toast({ message: errorText(e), tone: "var(--rose)" });
     } finally {
       setBusy(false);
     }
@@ -131,7 +131,7 @@ export function SleepSheet({ open, onClose, defaults }: { open: boolean; onClose
       toast({ message: "Sleep logged" });
       onClose();
     } catch (e: any) {
-      toast({ message: e.message, tone: "var(--rose)" });
+      toast({ message: errorText(e), tone: "var(--rose)" });
     } finally {
       setBusy(false);
     }

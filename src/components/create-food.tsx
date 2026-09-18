@@ -5,7 +5,7 @@ import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Button, Chip, Field, Input, Segmented, Sheet, Stepper, useToast } from "@/components/ui";
 import { Plus, X } from "lucide-react";
-import { titleCase } from "@/lib/utils";
+import { titleCase, errorText } from "@/lib/utils";
 
 const CATEGORIES = [
   "breads", "south_indian", "breakfast", "grains", "rice_dishes", "dal_legumes", "sabzi",
@@ -77,7 +77,7 @@ export function CreateFood({
               setName("");
               setPer100({ kcal: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 });
             } catch (e: any) {
-              toast({ message: e.message, tone: "var(--rose)" });
+              toast({ message: errorText(e), tone: "var(--rose)" });
             } finally {
               setBusy(false);
             }

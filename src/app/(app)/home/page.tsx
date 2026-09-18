@@ -28,7 +28,7 @@ import {
   TrendingUp,
   UtensilsCrossed,
 } from "lucide-react";
-import { cn, hhmm } from "@/lib/utils";
+import { cn, hhmm, errorText } from "@/lib/utils";
 import { useUnits } from "@/lib/units";
 
 const REMINDER_LINKS: Record<string, string> = {
@@ -76,7 +76,7 @@ export default function Home() {
       const id = await startWorkout({});
       router.push(`/train/session/${id}`);
     } catch (e: any) {
-      toast({ message: e.message, tone: "var(--rose)" });
+      toast({ message: errorText(e), tone: "var(--rose)" });
       setStarting(false);
     }
   }

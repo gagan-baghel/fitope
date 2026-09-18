@@ -16,7 +16,7 @@ import {
   useToast,
 } from "@/components/ui";
 import { ArrowLeft, ArrowRight, Check, Dumbbell, Sparkles } from "lucide-react";
-import { DAY_LABELS, cn } from "@/lib/utils";
+import { DAY_LABELS, cn, errorText } from "@/lib/utils";
 
 type Draft = {
   name: string;
@@ -167,7 +167,7 @@ function Onboarding({ me }: { me: any }) {
       toast({ message: withSample ? "Plan built with 6 weeks of sample history" : "Your plan is ready" });
       router.replace("/home");
     } catch (e: any) {
-      toast({ message: e?.message ?? "Something went wrong", tone: "var(--rose)" });
+      toast({ message: errorText(e), tone: "var(--rose)" });
       setBusy(false);
     }
   }

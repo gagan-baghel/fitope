@@ -20,7 +20,7 @@ import {
 } from "@/components/ui";
 import { ArrowLeft, CookingPot, Pencil, Plus, Search, Trash2, X } from "lucide-react";
 import { CreateFood } from "@/components/create-food";
-import { titleCase } from "@/lib/utils";
+import { titleCase, errorText } from "@/lib/utils";
 
 export function FoodsHub({ initialTab = "foods" }: { initialTab?: "foods" | "recipes" }) {
   const [tab, setTab] = useState<string>(initialTab);
@@ -269,7 +269,7 @@ function RecipeBuilder({ open, onClose }: { open: boolean; onClose: () => void }
               setItems([]);
               onClose();
             } catch (e: any) {
-              toast({ message: e.message, tone: "var(--rose)" });
+              toast({ message: errorText(e), tone: "var(--rose)" });
             } finally {
               setBusy(false);
             }

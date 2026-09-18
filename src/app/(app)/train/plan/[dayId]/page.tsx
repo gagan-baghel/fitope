@@ -21,7 +21,7 @@ import {
   Timer,
   Trophy,
 } from "lucide-react";
-import { DAY_NAMES, prettyDate } from "@/lib/utils";
+import { DAY_NAMES, prettyDate, errorText } from "@/lib/utils";
 
 /**
  * Plan-day detail, laid out like the reference: pastel hero, goal chips, a
@@ -70,7 +70,7 @@ export default function PlanDay() {
       const id = await start({ programDayId: dayId as any });
       router.push(`/train/session/${id}`);
     } catch (e: any) {
-      toast({ message: e.message, tone: "var(--rose)" });
+      toast({ message: errorText(e), tone: "var(--rose)" });
       setBusy(false);
     }
   }
