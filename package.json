@@ -8,7 +8,7 @@
     "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint",
-    "check": "tsx scripts/check-fitness-math.ts",
+    "check": "tsx scripts/check-fitness-math.ts && TZ=Asia/Kolkata tsx scripts/check-fitness-math.ts && TZ=America/Los_Angeles tsx scripts/check-fitness-math.ts",
     "seed": "convex run seed:ensureLibrary"
   },
   "dependencies": {

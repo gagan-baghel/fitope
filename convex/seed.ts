@@ -1,6 +1,6 @@
 import { v } from "convex/values";
 import { mutation, throttle, DAY } from "./lib/functions";
-import { requireUser, today, addDays, norm } from "./lib/util";
+import { requireUser, todayFor, addDays, norm, weekday } from "./lib/util";
 import { SEED_EXERCISES } from "./data/exercises";
 import { SEED_FOODS } from "./data/foods";
 import { nutrientsFor } from "./foods";
@@ -76,7 +76,7 @@ export const loadSampleHistory = mutation({
       .unique();
     const rand = rng(42);
     const days = (weeks ?? 6) * 7;
-    const start = addDays(today(), -days + 1);
+    const start = addDays(await todayFor(ctx, userId), -days + 1);
 
     const program = (
       await ctx.db
@@ -118,7 +118,7 @@ export const loadSampleHistory = mutation({
     let inserted = 0;
     for (let i = 0; i < days; i++) {
       const date = addDays(start, i);
-      const wd = new Date(date + "T00:00:00").getDay();
+      const wd = weekday(date);
 
       /* body weight most mornings (never double up on a date the user already logged) */
       const existingBody = await ctx.db

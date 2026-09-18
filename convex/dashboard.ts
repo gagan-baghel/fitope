@@ -1,7 +1,7 @@
 import { v } from "convex/values";
 import { query } from "./lib/functions";
 import { getAuthUserId } from "@convex-dev/auth/server";
-import { today, addDays, daysBetween } from "./lib/util";
+import { todayFor, addDays, daysBetween, weekday } from "./lib/util";
 import { targetsOn } from "./profiles";
 import { programDayForDate } from "./programs";
 import { pickWorkoutOfDay } from "./workouts";
@@ -13,7 +13,7 @@ export const home = query({
   handler: async (ctx, { date }) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) return null;
-    const d = date ?? today();
+    const d = date ?? (await todayFor(ctx, userId));
     const profile = await ctx.db
       .query("profiles")
       .withIndex("by_user", (q) => q.eq("userId", userId))
@@ -172,7 +172,7 @@ export const home = query({
           .withIndex("by_user", (q) => q.eq("userId", userId))
           .collect()
       )
-        .filter((r) => r.enabled && r.days.includes(new Date(d + "T00:00:00").getDay()))
+        .filter((r) => r.enabled && r.days.includes(weekday(d)))
         .filter((r) => {
           switch (r.kind) {
             case "workout":
@@ -202,7 +202,7 @@ export const timeline = query({
   handler: async (ctx, { days }) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) return [];
-    const from = addDays(today(), -(days ?? 14) + 1);
+    const from = addDays((await todayFor(ctx, userId)), -Math.min(Math.max(days ?? 14, 1), 90) + 1);
     const [workouts, meals, sleep, body, photos, checkins] = await Promise.all([
       ctx.db
         .query("workouts")

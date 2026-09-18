@@ -1,7 +1,7 @@
 import { v } from "convex/values";
 import { mutation, query } from "./lib/functions";
 import { getAuthUserId } from "@convex-dev/auth/server";
-import { requireUser, today, addDays, visibleTo } from "./lib/util";
+import { requireUser, todayFor, addDays, visibleTo } from "./lib/util";
 import { nutrientsFor } from "./foods";
 import { targetsOn } from "./profiles";
 import { Doc } from "./_generated/dataModel";
@@ -26,7 +26,7 @@ export const day = query({
   handler: async (ctx, { date }) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) return null;
-    const d = date ?? today();
+    const d = date ?? (await todayFor(ctx, userId));
     const entries = await ctx.db
       .query("mealEntries")
       .withIndex("by_user_date", (q) => q.eq("userId", userId).eq("date", d))
@@ -86,7 +86,7 @@ export const logEntry = mutation({
   },
   handler: async (ctx, args) => {
     const userId = await requireUser(ctx);
-    const d = args.date ?? today();
+    const d = args.date ?? (await todayFor(ctx, userId));
     if (args.qty <= 0 || args.qty > 100) throw new Error("Quantity looks wrong — enter between 0 and 100");
 
     if (args.manual) {
@@ -160,7 +160,7 @@ export const logTemplate = mutation({
     const userId = await requireUser(ctx);
     const t = await ctx.db.get(templateId);
     if (!t || t.userId !== userId) throw new Error("Not found");
-    const d = date ?? today();
+    const d = date ?? (await todayFor(ctx, userId));
     let n = 0;
     for (const item of t.items) {
       const food = visibleTo(await ctx.db.get(item.foodId), userId);
@@ -189,7 +189,7 @@ export const repeatMeal = mutation({
   args: { fromDate: v.string(), meal: v.optional(v.string()), toDate: v.optional(v.string()) },
   handler: async (ctx, { fromDate, meal, toDate }) => {
     const userId = await requireUser(ctx);
-    const d = toDate ?? today();
+    const d = toDate ?? (await todayFor(ctx, userId));
     const src = (
       await ctx.db
         .query("mealEntries")
@@ -271,13 +271,13 @@ export const range = query({
   handler: async (ctx, { days }) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) return [];
-    const n = days ?? 30;
-    const from = addDays(today(), -n + 1);
+    const n = Math.min(Math.max(days ?? 30, 1), 365);
+    const from = addDays((await todayFor(ctx, userId)), -n + 1);
     const entries = await ctx.db
       .query("mealEntries")
       .withIndex("by_user_date", (q) => q.eq("userId", userId).gte("date", from))
       .collect();
-    const target = await targetsOn(ctx, userId, today());
+    const target = await targetsOn(ctx, userId, (await todayFor(ctx, userId)));
     const byDate = new Map<string, Doc<"mealEntries">[]>();
     for (const e of entries) {
       if (!byDate.has(e.date)) byDate.set(e.date, []);
@@ -300,7 +300,7 @@ export const logWater = mutation({
   handler: async (ctx, { ml, date }) => {
     const userId = await requireUser(ctx);
     if (Math.abs(ml) > 3000) throw new Error("That is a lot of water in one go");
-    return await ctx.db.insert("waterLogs", { userId, date: date ?? today(), ml, at: Date.now() });
+    return await ctx.db.insert("waterLogs", { userId, date: date ?? (await todayFor(ctx, userId)), ml, at: Date.now() });
   },
 });
 
@@ -308,9 +308,10 @@ export const undoWater = mutation({
   args: { date: v.optional(v.string()) },
   handler: async (ctx, { date }) => {
     const userId = await requireUser(ctx);
+    const d = date ?? (await todayFor(ctx, userId));
     const rows = await ctx.db
       .query("waterLogs")
-      .withIndex("by_user_date", (q) => q.eq("userId", userId).eq("date", date ?? today()))
+      .withIndex("by_user_date", (q) => q.eq("userId", userId).eq("date", d))
       .collect();
     const last = rows.sort((a, b) => b.at - a.at)[0];
     if (last) await ctx.db.delete(last._id);

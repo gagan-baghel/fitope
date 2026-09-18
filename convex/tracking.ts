@@ -1,7 +1,7 @@
 import { v } from "convex/values";
 import { mutation, query, throttle, HOUR } from "./lib/functions";
 import { getAuthUserId } from "@convex-dev/auth/server";
-import { requireUser, today, addDays, daysBetween } from "./lib/util";
+import { requireUser, todayFor, addDays, daysBetween } from "./lib/util";
 import { trendSeries, linearSlopePerWeek, readiness } from "./lib/fitness";
 import { targetsOn } from "./profiles";
 
@@ -28,7 +28,7 @@ export const logBody = mutation({
   },
   handler: async (ctx, { date, ...rest }) => {
     const userId = await requireUser(ctx);
-    const d = date ?? today();
+    const d = date ?? (await todayFor(ctx, userId));
     if (rest.weightKg != null && (rest.weightKg < 20 || rest.weightKg > 400))
       throw new Error("Weight must be between 20 and 400 kg");
     if (rest.bodyFatPct != null && (rest.bodyFatPct < 2 || rest.bodyFatPct > 70))
@@ -66,7 +66,7 @@ export const bodyHistory = query({
   handler: async (ctx, { days }) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) return { points: [], slopePerWeek: 0, measurements: [], latest: null, first: null };
-    const from = addDays(today(), -(days ?? 180));
+    const from = addDays((await todayFor(ctx, userId)), -Math.min(Math.max(days ?? 180, 1), 730));
     const rows = (
       await ctx.db
         .query("bodyMetrics")
@@ -132,13 +132,13 @@ export const sleepHistory = query({
   handler: async (ctx, { days }) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) return { nights: [], avgMinutes: 0, consistency: 0, target: 480, adherence: 0 };
-    const n = days ?? 30;
-    const from = addDays(today(), -n + 1);
+    const n = Math.min(Math.max(days ?? 30, 1), 365);
+    const from = addDays((await todayFor(ctx, userId)), -n + 1);
     const rows = await ctx.db
       .query("sleepSessions")
       .withIndex("by_user_date", (q) => q.eq("userId", userId).gte("date", from))
       .collect();
-    const target = (await targetsOn(ctx, userId, today()))?.sleepMinutes ?? 480;
+    const target = (await targetsOn(ctx, userId, (await todayFor(ctx, userId))))?.sleepMinutes ?? 480;
     const byDate = new Map<string, { minutes: number; bedAt: number; wakeAt: number; quality?: number }>();
     for (const r of rows) {
       const cur = byDate.get(r.date);
@@ -202,7 +202,7 @@ export const logCheckin = mutation({
   },
   handler: async (ctx, { date, ...rest }) => {
     const userId = await requireUser(ctx);
-    const d = date ?? today();
+    const d = date ?? (await todayFor(ctx, userId));
     const existing = await ctx.db
       .query("checkins")
       .withIndex("by_user_date", (q) => q.eq("userId", userId).eq("date", d))
@@ -220,7 +220,7 @@ export const recovery = query({
   handler: async (ctx, { date }) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) return null;
-    const d = date ?? today();
+    const d = date ?? (await todayFor(ctx, userId));
     const checkin = await ctx.db
       .query("checkins")
       .withIndex("by_user_date", (q) => q.eq("userId", userId).eq("date", d))
@@ -276,7 +276,7 @@ export const checkinHistory = query({
   handler: async (ctx, { days }) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) return [];
-    const from = addDays(today(), -(days ?? 30));
+    const from = addDays((await todayFor(ctx, userId)), -Math.min(Math.max(days ?? 30, 1), 365));
     return (
       await ctx.db
         .query("checkins")
@@ -323,7 +323,7 @@ export const savePhoto = mutation({
       userId,
       storageId,
       pose,
-      date: date ?? today(),
+      date: date ?? (await todayFor(ctx, userId)),
       weightKg,
       notes,
     });

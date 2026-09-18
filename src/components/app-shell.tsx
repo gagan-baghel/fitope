@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useConvexAuth, useQuery } from "convex/react";
+import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useEffect } from "react";
-import { cn } from "@/lib/utils";
+import { cn, deviceTimezone } from "@/lib/utils";
 import { Activity, Apple, Dumbbell, House, Moon, TrendingUp, User, Users } from "lucide-react";
 import { Logo, Skeleton } from "@/components/ui";
 import { NudgeBanner } from "@/components/family";
@@ -31,6 +31,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (me && !me.profile?.onboardingComplete) router.replace("/onboarding");
   }, [me, router]);
+
+  // "Today" is computed server-side in this zone; keep it current (travel, new device).
+  const setTimezone = useMutation(api.profiles.setTimezone);
+  useEffect(() => {
+    const tz = deviceTimezone();
+    if (me?.profile && me.profile.timezone !== tz) setTimezone({ timezone: tz }).catch(() => {});
+  }, [me?.profile, setTimezone]);
 
   // An invite link opened while signed out is resumed once the user is set up.
   useEffect(() => {

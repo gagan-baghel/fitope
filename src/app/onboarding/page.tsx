@@ -16,7 +16,7 @@ import {
   useToast,
 } from "@/components/ui";
 import { ArrowLeft, ArrowRight, Check, Dumbbell, Sparkles } from "lucide-react";
-import { DAY_LABELS, cn, errorText } from "@/lib/utils";
+import { DAY_LABELS, cn, errorText, deviceTimezone } from "@/lib/utils";
 
 type Draft = {
   name: string;
@@ -150,6 +150,7 @@ function Onboarding({ me }: { me: any }) {
       bedtime: d.bedtime,
       wakeTime: d.wakeTime,
       units: d.units,
+      timezone: deviceTimezone(),
       onboardingStep: next,
     });
   }

@@ -56,6 +56,7 @@ export default defineSchema({
     wakeTime: v.optional(v.string()),
     units: v.optional(v.string()), // metric | imperial
     theme: v.optional(v.string()),
+    timezone: v.optional(v.string()), // IANA; "today" is computed in this zone
     onboardingComplete: v.boolean(),
     onboardingStep: v.optional(v.number()),
     hasSampleData: v.optional(v.boolean()),
@@ -367,7 +368,9 @@ export default defineSchema({
     revoked: v.boolean(),
   })
     .index("by_code", ["code"])
-    .index("by_circle", ["circleId"]),
+    .index("by_circle", ["circleId"])
+    .index("by_creator", ["createdBy"])
+    .index("by_expires", ["expiresAt"]),
 
   nudges: defineTable({
     circleId: v.id("circles"),
@@ -380,14 +383,17 @@ export default defineSchema({
   })
     .index("by_to", ["toId", "createdAt"])
     .index("by_from_to", ["fromId", "toId", "createdAt"])
-    .index("by_circle", ["circleId"]),
+    .index("by_circle", ["circleId"])
+    .index("by_created", ["createdAt"]),
 
   /** Per-user fixed-window counters behind `throttle()` in lib/functions. */
   rateLimits: defineTable({
     key: v.string(), // `${userId}:${bucket}`
     windowStart: v.number(),
     count: v.number(),
-  }).index("by_key", ["key"]),
+  })
+    .index("by_key", ["key"])
+    .index("by_window", ["windowStart"]),
 
   pushSubscriptions: defineTable({
     userId: v.id("users"),

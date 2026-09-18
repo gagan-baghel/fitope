@@ -1,10 +1,11 @@
 import { v } from "convex/values";
 import { mutation, query } from "./lib/functions";
 import { getAuthUserId } from "@convex-dev/auth/server";
-import { requireUser, today } from "./lib/util";
+import { requireUser, todayFor, safeTz } from "./lib/util";
 import { computeTargets } from "./lib/fitness";
 
 const profileFields = {
+  timezone: v.optional(v.string()),
   name: v.optional(v.string()),
   sex: v.optional(v.union(v.literal("male"), v.literal("female"), v.literal("other"))),
   birthYear: v.optional(v.number()),
@@ -75,6 +76,20 @@ export async function targetsOn(ctx: any, userId: any, date: string) {
   return await currentTargets(ctx, userId);
 }
 
+/** Keeps "today" right when the user travels or first opens the app on a new device. */
+export const setTimezone = mutation({
+  args: { timezone: v.string() },
+  handler: async (ctx, { timezone }) => {
+    const userId = await requireUser(ctx);
+    const tz = safeTz(timezone);
+    const profile = await ctx.db
+      .query("profiles")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .unique();
+    if (profile && profile.timezone !== tz) await ctx.db.patch(profile._id, { timezone: tz });
+  },
+});
+
 export const saveProfile = mutation({
   args: profileFields,
   handler: async (ctx, args) => {
@@ -83,7 +98,8 @@ export const saveProfile = mutation({
       .query("profiles")
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .unique();
-    const clean = Object.fromEntries(Object.entries(args).filter(([, v]) => v !== undefined));
+    const clean: Record<string, unknown> = Object.fromEntries(Object.entries(args).filter(([, v]) => v !== undefined));
+    if (args.timezone) clean.timezone = safeTz(args.timezone);
     if (existing) {
       await ctx.db.patch(existing._id, clean);
       return existing._id;
@@ -111,14 +127,15 @@ export const completeOnboarding = mutation({
 
     // Seed the first weight point from onboarding so charts have an anchor.
     if (profile.startWeightKg) {
+      const d = await todayFor(ctx, userId);
       const existing = await ctx.db
         .query("bodyMetrics")
-        .withIndex("by_user_date", (q) => q.eq("userId", userId).eq("date", today()))
+        .withIndex("by_user_date", (q) => q.eq("userId", userId).eq("date", d))
         .unique();
       if (!existing) {
         await ctx.db.insert("bodyMetrics", {
           userId,
-          date: today(),
+          date: d,
           weightKg: profile.startWeightKg,
         });
       }
@@ -159,7 +176,7 @@ export async function recalcTargets(ctx: any, userId: any, source: string) {
     targetWeightKg: profile.targetWeightKg,
     sleepTargetMinutes: sleepMinutes,
   });
-  const date = today();
+  const date = (await todayFor(ctx, userId));
   const existingToday = await ctx.db
     .query("targets")
     .withIndex("by_user_date", (q: any) => q.eq("userId", userId).eq("effectiveFrom", date))
@@ -205,7 +222,7 @@ export const setCustomTargets = mutation({
   },
   handler: async (ctx, args) => {
     const userId = await requireUser(ctx);
-    const date = today();
+    const date = (await todayFor(ctx, userId));
     const existing = await ctx.db
       .query("targets")
       .withIndex("by_user_date", (q) => q.eq("userId", userId).eq("effectiveFrom", date))

@@ -1,6 +1,9 @@
 import { QueryCtx, MutationCtx } from "../_generated/server";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { Id } from "../_generated/dataModel";
+import { localDate } from "./dates";
+
+export { safeTz, localDate, today, addDays, daysBetween, weekday } from "./dates";
 
 export async function requireUser(ctx: QueryCtx | MutationCtx): Promise<Id<"users">> {
   const userId = await getAuthUserId(ctx);
@@ -12,26 +15,17 @@ export async function currentUser(ctx: QueryCtx | MutationCtx) {
   return await getAuthUserId(ctx);
 }
 
-export function today(offsetDays = 0) {
-  const d = new Date();
-  d.setDate(d.getDate() + offsetDays);
-  return d.toISOString().slice(0, 10);
-}
-
-export function addDays(date: string, n: number) {
-  const d = new Date(date + "T00:00:00");
-  d.setDate(d.getDate() + n);
-  return d.toISOString().slice(0, 10);
-}
-
-export function daysBetween(a: string, b: string) {
-  return Math.round(
-    (new Date(b + "T00:00:00").getTime() - new Date(a + "T00:00:00").getTime()) / 86400000
-  );
-}
-
-export function weekday(date: string) {
-  return new Date(date + "T00:00:00").getDay();
+/**
+ * "Today" for this user, in their own time zone. The server runs in UTC, so plain today()
+ * would file an Indian user's 1am breakfast under yesterday and a Californian's dinner
+ * under tomorrow.
+ */
+export async function todayFor(ctx: QueryCtx | MutationCtx, userId: Id<"users">) {
+  const profile = await ctx.db
+    .query("profiles")
+    .withIndex("by_user", (q) => q.eq("userId", userId))
+    .unique();
+  return localDate(profile?.timezone);
 }
 
 export const norm = (s: string) => s.toLowerCase().replace(/\s+/g, " ").trim();

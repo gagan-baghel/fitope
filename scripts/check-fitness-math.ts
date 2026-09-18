@@ -8,6 +8,8 @@ import { SEED_FOODS } from "../convex/data/foods";
 import { SEED_EXERCISES } from "../convex/data/exercises";
 import { isQuiet, normalizeCode, randomToken } from "../convex/lib/family";
 import { guardArgs } from "../convex/lib/guard";
+import { addDays as serverAddDays, daysBetween, localDate, weekday } from "../convex/lib/dates";
+import { addDays as clientAddDays, todayStr } from "../src/lib/utils";
 
 /* Mifflin-St Jeor, published worked example */
 assert.equal(Math.round(bmr({ weightKg: 80, heightCm: 180, age: 30, sex: "male" })), 1780);
@@ -102,5 +104,21 @@ assert.throws(() => guardArgs({ ids: Array(201).fill("a") }), /too many/);
 assert.throws(() => guardArgs({ ml: Infinity }), /number/);
 assert.throws(() => guardArgs({ ml: NaN }), /number/);
 assert.throws(() => guardArgs({ a: { b: { c: { d: { e: { f: { g: 1 } } } } } } }), /nested/);
+
+/* dates: must be right in every zone (run with TZ=Asia/Kolkata and TZ=America/Los_Angeles too) */
+for (const addDays of [serverAddDays, clientAddDays]) {
+  assert.equal(addDays("2026-09-19", 1), "2026-09-20");
+  assert.equal(addDays("2026-09-19", -1), "2026-09-18");
+  assert.equal(addDays("2026-03-01", -1), "2026-02-28");
+  assert.equal(addDays("2026-12-31", 1), "2027-01-01");
+}
+assert.equal(daysBetween("2026-03-07", "2026-03-09"), 2); // across a US DST switch
+assert.equal(weekday("2026-09-19"), 6); // Saturday
+// 20:00 UTC on the 18th is already the 19th in India and still the 18th in California
+assert.equal(localDate("Asia/Kolkata", Date.UTC(2026, 8, 18, 20, 0)), "2026-09-19");
+assert.equal(localDate("America/Los_Angeles", Date.UTC(2026, 8, 18, 20, 0)), "2026-09-18");
+assert.equal(localDate("Not/AZone", Date.UTC(2026, 8, 18, 20, 0)), "2026-09-18"); // falls back to UTC
+const now = new Date();
+assert.equal(todayStr(), `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`);
 
 console.log(`✓ fitness math, ${SEED_FOODS.length} foods and ${SEED_EXERCISES.length} exercises all check out`);
