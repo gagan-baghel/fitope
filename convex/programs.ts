@@ -1,7 +1,7 @@
 import { v } from "convex/values";
 import { mutation, query } from "./lib/functions";
 import { getAuthUserId } from "@convex-dev/auth/server";
-import { requireUser, visibleTo } from "./lib/util";
+import { requireUser, visibleTo, weekday } from "./lib/util";
 import { Doc, Id } from "./_generated/dataModel";
 
 /* ------------------------------- generator -------------------------------- */
@@ -586,7 +586,7 @@ export async function programDayForDate(
       .collect()
   ).sort((a: Doc<"programDays">, b: Doc<"programDays">) => a.order - b.order);
   if (!days.length) return null;
-  const wd = new Date(date + "T00:00:00").getDay();
+  const wd = weekday(date);
   const byWeekday = days.find((d: Doc<"programDays">) => d.weekday === wd);
   if (byWeekday) return { program, day: byWeekday };
   return null;

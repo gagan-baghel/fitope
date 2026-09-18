@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQuery } from "convex/react";
+import { useConvex, useMutation, useQuery } from "convex/react";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { api } from "../../../../convex/_generated/api";
 import { useRouter } from "next/navigation";
@@ -35,7 +35,7 @@ import {
   Trash2,
   User,
 } from "lucide-react";
-import { DAY_LABELS, cn, hhmm, titleCase } from "@/lib/utils";
+import { DAY_LABELS, cn, hhmm, titleCase, errorText, todayStr } from "@/lib/utils";
 import { useUnits } from "@/lib/units";
 import { InstallRow } from "@/components/install";
 
@@ -43,7 +43,9 @@ export default function Me() {
   const me = useQuery(api.profiles.me, {});
   const goals = useQuery(api.profiles.listGoals, {});
   const reminders = useQuery(api.tracking.listReminders, {});
-  const exportData = useQuery(api.account.exportData, {});
+  // One-shot fetch on tap: a live subscription would re-read every row the user owns on every write.
+  const convex = useConvex();
+  const [exporting, setExporting] = useState(false);
   const saveProfile = useMutation(api.profiles.saveProfile);
   const setCustomTargets = useMutation(api.profiles.setCustomTargets);
   const recompute = useMutation(api.profiles.recomputeTargets);
@@ -309,12 +311,23 @@ export default function Me() {
         <Button
           variant="soft"
           className="w-full"
-          onClick={() => {
+          loading={exporting}
+          onClick={async () => {
+            setExporting(true);
+            let exportData;
+            try {
+              exportData = await convex.query(api.account.exportData, {});
+            } catch (e) {
+              toast({ message: errorText(e), tone: "var(--rose)" });
+              return;
+            } finally {
+              setExporting(false);
+            }
             const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
             const url = URL.createObjectURL(blob);
             const a = document.createElement("a");
             a.href = url;
-            a.download = `fitope-export-${new Date().toISOString().slice(0, 10)}.json`;
+            a.download = `fitope-export-${todayStr()}.json`;
             a.click();
             URL.revokeObjectURL(url);
             toast({ message: "Export downloaded" });

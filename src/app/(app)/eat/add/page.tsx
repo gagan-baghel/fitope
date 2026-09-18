@@ -69,11 +69,36 @@ function AddFood() {
   const recipes = useQuery(api.foods.listRecipes, tab === "recipes" ? {} : "skip");
   const logEntry = useMutation(api.nutrition.logEntry);
   const logTemplate = useMutation(api.nutrition.logTemplate);
+  const deleteEntry = useMutation(api.nutrition.deleteEntry);
 
   async function quickLog(foodId: any, qty: number, unitLabel: string, name: string) {
     await logEntry({ date, meal, foodId, qty, unitLabel });
     toast({ message: `${name} added to ${meal}` });
   }
+
+  /** Log a past entry again exactly as it was — library food, recipe or quick-add. */
+  async function relog(e: any) {
+    const how = e.foodId
+      ? { foodId: e.foodId, qty: e.qty, unitLabel: e.unitLabel }
+      : e.recipeId
+        ? { recipeId: e.recipeId, qty: e.qty }
+        : { qty: 1, manual: { name: e.name, ...e.nutrients } };
+    const id = await logEntry({ date, meal, ...how });
+    toast({ message: `${e.name} → ${meal}`, action: { label: "Undo", run: () => deleteEntry({ id }) } });
+  }
+
+  // Most-logged first, then recent — one tap each. Keyed like the server groups them.
+  const regulars = (() => {
+    const seen = new Set<string>();
+    return [...(rf?.favorites ?? []), ...(rf?.recents ?? [])]
+      .filter((e: any) => {
+        const k = e.foodId ?? e.recipeId ?? e.name;
+        if (seen.has(k)) return false;
+        seen.add(k);
+        return true;
+      })
+      .slice(0, 12);
+  })();
 
   return (
     <div className="space-y-4 pb-28">
@@ -118,6 +143,34 @@ function AddFood() {
 
       {tab === "search" && (
         <>
+          {!q && regulars.length > 0 && (
+            <section>
+              <div className="mb-2 flex items-center gap-1.5 text-[12px] font-semibold uppercase tracking-wider text-muted">
+                <Clock className="h-3.5 w-3.5" /> Your regulars
+              </div>
+              {/* One row that scrolls sideways, so it never pushes the food list down. */}
+              <div className="no-scrollbar -mx-4 flex snap-x scroll-px-4 gap-2 overflow-x-auto px-4 pb-1 sm:-mx-6 sm:scroll-px-6 sm:px-6">
+                {regulars.map((e: any) => (
+                  <button
+                    key={e._id}
+                    onClick={() => relog(e)}
+                    className="flex w-[132px] shrink-0 snap-start flex-col rounded-2xl border border-line bg-surface p-3 text-left transition-all active:scale-95 hover:border-accent/40"
+                  >
+                    <div className="flex items-start justify-between gap-1">
+                      <span className="line-clamp-2 min-h-[2.5em] text-[13px] font-semibold leading-tight">{e.name}</span>
+                      <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-accent text-accent-ink">
+                        <Plus className="h-3.5 w-3.5" />
+                      </span>
+                    </div>
+                    <span className="tabular mt-1.5 text-[11.5px] text-muted">
+                      {e.qty}&nbsp;{e.unitLabel} · {e.nutrients.kcal}&nbsp;kcal
+                    </span>
+                    {e.timesLogged ? <span className="tabular mt-0.5 text-[11px] font-semibold text-accent">×{e.timesLogged}</span> : null}
+                  </button>
+                ))}
+              </div>
+            </section>
+          )}
           {!q && (
             <div className="no-scrollbar flex gap-2 overflow-x-auto pb-1">
               <Chip active={!category} onClick={() => setCategory(undefined)}>
@@ -181,7 +234,7 @@ function AddFood() {
             {rf?.favorites?.length ? (
               <div className="space-y-1.5">
                 {rf.favorites.map((e: any) => (
-                  <PastEntryRow key={e._id} entry={e} onLog={() => e.foodId && quickLog(e.foodId, e.qty, e.unitLabel, e.name)} />
+                  <PastEntryRow key={e._id} entry={e} onLog={() => relog(e)} />
                 ))}
               </div>
             ) : (
@@ -192,7 +245,7 @@ function AddFood() {
             <div className="mb-2 text-[12px] font-semibold uppercase tracking-wider text-muted">Recent</div>
             <div className="space-y-1.5">
               {(rf?.recents ?? []).map((e: any) => (
-                <PastEntryRow key={e._id} entry={e} onLog={() => e.foodId && quickLog(e.foodId, e.qty, e.unitLabel, e.name)} />
+                <PastEntryRow key={e._id} entry={e} onLog={() => relog(e)} />
               ))}
             </div>
           </section>

@@ -526,6 +526,21 @@ export function ToastHost({ children }: { children: React.ReactNode }) {
     setToasts((prev) => [...prev.slice(-2), { ...t, id }]);
     setTimeout(() => setToasts((prev) => prev.filter((x) => x.id !== id)), 4200);
   }, []);
+
+  // Safety net: any server call that fails without its own handler still tells the user why
+  // (rate limit, validation) instead of failing silently.
+  React.useEffect(() => {
+    const onReject = (e: PromiseRejectionEvent) => {
+      const data = (e.reason as any)?.data;
+      const msg = String((e.reason as any)?.message ?? "");
+      // Only backend failures — ignore unrelated rejections (a cancelled share sheet etc.).
+      if (typeof data === "string") push({ message: data, tone: "var(--rose)" });
+      else if (/\[CONVEX|Server Error/.test(msg))
+        push({ message: "Something went wrong — check your connection and try again", tone: "var(--rose)" });
+    };
+    window.addEventListener("unhandledrejection", onReject);
+    return () => window.removeEventListener("unhandledrejection", onReject);
+  }, [push]);
   return (
     <ToastCtx.Provider value={push}>
       {children}

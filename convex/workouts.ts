@@ -1,7 +1,7 @@
 import { v } from "convex/values";
 import { mutation, query } from "./lib/functions";
 import { getAuthUserId } from "@convex-dev/auth/server";
-import { requireUser, today, addDays, visibleTo } from "./lib/util";
+import { requireUser, todayFor, addDays, visibleTo, weekday } from "./lib/util";
 import { e1rm } from "./lib/fitness";
 import { programDayForDate } from "./programs";
 import { Doc, Id } from "./_generated/dataModel";
@@ -66,7 +66,7 @@ export const forDate = query({
   handler: async (ctx, { date }) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) return null;
-    const d = date ?? today();
+    const d = date ?? (await todayFor(ctx, userId));
     const workouts = await ctx.db
       .query("workouts")
       .withIndex("by_user_date", (q) => q.eq("userId", userId).eq("date", d))
@@ -117,7 +117,7 @@ export const start = mutation({
   },
   handler: async (ctx, { date, programDayId, title }) => {
     const userId = await requireUser(ctx);
-    const d = date ?? today();
+    const d = date ?? (await todayFor(ctx, userId));
     const existing = (
       await ctx.db
         .query("workouts")
@@ -415,7 +415,7 @@ export const skip = mutation({
       await ctx.db.patch(workoutId, { status: "skipped", notes: reason });
       return workoutId;
     }
-    const d = date ?? today();
+    const d = date ?? (await todayFor(ctx, userId));
     const planned = await programDayForDate(ctx, userId, d);
     return await ctx.db.insert("workouts", {
       userId,
@@ -507,8 +507,8 @@ export const weekOverview = query({
   handler: async (ctx, { anchor }) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) return [];
-    const base = anchor ?? today();
-    const start = addDays(base, -new Date(base + "T00:00:00").getDay());
+    const base = anchor ?? (await todayFor(ctx, userId));
+    const start = addDays(base, -weekday(base));
     const days: { date: string; status: string; title?: string }[] = [];
     const workouts = await ctx.db
       .query("workouts")

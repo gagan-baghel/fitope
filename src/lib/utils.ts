@@ -15,16 +15,26 @@ export const hhmm = (minutes?: number | null) => {
   return h ? `${h}h ${m ? `${m}m` : ""}`.trim() : `${m}m`;
 };
 
+/** Today's calendar date on this device (not UTC — toISOString would be yesterday/tomorrow for much of the world). */
 export const todayStr = (offset = 0) => {
   const d = new Date();
   d.setDate(d.getDate() + offset);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+};
+
+/** Pure calendar arithmetic, done in UTC so the device's zone can never shift the result. */
+export const addDays = (date: string, n: number) => {
+  const d = new Date(date + "T00:00:00Z");
+  d.setUTCDate(d.getUTCDate() + n);
   return d.toISOString().slice(0, 10);
 };
 
-export const addDays = (date: string, n: number) => {
-  const d = new Date(date + "T00:00:00");
-  d.setDate(d.getDate() + n);
-  return d.toISOString().slice(0, 10);
+export const deviceTimezone = () => {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+  } catch {
+    return "UTC";
+  }
 };
 
 export const prettyDate = (date: string) => {

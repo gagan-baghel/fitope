@@ -4,7 +4,7 @@ import { mutation, query, throttle, HOUR } from "./lib/functions";
 import { internal } from "./_generated/api";
 import { Doc, Id } from "./_generated/dataModel";
 import { getAuthUserId } from "@convex-dev/auth/server";
-import { requireUser, addDays, daysBetween } from "./lib/util";
+import { requireUser, addDays, daysBetween, safeTz, localDate } from "./lib/util";
 import { targetsOn } from "./profiles";
 import { pickWorkoutOfDay } from "./workouts";
 import { trendSeries } from "./lib/fitness";
@@ -23,25 +23,6 @@ import {
 const DAY = 86400000;
 
 /* --------------------------------- time --------------------------------- */
-
-function safeTz(tz: string) {
-  try {
-    new Intl.DateTimeFormat("en-CA", { timeZone: tz });
-    return tz;
-  } catch {
-    return "UTC";
-  }
-}
-
-/** The member's own calendar date — a family can span time zones. */
-export function localDate(tz: string, at = Date.now()) {
-  return new Intl.DateTimeFormat("en-CA", {
-    timeZone: safeTz(tz),
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(at);
-}
 
 function localMinutes(tz: string, at = Date.now()) {
   const parts = new Intl.DateTimeFormat("en-GB", {
@@ -698,9 +679,7 @@ export async function eraseFamilyData(ctx: MutationCtx, userId: Id<"users">) {
   const subs = await ctx.db.query("pushSubscriptions").withIndex("by_user", (q) => q.eq("userId", userId)).collect();
   for (const r of [...sent, ...got, ...subs]) await ctx.db.delete(r._id);
   let removed = sent.length + got.length + subs.length;
-  const invites = await ctx.db.query("circleInvites").collect();
-  // ponytail: full scan of invites — tiny table (≤5 live per circle); add a by_creator index if it grows.
-  for (const i of invites.filter((i) => i.createdBy === userId)) {
+  for (const i of await ctx.db.query("circleInvites").withIndex("by_creator", (q) => q.eq("createdBy", userId)).collect()) {
     await ctx.db.delete(i._id);
     removed++;
   }

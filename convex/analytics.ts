@@ -1,7 +1,7 @@
 import { v } from "convex/values";
 import { query } from "./lib/functions";
 import { getAuthUserId } from "@convex-dev/auth/server";
-import { today, addDays, daysBetween } from "./lib/util";
+import { todayFor, addDays, daysBetween } from "./lib/util";
 import { trendSeries, linearSlopePerWeek, e1rm } from "./lib/fitness";
 import { targetsOn } from "./profiles";
 
@@ -13,8 +13,8 @@ export const overview = query({
   handler: async (ctx, { days }) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) return null;
-    const n = days ?? 90;
-    const from = addDays(today(), -n + 1);
+    const n = Math.min(Math.max(days ?? 90, 1), 365);
+    const from = addDays((await todayFor(ctx, userId)), -n + 1);
 
     const [workouts, meals, body, sleep, prs] = await Promise.all([
       ctx.db
@@ -39,7 +39,7 @@ export const overview = query({
         .order("desc")
         .take(50),
     ]);
-    const targets = await targetsOn(ctx, userId, today());
+    const targets = await targetsOn(ctx, userId, (await todayFor(ctx, userId)));
     const done = workouts.filter((w) => w.status === "completed");
 
     /* weekly buckets */
@@ -141,7 +141,7 @@ export const overview = query({
 
     const weeksArr = [...weeks.values()].sort((a, b) => (a.week < b.week ? -1 : 1));
     return {
-      range: { from, to: today(), days: n },
+      range: { from, to: (await todayFor(ctx, userId)), days: n },
       totals: {
         workouts: done.length,
         skipped: workouts.filter((w) => w.status === "skipped").length,
@@ -233,8 +233,8 @@ function milestones(c: {
 }
 
 function weekKey(date: string) {
-  const d = new Date(date + "T00:00:00");
-  d.setDate(d.getDate() - d.getDay());
+  const d = new Date(date + "T00:00:00Z");
+  d.setUTCDate(d.getUTCDate() - d.getUTCDay());
   return d.toISOString().slice(0, 10);
 }
 
@@ -247,7 +247,7 @@ export const insights = query({
   handler: async (ctx) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) return [];
-    const d = today();
+    const d = (await todayFor(ctx, userId));
     const from = addDays(d, -27);
     const profile = await ctx.db
       .query("profiles")
@@ -402,7 +402,7 @@ export const weeklySummary = query({
   handler: async (ctx) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) return null;
-    const d = today();
+    const d = (await todayFor(ctx, userId));
     const from = addDays(d, -6);
     const [workouts, meals, sleep, body] = await Promise.all([
       ctx.db
