@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { mutation, query } from "./lib/functions";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { requireUser, today } from "./lib/util";
 import { computeTargets } from "./lib/fitness";

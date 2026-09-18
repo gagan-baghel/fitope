@@ -29,7 +29,7 @@ export function FoodsHub({ initialTab = "foods" }: { initialTab?: "foods" | "rec
   return (
     <div className="space-y-4">
       <header className="flex items-center gap-3 pt-1">
-        <button onClick={() => router.push("/eat")} className="rounded-xl p-1.5 text-muted hover:bg-surface-2 hover:text-ink">
+        <button onClick={() => router.push("/eat")} className="-m-1.5 rounded-xl p-3 text-muted hover:bg-surface-2 hover:text-ink">
           <ArrowLeft className="h-5 w-5" />
         </button>
         <h1 className="flex-1 text-[22px] font-bold tracking-tight">My food library</h1>
@@ -73,7 +73,7 @@ function MyFoods() {
               <div className="min-w-0 flex-1">
                 <div className="truncate text-[14px] font-semibold">{f.name}</div>
                 <div className="tabular text-[11.5px] text-muted">
-                  {f.per100.kcal} kcal · P {f.per100.protein} · C {f.per100.carbs} · F {f.per100.fat} · Fib{" "}
+                  {f.per100.kcal}&nbsp;kcal · P&nbsp;{f.per100.protein} · C&nbsp;{f.per100.carbs} · F&nbsp;{f.per100.fat} · Fib{"\u00a0"}
                   {f.per100.fiber} / 100 g
                 </div>
                 <div className="mt-1.5 flex flex-wrap gap-1">
@@ -299,7 +299,7 @@ function RecipeBuilder({ open, onClose }: { open: boolean; onClose: () => void }
                   step={25}
                   max={5000}
                   suffix="g"
-                  className="w-32"
+                  className="w-28 sm:w-32"
                 />
                 <button onClick={() => setItems((p) => p.filter((_, j) => j !== idx))} className="text-muted hover:text-rose">
                   <X className="h-4 w-4" />

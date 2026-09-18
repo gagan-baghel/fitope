@@ -1,7 +1,7 @@
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { mutation, query } from "./lib/functions";
 import { getAuthUserId } from "@convex-dev/auth/server";
-import { requireUser, today, addDays } from "./lib/util";
+import { requireUser, today, addDays, visibleTo } from "./lib/util";
 import { e1rm } from "./lib/fitness";
 import { programDayForDate } from "./programs";
 import { Doc, Id } from "./_generated/dataModel";
@@ -175,7 +175,7 @@ export const start = mutation({
           .take(30);
         const done = prev.filter((s) => s.completed && s.weightKg);
         const suggested = done.length ? Math.max(...done.map((s) => s.weightKg ?? 0)) : item.targetWeightKg;
-        for (let s = 0; s < item.sets; s++) {
+        for (let s = 0; s < Math.min(item.sets, 10); s++) {
           await ctx.db.insert("sets", {
             userId,
             workoutId,
@@ -201,6 +201,8 @@ export const addExercise = mutation({
     const userId = await requireUser(ctx);
     const w = await ctx.db.get(workoutId);
     if (!w || w.userId !== userId) throw new Error("Not found");
+    if (!visibleTo(await ctx.db.get(exerciseId), userId)) throw new Error("Exercise not found");
+    if (sets != null && (sets < 1 || sets > 10)) throw new Error("Sets must be 1–10");
     const existing = await ctx.db
       .query("workoutExercises")
       .withIndex("by_workout", (q) => q.eq("workoutId", workoutId))
@@ -459,7 +461,7 @@ export const history = query({
         from ? q.eq("userId", userId).gte("date", from) : q.eq("userId", userId)
       )
       .order("desc")
-      .take(limit ?? 60);
+      .take(Math.min(limit ?? 60, 100));
     return await Promise.all(
       rows.map(async (w) => {
         const sets = await ctx.db

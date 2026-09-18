@@ -76,10 +76,10 @@ function AddFood() {
   }
 
   return (
-    <div className="space-y-4 pb-8">
-      <header className="sticky top-0 z-30 -mx-4 -mt-5 space-y-3 bg-bg/90 px-4 pb-3 pt-5 backdrop-blur-xl sm:-mx-6 sm:px-6">
+    <div className="space-y-4 pb-28">
+      <header className="sticky top-[var(--safe-top)] z-30 -mx-4 -mt-5 space-y-3 bg-bg/90 px-4 pb-3 pt-5 backdrop-blur-xl sm:-mx-6 sm:px-6">
         <div className="flex items-center gap-3">
-          <button onClick={() => router.push("/eat")} className="rounded-xl p-1.5 text-muted hover:bg-surface-2 hover:text-ink">
+          <button onClick={() => router.push("/eat")} className="-m-1.5 rounded-xl p-3 text-muted hover:bg-surface-2 hover:text-ink">
             <ArrowLeft className="h-5 w-5" />
           </button>
           <h1 className="flex-1 text-[18px] font-bold tracking-tight">Log food</h1>
@@ -233,7 +233,7 @@ function AddFood() {
               className="flex w-full items-center gap-3 rounded-2xl border border-line bg-surface px-4 py-3 text-left hover:border-accent/40"
             >
               <div className="min-w-0 flex-1">
-                <div className="truncate text-[13.5px] font-semibold">{r.name}</div>
+                <div className="line-clamp-2 text-[13.5px] font-semibold leading-snug">{r.name}</div>
                 <div className="tabular text-[11.5px] text-muted">
                   {r.perServing.kcal} kcal · P {r.perServing.protein} · per serving
                 </div>
@@ -267,9 +267,9 @@ function FoodRow({ food, onOpen, onQuick }: { food: any; onOpen: () => void; onQ
     <div className="flex items-center gap-3 rounded-[20px] border border-line bg-surface p-3 transition-colors hover:border-ink/15">
       <FoodTile category={food.category} />
       <button onClick={onOpen} className="min-w-0 flex-1 text-left">
-        <div className="flex items-center gap-2">
-          <span className={cn("h-2 w-2 shrink-0 rounded-full", food.veg ? "bg-mint" : "bg-rose")} />
-          <span className="truncate text-[14.5px] font-bold">{food.name}</span>
+        <div className="flex items-start gap-2">
+          <span className={cn("mt-[7px] h-2 w-2 shrink-0 rounded-full", food.veg ? "bg-mint" : "bg-rose")} />
+          <span className="line-clamp-2 min-w-0 text-[14.5px] font-bold leading-snug">{food.name}</span>
           {food.state === "raw" && <Pill tone="amber">raw</Pill>}
           {food.ownerUserId && <Pill tone="violet">mine</Pill>}
         </div>
@@ -296,7 +296,7 @@ function PastEntryRow({ entry, onLog }: { entry: any; onLog: () => void }) {
       className="flex w-full items-center gap-3 rounded-2xl border border-line bg-surface px-4 py-3 text-left hover:border-accent/40"
     >
       <div className="min-w-0 flex-1">
-        <div className="truncate text-[13.5px] font-semibold">{entry.name}</div>
+        <div className="line-clamp-2 text-[13.5px] font-semibold leading-snug">{entry.name}</div>
         <div className="tabular text-[11.5px] text-muted">
           {entry.qty} {entry.unitLabel} · {entry.nutrients.kcal} kcal
           {entry.timesLogged ? ` · logged ${entry.timesLogged}×` : ""}
@@ -370,7 +370,7 @@ function FoodSheet({
           <div className="flex items-center gap-3">
             <FoodTile category={food.category} size={64} radius={20} />
             <div className="min-w-0">
-              <div className="truncate text-[15px] font-bold">{food.name}</div>
+              <div className="line-clamp-2 text-[15px] font-bold leading-snug">{food.name}</div>
               <div className="text-[12px] text-muted">
                 {food.per100.kcal} kcal · P {food.per100.protein} g per 100 g
               </div>

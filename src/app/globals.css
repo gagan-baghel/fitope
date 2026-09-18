@@ -7,6 +7,11 @@
 --------------------------------------------------------------------------- */
 :root {
   color-scheme: light;
+  /* The app opts into `viewport-fit=cover`, so the notch and the home indicator
+     are drawn over by the app. Every screen measures them from these two tokens
+     rather than hard-coding 44px/34px. */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
   /* Light is the primary identity: cool paper ground, white cards, near-black actions. */
   --bg: #eef1f5;
   --bg-grad: radial-gradient(1100px 520px at 88% -12%, #dfeafb 0%, transparent 62%),
@@ -131,12 +136,25 @@
     font-family: var(--font-geist-sans, ui-sans-serif), -apple-system, BlinkMacSystemFont, "Segoe UI",
       system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
+    /* Stops iOS from inflating body copy in landscape. */
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
   }
 
   body {
     background-image: var(--bg-grad);
-    background-attachment: fixed;
     min-height: 100dvh;
+    /* Nothing should ever scroll sideways on a phone. `clip` rather than `hidden`
+       so no scroll container is created — sticky page headers keep working. */
+    overflow-x: clip;
+  }
+
+  /* Fixed attachment is janky and unreliable on mobile Safari, so the gradient is
+     anchored to the viewport only where it actually behaves. */
+  @media (min-width: 640px) {
+    body {
+      background-attachment: fixed;
+    }
   }
 
   ::selection {

@@ -78,9 +78,9 @@ export default function Session() {
 
   return (
     <div className="space-y-4 pb-24">
-      <header className="sticky top-0 z-30 -mx-4 -mt-5 bg-bg/85 px-4 pb-3 pt-5 backdrop-blur-xl sm:-mx-6 sm:px-6">
+      <header className="sticky top-[var(--safe-top)] z-30 -mx-4 -mt-5 bg-bg/85 px-4 pb-3 pt-5 backdrop-blur-xl sm:-mx-6 sm:px-6">
         <div className="flex items-center gap-3">
-          <button onClick={() => router.push("/train")} className="rounded-xl p-1.5 text-muted hover:bg-surface-2 hover:text-ink">
+          <button onClick={() => router.push("/train")} className="-m-1.5 rounded-xl p-3 text-muted hover:bg-surface-2 hover:text-ink">
             <ArrowLeft className="h-5 w-5" />
           </button>
           <div className="min-w-0 flex-1">
@@ -274,11 +274,14 @@ function ExerciseBlock({
             </div>
           </button>
           {we.last && (
-            <div className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-surface-2 px-2.5 py-1 text-[11.5px] text-muted">
-              <Flame className="h-3 w-3 text-amber" />
-              Last {prettyDate(we.last.date)}: {we.last.topWeight ? `${we.last.topWeight} kg × ${we.last.topReps}` : `${we.last.topReps} reps`}
-              {" · "}
-              {we.last.sets} sets
+            <div className="mt-2 inline-flex max-w-full items-center gap-1.5 whitespace-nowrap rounded-lg bg-surface-2 px-2.5 py-1 text-[11.5px] text-muted">
+              <Flame className="h-3 w-3 shrink-0 text-amber" />
+              {/* The date is the least useful part mid-set; drop it where it would force a wrap. */}
+              <span className="hidden min-[360px]:inline">{prettyDate(we.last.date)}:</span>
+              <span className="tabular font-semibold text-ink">
+                {we.last.topWeight ? `${we.last.topWeight} kg × ${we.last.topReps}` : `${we.last.topReps} reps`}
+              </span>
+              · {we.last.sets} sets
             </div>
           )}
         </div>
@@ -392,7 +395,7 @@ function SetRow({
         placeholder={set.targetReps ? "–" : "0"}
         onChange={(e) => setWeight(e.target.value.replace(/[^0-9.]/g, ""))}
         onBlur={() => weight !== (set.weightKg?.toString() ?? "") && commit({ weightKg: weight === "" ? 0 : Number(weight) })}
-        className="tabular h-10 w-full rounded-lg border border-line bg-surface-2 text-center text-[14px] font-semibold outline-none focus:border-accent/60 disabled:opacity-70"
+        className="tabular h-10 w-full rounded-lg border border-line bg-surface-2 text-center text-[16px] font-semibold outline-none focus:border-accent/60 disabled:opacity-70"
       />
       <input
         inputMode="numeric"
@@ -401,7 +404,7 @@ function SetRow({
         placeholder={set.targetReps ?? "0"}
         onChange={(e) => setReps(e.target.value.replace(/[^0-9]/g, ""))}
         onBlur={() => reps !== (set.reps?.toString() ?? "") && commit({ reps: reps === "" ? 0 : Number(reps) })}
-        className="tabular h-10 w-full rounded-lg border border-line bg-surface-2 text-center text-[14px] font-semibold outline-none focus:border-accent/60 disabled:opacity-70"
+        className="tabular h-10 w-full rounded-lg border border-line bg-surface-2 text-center text-[16px] font-semibold outline-none focus:border-accent/60 disabled:opacity-70"
       />
       <div className="flex justify-end gap-1">
         {readOnly ? (

@@ -1,7 +1,7 @@
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { mutation, query } from "./lib/functions";
 import { getAuthUserId } from "@convex-dev/auth/server";
-import { requireUser, today, addDays } from "./lib/util";
+import { requireUser, today, addDays, visibleTo } from "./lib/util";
 import { nutrientsFor } from "./foods";
 import { targetsOn } from "./profiles";
 import { Doc } from "./_generated/dataModel";
@@ -163,7 +163,7 @@ export const logTemplate = mutation({
     const d = date ?? today();
     let n = 0;
     for (const item of t.items) {
-      const food = await ctx.db.get(item.foodId);
+      const food = visibleTo(await ctx.db.get(item.foodId), userId);
       if (!food) continue;
       await ctx.db.insert("mealEntries", {
         userId,
@@ -260,6 +260,7 @@ export const restoreEntry = mutation({
   },
   handler: async (ctx, args) => {
     const userId = await requireUser(ctx);
+    if (args.foodId && !visibleTo(await ctx.db.get(args.foodId), userId)) throw new Error("Food not found");
     return await ctx.db.insert("mealEntries", { userId, ...args, at: Date.now() });
   },
 });

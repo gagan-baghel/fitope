@@ -37,6 +37,7 @@ import {
 } from "lucide-react";
 import { DAY_LABELS, cn, hhmm, titleCase } from "@/lib/utils";
 import { useUnits } from "@/lib/units";
+import { InstallRow } from "@/components/install";
 
 export default function Me() {
   const me = useQuery(api.profiles.me, {});
@@ -52,6 +53,7 @@ export default function Me() {
   const deleteReminder = useMutation(api.tracking.deleteReminder);
   const clearSample = useMutation(api.seed.clearSampleData);
   const deleteAll = useMutation(api.account.deleteAccountData);
+  const deleteAccount = useMutation(api.account.deleteAccount);
   const { signOut } = useAuthActions();
   const router = useRouter();
   const toast = useToast();
@@ -291,6 +293,7 @@ export default function Me() {
           <span className="flex-1 text-[13.5px] font-semibold">Edit profile & training setup</span>
           <ChevronRight className="h-4 w-4 text-muted" />
         </button>
+        <InstallRow />
       </Card>
 
       {/* Data */}
@@ -344,6 +347,18 @@ export default function Me() {
           }}
         >
           <Trash2 className="h-4 w-4" /> Delete all my data
+        </ConfirmButton>
+        <ConfirmButton
+          className="w-full"
+          size="md"
+          confirmLabel="Tap again — account and login are erased"
+          onConfirm={async () => {
+            await deleteAccount({});
+            await signOut();
+            router.replace("/welcome");
+          }}
+        >
+          <Trash2 className="h-4 w-4" /> Delete my account
         </ConfirmButton>
       </Card>
 
@@ -538,7 +553,7 @@ export default function Me() {
               <Input type="time" value={reminderDraft.time} onChange={(e) => setReminderDraft({ ...reminderDraft, time: e.target.value })} />
             </Field>
             <Field label="Days">
-              <div className="flex gap-2">
+              <div className="flex gap-1.5">
                 {DAY_LABELS.map((l, i) => (
                   <button
                     key={i}
@@ -551,7 +566,7 @@ export default function Me() {
                       })
                     }
                     className={cn(
-                      "h-11 flex-1 rounded-xl border text-[13px] font-semibold",
+                      "h-10 flex-1 rounded-xl border text-[12px] font-semibold",
                       reminderDraft.days.includes(i) ? "border-accent bg-accent text-accent-ink" : "border-line bg-surface-2 text-muted"
                     )}
                   >
@@ -687,7 +702,7 @@ function ProfileSheet({ open, onClose, profile }: { open: boolean; onClose: () =
           </Field>
         </div>
         <Field label="Preferred training days">
-          <div className="flex gap-2">
+          <div className="flex gap-1.5">
             {DAY_LABELS.map((l, i) => (
               <button
                 key={i}
@@ -700,7 +715,7 @@ function ProfileSheet({ open, onClose, profile }: { open: boolean; onClose: () =
                   })
                 }
                 className={cn(
-                  "h-11 flex-1 rounded-xl border text-[13px] font-semibold",
+                  "h-10 flex-1 rounded-xl border text-[12px] font-semibold",
                   (d.preferredDays ?? []).includes(i) ? "border-accent bg-accent text-accent-ink" : "border-line bg-surface-2 text-muted"
                 )}
               >

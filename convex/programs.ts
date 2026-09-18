@@ -1,7 +1,7 @@
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { mutation, query } from "./lib/functions";
 import { getAuthUserId } from "@convex-dev/auth/server";
-import { requireUser } from "./lib/util";
+import { requireUser, visibleTo } from "./lib/util";
 import { Doc, Id } from "./_generated/dataModel";
 
 /* ------------------------------- generator -------------------------------- */
@@ -542,6 +542,12 @@ export const upsertDay = mutation({
     const userId = await requireUser(ctx);
     const program = await ctx.db.get(rest.programId);
     if (!program || program.userId !== userId) throw new Error("Not found");
+    if (rest.items.length > 30) throw new Error("A session can have at most 30 exercises");
+    for (const it of rest.items) {
+      if (it.sets < 1 || it.sets > 10) throw new Error("Sets must be 1–10");
+      if (it.restSec < 0 || it.restSec > 900) throw new Error("Rest must be 0–15 minutes");
+      if (!visibleTo(await ctx.db.get(it.exerciseId), userId)) throw new Error("Exercise not found");
+    }
     if (id) {
       const day = await ctx.db.get(id);
       if (!day || day.userId !== userId) throw new Error("Not found");

@@ -1,7 +1,7 @@
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { mutation, query } from "./lib/functions";
 import { getAuthUserId } from "@convex-dev/auth/server";
-import { requireUser, norm } from "./lib/util";
+import { requireUser, norm, visibleTo } from "./lib/util";
 import { Doc, Id } from "./_generated/dataModel";
 
 export const nutrientsFor = (per100: Doc<"foods">["per100"], grams: number) => ({
@@ -21,7 +21,7 @@ export const search = query({
   },
   handler: async (ctx, { q, category, vegOnly, limit }) => {
     const userId = await getAuthUserId(ctx);
-    const take = limit ?? 60;
+    const take = Math.min(limit ?? 60, 100);
     let rows: Doc<"foods">[] = [];
     if (q && q.trim().length > 1) {
       const term = norm(q);
@@ -69,7 +69,7 @@ export const search = query({
 
 export const get = query({
   args: { id: v.id("foods") },
-  handler: async (ctx, { id }) => await ctx.db.get(id),
+  handler: async (ctx, { id }) => visibleTo(await ctx.db.get(id), await getAuthUserId(ctx)),
 });
 
 export const categories = query({
@@ -312,6 +312,8 @@ export const saveTemplate = mutation({
   },
   handler: async (ctx, args) => {
     const userId = await requireUser(ctx);
+    for (const it of args.items)
+      if (!visibleTo(await ctx.db.get(it.foodId), userId)) throw new Error("Food not found");
     return await ctx.db.insert("mealTemplates", { userId, ...args, createdAt: Date.now() });
   },
 });

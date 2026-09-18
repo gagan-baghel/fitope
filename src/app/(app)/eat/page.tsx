@@ -63,13 +63,15 @@ export default function Eat() {
 
   return (
     <div className="space-y-5">
-      <header className="flex items-center justify-between pt-1">
-        <h1 className="text-[26px] font-bold tracking-tight">Nutrition</h1>
-        <div className="flex items-center gap-1 rounded-2xl border border-line bg-surface p-1">
+      <header className="flex min-w-0 items-center justify-between gap-3 pt-1">
+        <h1 className="min-w-0 text-[22px] font-bold tracking-tight sm:text-[26px]">Nutrition</h1>
+        <div className="flex shrink-0 items-center gap-1 rounded-2xl border border-line bg-surface p-1">
           <button onClick={() => setDate(addDays(date, -1))} className="rounded-xl p-1.5 text-muted hover:bg-surface-2 hover:text-ink">
             <ChevronLeft className="h-4 w-4" />
           </button>
-          <span className="min-w-[92px] text-center text-[12.5px] font-semibold">{prettyDate(date)}</span>
+          <span className="min-w-[72px] text-center text-[12px] font-semibold sm:min-w-[92px] sm:text-[12.5px]">
+            {prettyDate(date)}
+          </span>
           <button
             disabled={date >= todayStr()}
             onClick={() => setDate(addDays(date, 1))}
@@ -194,7 +196,7 @@ export default function Eat() {
                     }}
                     tile={<FoodTile category={e.category} />}
                     title={e.name}
-                    subtitle={`${e.qty} ${e.unitLabel}${e.grams ? ` · ${e.grams} g` : ""} · P ${e.nutrients.protein} · C ${e.nutrients.carbs} · F ${e.nutrients.fat}`}
+                    subtitle={`${e.qty}\u00a0${e.unitLabel}${e.grams ? ` · ${e.grams}\u00a0g` : ""} · P\u00a0${e.nutrients.protein} · C\u00a0${e.nutrients.carbs} · F\u00a0${e.nutrients.fat}`}
                     trailing={
                       <div className="flex items-center gap-2">
                         <span className="tabular text-[15px] font-bold">{e.nutrients.kcal}</span>

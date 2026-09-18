@@ -53,9 +53,9 @@ export default function Progress() {
 
   return (
     <div className="space-y-5">
-      <header className="flex items-center justify-between pt-1">
-        <h1 className="text-[26px] font-bold tracking-tight">Progress</h1>
-        <div className="flex gap-2">
+      <header className="flex min-w-0 items-center justify-between gap-3 pt-1">
+        <h1 className="min-w-0 text-[22px] font-bold tracking-tight sm:text-[26px]">Progress</h1>
+        <div className="flex shrink-0 gap-1.5">
           <Link href="/progress/photos">
             <Button size="sm" variant="soft">
               <Camera className="h-4 w-4" /> Photos

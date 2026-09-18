@@ -59,9 +59,9 @@ export default function Train() {
 
   return (
     <div className="space-y-6">
-      <header className="flex items-center justify-between pt-1">
-        <h1 className="text-[26px] font-bold tracking-tight">Train</h1>
-        <div className="flex gap-2">
+      <header className="flex min-w-0 items-center justify-between gap-3 pt-1">
+        <h1 className="min-w-0 text-[22px] font-bold tracking-tight sm:text-[26px]">Train</h1>
+        <div className="flex shrink-0 gap-1.5">
           <Link href="/train/exercises">
             <Button variant="soft" size="sm">
               <Library className="h-4 w-4" /> Library
@@ -91,7 +91,7 @@ export default function Train() {
                 <span className="text-[10px] font-semibold text-muted">{DAY_LETTERS[i]}</span>
                 <div
                   className={cn(
-                    "grid h-11 w-full place-items-center rounded-2xl border text-[12px] font-bold transition-colors",
+                    "grid h-10 w-full place-items-center rounded-xl border text-[12px] font-bold transition-colors sm:h-11 sm:rounded-2xl",
                     d.status === "completed" && "border-transparent bg-ink text-ground",
                     d.status === "in_progress" && "border-ink bg-surface text-ink",
                     d.status === "planned" && "border-line bg-surface-2 text-ink-2",

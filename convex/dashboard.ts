@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { query } from "./_generated/server";
+import { query } from "./lib/functions";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { today, addDays, daysBetween } from "./lib/util";
 import { targetsOn } from "./profiles";

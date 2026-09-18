@@ -26,7 +26,7 @@ export default function Programs() {
   return (
     <div className="space-y-4">
       <header className="flex items-center gap-3 pt-1">
-        <button onClick={() => router.push("/train")} className="rounded-xl p-1.5 text-muted hover:bg-surface-2 hover:text-ink">
+        <button onClick={() => router.push("/train")} className="-m-1.5 rounded-xl p-3 text-muted hover:bg-surface-2 hover:text-ink">
           <ArrowLeft className="h-5 w-5" />
         </button>
         <h1 className="flex-1 text-[22px] font-bold tracking-tight">Training plans</h1>

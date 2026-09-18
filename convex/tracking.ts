@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { mutation, query, throttle, HOUR } from "./lib/functions";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { requireUser, today, addDays, daysBetween } from "./lib/util";
 import { trendSeries, linearSlopePerWeek, readiness } from "./lib/fitness";
@@ -291,7 +291,8 @@ export const checkinHistory = query({
 export const generateUploadUrl = mutation({
   args: {},
   handler: async (ctx) => {
-    await requireUser(ctx);
+    const userId = await requireUser(ctx);
+    await throttle(ctx, userId, "upload", { max: 30, windowMs: HOUR });
     return await ctx.storage.generateUploadUrl();
   },
 });
@@ -306,6 +307,18 @@ export const savePhoto = mutation({
   },
   handler: async (ctx, { storageId, pose, date, weightKg, notes }) => {
     const userId = await requireUser(ctx);
+    // Upload URLs accept any bytes; only keep real, reasonably sized images, and never let one
+    // stored file be attached twice (it would survive the first owner deleting it).
+    const meta = await ctx.db.system.get(storageId);
+    const bad = !meta || !meta.contentType?.startsWith("image/") || meta.size > 10 * 1024 * 1024;
+    const taken = await ctx.db
+      .query("progressPhotos")
+      .withIndex("by_storage", (q) => q.eq("storageId", storageId))
+      .first();
+    if (bad || taken) {
+      if (bad && meta) await ctx.storage.delete(storageId);
+      throw new Error("Upload a photo (JPG/PNG/HEIC, up to 10 MB)");
+    }
     return await ctx.db.insert("progressPhotos", {
       userId,
       storageId,

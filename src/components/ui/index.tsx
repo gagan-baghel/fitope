@@ -29,9 +29,12 @@ export function SectionTitle({
   className?: string;
 }) {
   return (
-    <div className={cn("mb-3 flex items-end justify-between gap-3", className)}>
-      <h2 className="text-[15px] font-semibold tracking-tight text-ink">{children}</h2>
-      {action}
+    <div className={cn("mb-3 flex min-w-0 items-end justify-between gap-3", className)}>
+      <h2 className="min-w-0 text-[15px] font-semibold leading-tight tracking-tight text-ink">{children}</h2>
+      {/* Text links here are ~18px tall; pad the hit area to ~44px without moving anything. */}
+      {action && (
+        <div className="shrink-0 [&>a]:-my-3 [&>a]:inline-flex [&>a]:py-3 [&>button]:-my-3 [&>button]:py-3">{action}</div>
+      )}
     </div>
   );
 }
@@ -69,7 +72,7 @@ export function Button({
   return (
     <button
       className={cn(
-        "inline-flex select-none items-center justify-center gap-2 font-semibold transition-all duration-150 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-45",
+        "inline-flex select-none items-center justify-center gap-2 whitespace-nowrap font-semibold transition-all duration-150 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-45",
         VARIANTS[variant],
         SIZES[size],
         className
@@ -157,8 +160,10 @@ export function Field({
   );
 }
 
+/* 16px, not 15: iOS Safari force-zooms the viewport whenever a focused field is
+   smaller than that, which wrecks the layout on every tap. */
 export const inputClass =
-  "w-full rounded-2xl border border-line bg-surface-2 px-4 py-3 text-[15px] text-ink placeholder:text-muted/70 transition-colors focus:border-accent/60 focus:bg-surface focus:outline-none";
+  "w-full rounded-2xl border border-line bg-surface-2 px-4 py-3 text-[16px] text-ink placeholder:text-muted/70 transition-colors focus:border-accent/60 focus:bg-surface focus:outline-none";
 
 export function Input(props: React.InputHTMLAttributes<HTMLInputElement>) {
   return <input {...props} className={cn(inputClass, props.className)} />;
@@ -201,7 +206,12 @@ export function Segmented<T extends string>({
           key={o.value}
           onClick={() => onChange(o.value)}
           className={cn(
-            "flex-1 whitespace-nowrap rounded-xl px-3 py-2 text-[13px] font-semibold transition-all",
+            /* `min-w-0` is the load-bearing part: without it a flex item refuses to
+               shrink below its min-content width, so a four-option control with
+               labels like "3 months" forced the whole page ~11px wider than a
+               320px phone. `truncate` is the backstop if a label still won't fit;
+               the tighter phone padding/size is what keeps it from ever engaging. */
+            "min-w-0 flex-1 truncate rounded-xl px-1 py-2 text-[12px] font-semibold transition-all min-[360px]:px-2 sm:px-3 sm:text-[13px]",
             value === o.value ? "bg-ink text-ground shadow-sm" : "text-muted hover:text-ink"
           )}
         >
@@ -379,15 +389,23 @@ export function Sheet({
         )}
       >
         {title && (
-          <div className="flex items-center justify-between border-b border-line px-5 py-4">
-            <div className="text-[15px] font-semibold">{title}</div>
-            <button onClick={onClose} className="rounded-xl p-1.5 text-muted hover:bg-surface-2 hover:text-ink" aria-label="Close">
+          <div className="flex shrink-0 items-center justify-between gap-3 border-b border-line px-5 py-4">
+            <div className="min-w-0 truncate text-[15px] font-semibold">{title}</div>
+            <button
+              onClick={onClose}
+              className="-m-1.5 shrink-0 rounded-xl p-3 text-muted hover:bg-surface-2 hover:text-ink"
+              aria-label="Close"
+            >
               <X className="h-5 w-5" />
             </button>
           </div>
         )}
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-4">{children}</div>
-        {footer && <div className="border-t border-line bg-surface px-5 py-3.5">{footer}</div>}
+        {footer && (
+          <div className="shrink-0 border-t border-line bg-surface px-5 pt-3.5 pb-[max(0.875rem,var(--safe-bottom))]">
+            {footer}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -476,15 +494,21 @@ export function Stat({
   className?: string;
 }) {
   return (
-    <div className={cn("rounded-2xl border border-line bg-surface-2 p-3.5", className)}>
-      <div className="text-[11px] font-semibold uppercase tracking-wider text-muted">{label}</div>
-      <div className="mt-1 flex items-baseline gap-1">
-        <span className="tabular text-[22px] font-bold leading-none" style={tone ? { color: tone } : undefined}>
+    <div className={cn("min-w-0 rounded-2xl border border-line bg-surface-2 p-2.5 sm:p-3.5", className)}>
+      {/* Labels and subs wrap instead of truncating: three of these share ~240px on a 320px phone. */}
+      <div className="line-clamp-2 break-words text-[10px] font-semibold uppercase leading-tight tracking-wide text-muted sm:text-[11px] sm:tracking-wider">
+        {label}
+      </div>
+      <div className="mt-1 flex flex-wrap items-baseline gap-x-1">
+        <span
+          className="tabular whitespace-nowrap text-[16px] font-bold leading-tight min-[360px]:text-[17px] sm:text-[22px]"
+          style={tone ? { color: tone } : undefined}
+        >
           {value}
         </span>
-        {unit && <span className="text-[12px] font-medium text-muted">{unit}</span>}
+        {unit && <span className="shrink-0 text-[11px] font-medium text-muted sm:text-[12px]">{unit}</span>}
       </div>
-      {sub && <div className="mt-1 text-[12px] text-muted">{sub}</div>}
+      {sub && <div className="mt-0.5 line-clamp-2 text-[11px] leading-snug text-muted sm:text-[12px]">{sub}</div>}
     </div>
   );
 }

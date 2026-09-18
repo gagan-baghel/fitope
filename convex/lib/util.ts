@@ -41,3 +41,9 @@ export function assertOwner<T extends { userId: Id<"users"> }>(doc: T | null, us
   if (!doc || doc.userId !== userId) throw new Error("Not found");
   return doc;
 }
+
+/** Library rows (foods, exercises) are shared when unowned, otherwise private to their owner. */
+export function visibleTo<T extends { ownerUserId?: Id<"users"> }>(doc: T | null, userId: Id<"users"> | null): T | null {
+  if (!doc) return null;
+  return !doc.ownerUserId || doc.ownerUserId === userId ? doc : null;
+}

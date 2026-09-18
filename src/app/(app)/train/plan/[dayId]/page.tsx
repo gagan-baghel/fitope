@@ -192,8 +192,8 @@ export default function PlanDay() {
         </div>
       </div>
 
-      {/* Sticky CTA — the reference's "Join" button */}
-      <div className="fixed inset-x-0 bottom-0 z-30 px-4 pb-[max(88px,calc(env(safe-area-inset-bottom)+84px))] lg:pb-6">
+      {/* Sticky CTA — the reference's "Join" button. Sits above the floating nav. */}
+      <div className="fixed inset-x-0 bottom-0 z-30 px-4 pb-[calc(var(--safe-bottom)_+_88px)] lg:pb-6">
         <div className="mx-auto max-w-md">
           <Button size="lg" className="w-full shadow-[var(--shadow-lift)]" loading={busy} onClick={begin}>
             <Play className="h-4 w-4" /> Start workout

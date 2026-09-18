@@ -8,6 +8,8 @@ import { useState } from "react";
 import { Bar, Button, Card, Pill, Ring, SectionTitle, Skeleton, useToast } from "@/components/ui";
 import { CircleAction, MediaTile, MinutesRing, RowCard } from "@/components/ui/media";
 import { CheckinSheet, SleepSheet, WeightSheet } from "@/components/quick-log";
+import { FamilyStrip } from "@/components/family";
+import { InstallCard } from "@/components/install";
 import {
   ArrowRight,
   Bell,
@@ -102,6 +104,9 @@ export default function Home() {
           <span className="tabular text-[13px] font-bold">{data.streak}</span>
         </div>
       </header>
+
+      <FamilyStrip />
+      <InstallCard />
 
       {/* Due reminders */}
       {data.dueReminders?.length > 0 && (
@@ -260,7 +265,8 @@ export default function Home() {
         >
           Fuel today
         </SectionTitle>
-        <div className="grid grid-cols-4 gap-2">
+        {/* 2×2 on phones — four columns leaves each ring ~55px wide at 320px. */}
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           {(
             [
               ["Protein", n.protein, t?.protein ?? 0, "var(--mint)"],
@@ -269,19 +275,25 @@ export default function Home() {
               ["Fat", n.fat, t?.fat ?? 0, "var(--amber)"],
             ] as const
           ).map(([label, value, target, color]) => (
-            <div key={label} className="rounded-2xl bg-surface-2 p-2.5 text-center">
-              <Ring value={value} max={target || 1} size={46} stroke={4} color={color} track="var(--surface-3)">
+            <div
+              key={label}
+              className="flex min-w-0 items-center gap-2.5 rounded-2xl bg-surface-2 p-2.5 sm:flex-col sm:gap-1.5 sm:p-2 sm:text-center"
+            >
+              <Ring value={value} max={target || 1} size={44} stroke={4} color={color} track="var(--surface-3)" className="shrink-0">
                 <span className="tabular text-[13px] font-bold">{Math.round(value)}</span>
               </Ring>
-              <div className="mt-1.5 text-[11px] font-semibold text-ink">{label}</div>
-              <div className="tabular text-[10.5px] text-muted">of {Math.round(target)} g</div>
+              <div className="min-w-0">
+                <div className="truncate text-[13px] font-semibold text-ink sm:text-[11px]">{label}</div>
+                <div className="tabular truncate text-[12px] text-muted sm:text-[10.5px]">of {Math.round(target)} g</div>
+              </div>
             </div>
           ))}
         </div>
       </Card>
 
       {/* Water / sleep / weight */}
-      <div className="grid grid-cols-3 gap-3">
+      {/* Rows on phones, cards from sm up — three cards are ~88px wide at 320px. */}
+      <div className="grid gap-2 sm:grid-cols-3 sm:gap-3">
         <MiniStat
           icon={Droplets}
           tint="var(--tile-3)"
@@ -437,14 +449,23 @@ function MiniStat({
   cta: string;
 }) {
   return (
-    <button onClick={onClick} className="card p-3 text-left transition-transform active:scale-[0.98]">
-      <span className="grid h-7 w-7 place-items-center rounded-lg" style={{ background: tint }}>
-        <Icon className="h-3.5 w-3.5" style={{ color: "var(--tile-ink)" }} />
+    <button
+      onClick={onClick}
+      className="card flex items-center gap-3 p-3 text-left transition-transform active:scale-[0.98] sm:block"
+    >
+      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl sm:h-7 sm:w-7 sm:rounded-lg" style={{ background: tint }}>
+        <Icon className="h-[18px] w-[18px] sm:h-3.5 sm:w-3.5" style={{ color: "var(--tile-ink)" }} />
       </span>
-      <div className="tabular mt-2 text-[16px] font-bold leading-none">{value}</div>
-      <div className="mt-1 truncate text-[10.5px] text-muted">{label}</div>
-      {bar && <Bar value={bar.value} max={bar.max} color={bar.color} className="mt-2" height={4} />}
-      <div className="mt-1.5 truncate text-[10.5px] font-semibold text-ink">{cta}</div>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-baseline gap-1.5 sm:mt-2 sm:block">
+          <span className="tabular text-[17px] font-bold leading-none sm:text-[16px]">{value}</span>
+          <span className="truncate text-[12px] text-muted sm:mt-1 sm:block sm:text-[10.5px]">{label}</span>
+        </div>
+        {bar && <Bar value={bar.value} max={bar.max} color={bar.color} className="mt-2" height={4} />}
+      </div>
+      <span className="shrink-0 rounded-full bg-surface-2 px-3 py-1.5 text-[12px] font-semibold text-ink sm:mt-1.5 sm:block sm:truncate sm:bg-transparent sm:p-0 sm:text-[10.5px]">
+        {cta}
+      </span>
     </button>
   );
 }

@@ -3,15 +3,16 @@
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useConvexAuth } from "convex/react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { Button, Card, Field, Input, useToast } from "@/components/ui";
-import { Activity, Apple, Dumbbell, Moon, TrendingUp } from "lucide-react";
+import { useEffect, useState, useSyncExternalStore } from "react";
+import { Button, Input, Segmented, useToast } from "@/components/ui";
+import { InstallCard } from "@/components/install";
+import { Apple, Dumbbell, Eye, EyeOff, Lock, Mail, Moon, TrendingUp, User } from "lucide-react";
 
 const PILLARS = [
-  { icon: Dumbbell, title: "Train with progression", body: "Plans that adapt to what you actually lifted last time." },
-  { icon: Apple, title: "Eat, Indian-first", body: "265 everyday foods in katoris, rotis and bowls — not just grams." },
-  { icon: Moon, title: "Sleep & recovery", body: "Readiness built from your own sleep, soreness and training load." },
-  { icon: TrendingUp, title: "See the trend", body: "Trend weight, strength curves and photos over months, not days." },
+  { icon: Dumbbell, title: "Train", body: "Plans that adapt to what you actually lifted last time." },
+  { icon: Apple, title: "Eat Indian", body: "265 everyday foods in katoris, rotis and bowls." },
+  { icon: Moon, title: "Recover", body: "Readiness from your own sleep, soreness and load." },
+  { icon: TrendingUp, title: "Progress", body: "Trend weight, strength curves and photos over months." },
 ];
 
 export default function Welcome() {
@@ -19,8 +20,13 @@ export default function Welcome() {
   const { isAuthenticated } = useConvexAuth();
   const router = useRouter();
   const toast = useToast();
-  const [mode, setMode] = useState<"signIn" | "signUp">("signUp");
   const [busy, setBusy] = useState(false);
+  const [showPw, setShowPw] = useState(false);
+  // Set by /join/CODE when the invite link was opened signed out. Server render: false.
+  const invited = useSyncExternalStore(noSubscribe, readInvited, () => false);
+  // Invited people are almost always new, so default them to Create account.
+  const [chosen, setMode] = useState<"signIn" | "signUp" | null>(null);
+  const mode = chosen ?? (invited ? "signUp" : "signIn");
 
   useEffect(() => {
     if (isAuthenticated) router.replace("/");
@@ -31,19 +37,22 @@ export default function Welcome() {
     setBusy(true);
     const form = new FormData(e.currentTarget);
     form.set("flow", mode);
+    form.set("email", String(form.get("email") ?? "").trim().toLowerCase());
     try {
       await signIn("password", form);
       router.replace("/");
     } catch (err: any) {
       const msg = String(err?.message ?? "");
       toast({
-        message: msg.includes("InvalidAccountId")
-          ? "No account with that email — try creating one."
-          : msg.includes("InvalidSecret")
-            ? "That password does not match."
-            : mode === "signUp"
-              ? "Could not create the account. Password needs 8+ characters."
-              : "Could not sign in.",
+        // One message for unknown email and wrong password, so the form can't be used to
+        // discover who has an account.
+        message: typeof err?.data === "string"
+          ? err.data // our own validation (weak password, bad email) — safe to show as is
+          : msg.includes("TooManyFailedAttempts")
+          ? "Too many tries. Wait a few minutes and try again."
+          : mode === "signUp"
+            ? "Could not create the account. Use a valid email and 8+ character password, or sign in."
+            : "Email or password is wrong.",
         tone: "var(--rose)",
       });
     } finally {
@@ -52,24 +61,23 @@ export default function Welcome() {
   }
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-6xl flex-col gap-10 px-5 py-10 lg:flex-row lg:items-center lg:gap-16 lg:py-16">
-      <section className="flex-1 animate-rise">
-        <div className="mb-8 flex items-center gap-3">
-          <div className="grid h-11 w-11 place-items-center rounded-2xl bg-accent text-accent-ink">
-            <Dumbbell className="h-6 w-6" strokeWidth={2.5} />
+    <main className="mx-auto flex min-h-dvh max-w-6xl flex-col px-4 pt-[calc(var(--safe-top)_+_1rem)] pb-8 sm:px-6 lg:flex-row lg:items-center lg:gap-16 lg:py-16">
+      {/* Brand + pitch. On phones this is two short lines so the form is on the first screen. */}
+      <section className="lg:flex-1">
+        <div className="flex items-center gap-2.5">
+          <div className="grid h-10 w-10 place-items-center rounded-2xl bg-accent text-accent-ink">
+            <Dumbbell className="h-5 w-5" strokeWidth={2.5} />
           </div>
-          <span className="text-lg font-bold tracking-tight">FitOpe</span>
+          <span className="text-[17px] font-bold tracking-tight">FitOpe</span>
         </div>
-        <h1 className="max-w-xl text-[40px] font-bold leading-[1.05] tracking-tight sm:text-[54px]">
-          Your body,
-          <br />
-          <span className="text-accent">tracked properly.</span>
+        <h1 className="mt-5 text-[26px] font-bold leading-[1.1] tracking-tight sm:text-[40px] lg:mt-8 lg:text-[54px]">
+          Your body, <span className="text-muted lg:block lg:text-accent">tracked properly.</span>
         </h1>
-        <p className="mt-5 max-w-md text-[15px] leading-relaxed text-ink-2">
+        <p className="mt-4 hidden max-w-md text-[15px] leading-relaxed text-ink-2 lg:block">
           Training, Indian nutrition, sleep and recovery in one place — built around trends that
           actually mean something, not day-to-day noise.
         </p>
-        <div className="mt-9 grid max-w-xl gap-3 sm:grid-cols-2">
+        <div className="mt-9 hidden max-w-xl grid-cols-2 gap-3 lg:grid">
           {PILLARS.map((p) => (
             <div key={p.title} className="rounded-2xl border border-line bg-surface/70 p-4">
               <p.icon className="mb-2.5 h-5 w-5 text-accent" />
@@ -80,49 +88,102 @@ export default function Welcome() {
         </div>
       </section>
 
-      <section className="w-full animate-rise lg:max-w-sm" style={{ animationDelay: "80ms" }}>
-        <Card className="p-6">
-          <div className="mb-1 flex items-center gap-2 text-[12px] font-semibold text-accent">
-            <Activity className="h-4 w-4" /> {mode === "signUp" ? "Create your account" : "Welcome back"}
+      <section className="mt-5 w-full animate-rise lg:mt-0 lg:max-w-sm">
+        {invited && (
+          <div className="mb-3 flex items-center gap-3 rounded-2xl border border-mint/30 bg-mint/10 px-4 py-3">
+            <span className="text-[26px] leading-none">👨‍👩‍👧‍👦</span>
+            <span className="text-[13.5px] font-semibold">You&apos;re invited to a family. Sign in or create an account to join.</span>
           </div>
-          <h2 className="text-[22px] font-bold tracking-tight">
-            {mode === "signUp" ? "Start in 90 seconds" : "Sign in"}
-          </h2>
-          <form onSubmit={submit} className="mt-5 space-y-3.5">
+        )}
+        <div className="card p-4 sm:p-6">
+          <Segmented
+            value={mode}
+            onChange={setMode}
+            options={[
+              { value: "signIn", label: "Sign in" },
+              { value: "signUp", label: "Create account" },
+            ]}
+          />
+          <form onSubmit={submit} className="mt-4 space-y-3">
             {mode === "signUp" && (
-              <Field label="Name">
-                <Input name="name" placeholder="Your name" autoComplete="name" />
-              </Field>
+              <IconInput icon={User}>
+                <Input name="name" placeholder="Your name" autoComplete="name" maxLength={60} className="pl-11" aria-label="Name" />
+              </IconInput>
             )}
-            <Field label="Email">
-              <Input name="email" type="email" required placeholder="you@email.com" autoComplete="email" />
-            </Field>
-            <Field label="Password" hint={mode === "signUp" ? "At least 8 characters." : undefined}>
+            <IconInput icon={Mail}>
+              <Input
+                name="email"
+                type="email"
+                required
+                maxLength={254}
+                placeholder="you@email.com"
+                autoComplete="email"
+                inputMode="email"
+                autoCapitalize="none"
+                className="pl-11"
+                aria-label="Email"
+              />
+            </IconInput>
+            <IconInput icon={Lock}>
               <Input
                 name="password"
-                type="password"
+                type={showPw ? "text" : "password"}
                 required
                 minLength={8}
-                placeholder="••••••••"
+                maxLength={128}
+                placeholder={mode === "signUp" ? "Password (8+ characters)" : "Password"}
                 autoComplete={mode === "signUp" ? "new-password" : "current-password"}
+                className="px-11"
+                aria-label="Password"
               />
-            </Field>
+              <button
+                type="button"
+                onClick={() => setShowPw((v) => !v)}
+                className="absolute right-1 top-1/2 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-xl text-muted hover:text-ink"
+                aria-label={showPw ? "Hide password" : "Show password"}
+              >
+                {showPw ? <EyeOff className="h-[18px] w-[18px]" /> : <Eye className="h-[18px] w-[18px]" />}
+              </button>
+            </IconInput>
             <Button type="submit" size="lg" className="w-full" loading={busy}>
               {mode === "signUp" ? "Create account" : "Sign in"}
             </Button>
           </form>
-          <button
-            className="mt-4 w-full text-center text-[13px] text-muted transition-colors hover:text-ink"
-            onClick={() => setMode(mode === "signUp" ? "signIn" : "signUp")}
-          >
-            {mode === "signUp" ? "Already have an account? Sign in" : "New here? Create an account"}
-          </button>
-          <p className="mt-5 text-[11.5px] leading-relaxed text-muted">
-            FitOpe tracks fitness data you enter yourself. It is not a medical device and does not
-            diagnose or treat anything.
+          <p className="mt-4 text-center text-[11.5px] leading-relaxed text-muted">
+            Not a medical device. Your data is private to you and the family you choose.
           </p>
-        </Card>
+        </div>
+
+        <InstallCard className="mt-3" />
+
+        {/* Phones: what the app does, as a compact strip under the form. */}
+        <div className="mt-5 grid grid-cols-2 gap-2 lg:hidden">
+          {PILLARS.map((p) => (
+            <div key={p.title} className="flex items-center gap-2.5 rounded-2xl border border-line bg-surface/70 p-3">
+              <p.icon className="h-5 w-5 shrink-0 text-accent" />
+              <span className="text-[13px] font-semibold">{p.title}</span>
+            </div>
+          ))}
+        </div>
       </section>
     </main>
+  );
+}
+
+const noSubscribe = () => () => {};
+function readInvited() {
+  try {
+    return !!localStorage.getItem("fitope-join");
+  } catch {
+    return false;
+  }
+}
+
+function IconInput({ icon: Icon, children }: { icon: any; children: React.ReactNode }) {
+  return (
+    <div className="relative">
+      <Icon className="pointer-events-none absolute left-4 top-1/2 z-10 h-[18px] w-[18px] -translate-y-1/2 text-muted" />
+      {children}
+    </div>
   );
 }
