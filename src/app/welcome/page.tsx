@@ -4,7 +4,7 @@ import { useAuthActions } from "@convex-dev/auth/react";
 import { useConvexAuth } from "convex/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useSyncExternalStore } from "react";
-import { Button, Input, Segmented, useToast } from "@/components/ui";
+import { Button, Input, Logo, Segmented, useToast } from "@/components/ui";
 import { InstallCard } from "@/components/install";
 import { Apple, Dumbbell, Eye, EyeOff, Lock, Mail, Moon, TrendingUp, User } from "lucide-react";
 
@@ -65,9 +65,7 @@ export default function Welcome() {
       {/* Brand + pitch. On phones this is two short lines so the form is on the first screen. */}
       <section className="lg:flex-1">
         <div className="flex items-center gap-2.5">
-          <div className="grid h-10 w-10 place-items-center rounded-2xl bg-accent text-accent-ink">
-            <Dumbbell className="h-5 w-5" strokeWidth={2.5} />
-          </div>
+          <Logo size={40} />
           <span className="text-[17px] font-bold tracking-tight">FitOpe</span>
         </div>
         <h1 className="mt-5 text-[26px] font-bold leading-[1.1] tracking-tight sm:text-[40px] lg:mt-8 lg:text-[54px]">

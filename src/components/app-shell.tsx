@@ -7,7 +7,7 @@ import { api } from "../../convex/_generated/api";
 import { useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Activity, Apple, Dumbbell, House, Moon, TrendingUp, User, Users } from "lucide-react";
-import { Skeleton } from "@/components/ui";
+import { Logo, Skeleton } from "@/components/ui";
 import { NudgeBanner } from "@/components/family";
 
 const TABS = [
@@ -60,9 +60,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {/* Desktop rail */}
       <aside className="sticky top-0 hidden h-dvh w-60 shrink-0 flex-col border-r border-line px-4 py-6 lg:flex">
         <Link href="/home" className="mb-8 flex items-center gap-2.5 px-2">
-          <div className="grid h-9 w-9 place-items-center rounded-xl bg-accent text-accent-ink">
-            <Dumbbell className="h-5 w-5" strokeWidth={2.5} />
-          </div>
+          <Logo size={36} />
           <span className="text-[17px] font-bold tracking-tight">FitOpe</span>
         </Link>
         <nav className="space-y-1">
