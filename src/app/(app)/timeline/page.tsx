@@ -5,7 +5,7 @@ import { api } from "../../../../convex/_generated/api";
 import Link from "next/link";
 import { useState } from "react";
 import { Card, EmptyState, Pill, Segmented, Skeleton } from "@/components/ui";
-import { Activity, Camera, Dumbbell, HeartPulse, Moon, Scale, UtensilsCrossed } from "lucide-react";
+import { Activity, Dumbbell, HeartPulse, Moon, Scale, UtensilsCrossed } from "lucide-react";
 import { cn, hhmm, prettyDate } from "@/lib/utils";
 
 export default function Timeline() {
@@ -33,7 +33,7 @@ export default function Timeline() {
       {rows === undefined ? (
         <Skeleton className="h-72 w-full" />
       ) : rows.length === 0 ? (
-        <EmptyState icon={<Activity className="h-5 w-5" />} title="Nothing logged yet" body="Workouts, meals, sleep, weigh-ins and photos all land here." />
+        <EmptyState icon={<Activity className="h-5 w-5" />} title="Nothing logged yet" body="Workouts, meals, sleep and weigh-ins all land here." />
       ) : (
         <div className="space-y-3">
           {rows.map((d: any) => (
@@ -91,14 +91,6 @@ export default function Timeline() {
                       energy {d.checkin.energy} · soreness {d.checkin.soreness}
                     </span>
                   </div>
-                )}
-                {d.photos > 0 && (
-                  <Link href="/progress/photos" className="flex items-center gap-2.5 text-[13.5px]">
-                    <Camera className="h-4 w-4 shrink-0 text-muted" />
-                    <span className="flex-1">
-                      {d.photos} progress photo{d.photos > 1 ? "s" : ""}
-                    </span>
-                  </Link>
                 )}
               </Card>
             </div>

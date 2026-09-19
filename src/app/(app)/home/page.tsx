@@ -6,14 +6,13 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Bar, Button, Card, Pill, Ring, SectionTitle, Skeleton, useToast } from "@/components/ui";
-import { CircleAction, MediaTile, MinutesRing, RowCard } from "@/components/ui/media";
-import { CheckinSheet, SleepSheet, WeightSheet } from "@/components/quick-log";
+import { MediaTile, MinutesRing, RowCard } from "@/components/ui/media";
+import { SleepSheet, WeightSheet } from "@/components/quick-log";
 import { FamilyStrip } from "@/components/family";
 import { InstallCard } from "@/components/install";
 import {
   ArrowRight,
   Bell,
-  Camera,
   Check,
   ChevronRight,
   Droplets,
@@ -37,7 +36,6 @@ const REMINDER_LINKS: Record<string, string> = {
   water: "/eat",
   sleep: "/recover",
   weigh_in: "/progress",
-  photo: "/progress/photos",
 };
 
 export default function Home() {
@@ -47,7 +45,7 @@ export default function Home() {
   const startWorkout = useMutation(api.workouts.start);
   const router = useRouter();
   const toast = useToast();
-  const [sheet, setSheet] = useState<null | "weight" | "sleep" | "checkin">(null);
+  const [sheet, setSheet] = useState<null | "weight" | "sleep">(null);
   const [starting, setStarting] = useState(false);
   const u = useUnits();
 
@@ -201,23 +199,6 @@ export default function Home() {
         />
       </div>
 
-      {/* Quick actions row */}
-      <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 sm:-mx-6 sm:px-6">
-        <CircleAction icon={UtensilsCrossed} label="Food" onClick={() => router.push("/eat/add?meal=auto")} />
-        <CircleAction
-          icon={Droplets}
-          label="+250 ml"
-          onClick={async () => {
-            await logWater({ ml: 250 });
-            toast({ message: "250 ml logged" });
-          }}
-        />
-        <CircleAction icon={Scale} label="Weigh in" onClick={() => setSheet("weight")} />
-        <CircleAction icon={Moon} label="Sleep" onClick={() => setSheet("sleep")} />
-        <CircleAction icon={HeartPulse} label="Check-in" onClick={() => setSheet("checkin")} active={!!data.checkin} />
-        <CircleAction icon={Camera} label="Photo" onClick={() => router.push("/progress/photos")} />
-      </div>
-
       {/* Today's plan — reference list rows */}
       {(planned?.items?.length || (w as any)?.setsTotal) && (
         <section>
@@ -300,7 +281,10 @@ export default function Home() {
           value={`${(data.water / 1000).toFixed(1)}L`}
           label={`of ${((t?.waterMl ?? 3000) / 1000).toFixed(1)} L`}
           bar={{ value: data.water, max: t?.waterMl ?? 3000, color: "var(--sky)" }}
-          onClick={() => logWater({ ml: 250 })}
+          onClick={async () => {
+            await logWater({ ml: 250 });
+            toast({ message: "250 ml logged" });
+          }}
           cta="+250 ml"
         />
         <MiniStat
@@ -379,7 +363,6 @@ export default function Home() {
         onClose={() => setSheet(null)}
         defaults={{ bedtime: data.profile?.bedtime, wakeTime: data.profile?.wakeTime }}
       />
-      <CheckinSheet open={sheet === "checkin"} onClose={() => setSheet(null)} initial={data.checkin} />
     </div>
   );
 }
@@ -449,10 +432,7 @@ function MiniStat({
   cta: string;
 }) {
   return (
-    <button
-      onClick={onClick}
-      className="card flex items-center gap-3 p-3 text-left transition-transform active:scale-[0.98] sm:block"
-    >
+    <div className="card flex items-center gap-3 p-3 sm:block">
       <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl sm:h-7 sm:w-7 sm:rounded-lg" style={{ background: tint }}>
         <Icon className="h-[18px] w-[18px] sm:h-3.5 sm:w-3.5" style={{ color: "var(--tile-ink)" }} />
       </span>
@@ -463,9 +443,12 @@ function MiniStat({
         </div>
         {bar && <Bar value={bar.value} max={bar.max} color={bar.color} className="mt-2" height={4} />}
       </div>
-      <span className="shrink-0 rounded-full bg-surface-2 px-3 py-1.5 text-[12px] font-semibold text-ink sm:mt-1.5 sm:block sm:truncate sm:bg-transparent sm:p-0 sm:text-[10.5px]">
+      <button
+        onClick={onClick}
+        className="shrink-0 rounded-full bg-surface-2 px-3 py-1.5 text-[12px] font-semibold text-ink transition-transform active:scale-95 sm:mt-2 sm:w-full sm:truncate"
+      >
         {cta}
-      </span>
-    </button>
+      </button>
+    </div>
   );
 }

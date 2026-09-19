@@ -12,7 +12,7 @@ const PILLARS = [
   { icon: Dumbbell, title: "Train", body: "Plans that adapt to what you actually lifted last time." },
   { icon: Apple, title: "Eat Indian", body: "265 everyday foods in katoris, rotis and bowls." },
   { icon: Moon, title: "Recover", body: "Readiness from your own sleep, soreness and load." },
-  { icon: TrendingUp, title: "Progress", body: "Trend weight, strength curves and photos over months." },
+  { icon: TrendingUp, title: "Progress", body: "Trend weight, and strength curves over months." },
 ];
 
 export default function Welcome() {

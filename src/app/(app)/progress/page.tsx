@@ -2,7 +2,6 @@
 
 import { useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
-import Link from "next/link";
 import { useState } from "react";
 import {
   Bar as BarMeter,
@@ -29,7 +28,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { Camera, ChevronRight, Plus, Ruler, Scale, Sparkles, Trophy } from "lucide-react";
+import { ChevronRight, Plus, Ruler, Scale, Sparkles, Trophy } from "lucide-react";
 import { cn, prettyDate, titleCase } from "@/lib/utils";
 import { useUnits } from "@/lib/units";
 
@@ -56,11 +55,6 @@ export default function Progress() {
       <header className="flex min-w-0 items-center justify-between gap-3 pt-1">
         <h1 className="min-w-0 text-[22px] font-bold tracking-tight sm:text-[26px]">Progress</h1>
         <div className="flex shrink-0 gap-1.5">
-          <Link href="/progress/photos">
-            <Button size="sm" variant="soft">
-              <Camera className="h-4 w-4" /> Photos
-            </Button>
-          </Link>
           <Button size="sm" onClick={() => setLogging(true)}>
             <Plus className="h-4 w-4" /> Weigh in
           </Button>

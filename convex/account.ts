@@ -70,7 +70,6 @@ export const exportData = query({
  * batches so a long-time user's history never exceeds one transaction's limits.
  */
 const OWNED = [
-  { table: "progressPhotos", index: "by_user_date", field: "userId" },
   { table: "sets", index: "by_user_exercise", field: "userId" },
   { table: "workoutExercises", index: "by_user_exercise", field: "userId" },
   { table: "workouts", index: "by_user_date", field: "userId" },
@@ -147,10 +146,7 @@ export const wipeBatch = internalMutation({
           .filter((q: any) => q.lt(q.field("_creationTime"), args.before))
           .take(budget);
         if (rows.length === 0) break;
-        for (const r of rows) {
-          if (src.table === "progressPhotos") await ctx.storage.delete(r.storageId);
-          await ctx.db.delete(r._id);
-        }
+        for (const r of rows) await ctx.db.delete(r._id);
         budget -= rows.length;
       }
       if (budget <= 0) {

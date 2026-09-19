@@ -507,11 +507,6 @@ function SettingsSheet({ open, onClose, me, isOwner, circleName }: { open: boole
                 </button>
               );
             })}
-            <div className="flex items-center gap-3 rounded-2xl px-3.5 py-3 opacity-60">
-              <span className="text-[22px] leading-none">📷</span>
-              <span className="flex-1 text-[14.5px] font-semibold">Photos</span>
-              <Lock className="h-5 w-5" aria-label="Always private" />
-            </div>
           </div>
         </div>
 

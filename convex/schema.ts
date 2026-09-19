@@ -10,6 +10,14 @@ const nutrients = v.object({
   fiber: v.number(),
 });
 
+export const reminderKind = v.union(
+  v.literal("workout"),
+  v.literal("meal"),
+  v.literal("water"),
+  v.literal("sleep"),
+  v.literal("weigh_in")
+);
+
 export const measurementFields = v.object({
   waist: v.optional(v.number()),
   chest: v.optional(v.number()),
@@ -21,7 +29,7 @@ export const measurementFields = v.object({
   calves: v.optional(v.number()),
 });
 
-/** What a family member lets the rest of the circle see. Photos are never shareable. */
+/** What a family member lets the rest of the circle see. */
 export const shareFields = v.object({
   meals: v.boolean(),
   water: v.boolean(),
@@ -299,17 +307,6 @@ export default defineSchema({
     isSample: v.optional(v.boolean()),
   }).index("by_user_date", ["userId", "date"]),
 
-  progressPhotos: defineTable({
-    userId: v.id("users"),
-    date: v.string(),
-    pose: v.string(), // front | side | back
-    storageId: v.id("_storage"),
-    weightKg: v.optional(v.number()),
-    notes: v.optional(v.string()),
-  })
-    .index("by_user_date", ["userId", "date"])
-    .index("by_storage", ["storageId"]),
-
   checkins: defineTable({
     userId: v.id("users"),
     date: v.string(),
@@ -322,7 +319,7 @@ export default defineSchema({
 
   reminders: defineTable({
     userId: v.id("users"),
-    kind: v.string(), // workout | meal | water | sleep | weigh_in | photo
+    kind: reminderKind,
     label: v.string(),
     time: v.string(),
     days: v.array(v.number()),
