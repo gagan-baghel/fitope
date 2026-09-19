@@ -1,4 +1,4 @@
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./lib/functions";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { requireUser, todayFor, safeTz } from "./lib/util";
@@ -150,13 +150,15 @@ export async function recalcTargets(ctx: any, userId: any, source: string) {
     .query("profiles")
     .withIndex("by_user", (q: any) => q.eq("userId", userId))
     .unique();
-  if (!profile?.heightCm || !profile?.startWeightKg) return null;
+  // The newest logged weight wins; the onboarding weight is only a fallback.
   const latest = await ctx.db
     .query("bodyMetrics")
     .withIndex("by_user_date", (q: any) => q.eq("userId", userId))
     .order("desc")
+    .filter((q: any) => q.neq(q.field("weightKg"), undefined))
     .first();
-  const weightKg = latest?.weightKg ?? profile.startWeightKg;
+  const weightKg = latest?.weightKg ?? profile?.startWeightKg;
+  if (!profile?.heightCm || !weightKg) return null;
   const age = profile.birthYear ? new Date().getFullYear() - profile.birthYear : 30;
   let sleepMinutes = 480;
   if (profile.bedtime && profile.wakeTime) {
@@ -206,7 +208,9 @@ export const recomputeTargets = mutation({
   args: {},
   handler: async (ctx) => {
     const userId = await requireUser(ctx);
-    return await recalcTargets(ctx, userId, "estimated");
+    const id = await recalcTargets(ctx, userId, "estimated");
+    if (!id) throw new ConvexError("Add your height and log a weight to estimate targets");
+    return id;
   },
 });
 

@@ -81,14 +81,8 @@ export default function Home() {
 
   return (
     <div className="space-y-5">
-      {/* Welcome row — avatar, greeting, streak pill */}
-      <header className="flex items-center gap-2.5 pt-1">
-        <Link
-          href="/me"
-          className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-ink text-[15px] font-bold text-ground"
-        >
-          {(firstName || "?").slice(0, 1).toUpperCase()}
-        </Link>
+      {/* Welcome row — greeting and streak (the avatar lives in the top bar) */}
+      <header className="flex items-center gap-2.5">
         <div className="min-w-0 flex-1">
           <div className="text-[11.5px] text-muted">
             {hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening"}
