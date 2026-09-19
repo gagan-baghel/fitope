@@ -83,18 +83,18 @@ export default function Me() {
 
   return (
     <div className="space-y-5">
-      <header className="flex items-center gap-4 pt-1">
-        <div className="grid h-14 w-14 place-items-center rounded-2xl bg-accent text-[20px] font-bold text-accent-ink">
+      <header className="flex items-center gap-3">
+        <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-accent text-[15px] font-bold text-accent-ink">
           {(p?.name ?? me?.email ?? "?").slice(0, 1).toUpperCase()}
         </div>
         <div className="min-w-0">
-          <h1 className="truncate text-[22px] font-bold tracking-tight">{p?.name ?? "Your profile"}</h1>
-          <div className="truncate text-[13px] text-muted">{me?.email}</div>
+          <h1 className="truncate text-[17px] font-bold leading-tight tracking-tight">{p?.name ?? "Your profile"}</h1>
+          <div className="truncate text-[12px] text-muted">{me?.email}</div>
         </div>
       </header>
 
       {/* Snapshot */}
-      <div className="grid grid-cols-3 gap-2.5">
+      <Card className="grid grid-cols-3 gap-3">
         <Stat label="Goal" value={<span className="text-[15px]">{titleCase(p?.goal ?? "–")}</span>} />
         <Stat
           label="Weight"
@@ -103,7 +103,7 @@ export default function Me() {
           sub={p?.targetWeightKg ? `target ${u.outWeight(p.targetWeightKg)}` : undefined}
         />
         <Stat label="Training" value={p?.daysPerWeek ?? "–"} unit="d/wk" />
-      </div>
+      </Card>
 
       {/* Targets */}
       <Card>
@@ -122,33 +122,50 @@ export default function Me() {
         >
           Daily targets
         </SectionTitle>
-        <div className="grid grid-cols-3 gap-2.5">
-          <Stat label="Calories" value={target?.kcal ?? "–"} unit="kcal" />
-          <Stat label="Protein" value={target?.protein ?? "–"} unit="g" tone="var(--accent)" />
-          <Stat label="Fiber" value={target?.fiber ?? "–"} unit="g" tone="var(--mint)" />
-          <Stat label="Carbs" value={target?.carbs ?? "–"} unit="g" />
-          <Stat label="Fat" value={target?.fat ?? "–"} unit="g" />
-          <Stat label="Water" value={target?.waterMl ?? "–"} unit="ml" tone="var(--sky)" />
-        </div>
-        <div className="mt-3 flex flex-wrap items-center gap-2 text-[11.5px] text-muted">
-          <Pill tone={target?.source === "custom" ? "violet" : "amber"}>
-            {target?.source === "custom" ? "Your numbers" : "Estimated"}
-          </Pill>
-          {target?.basis && (
-            <span>
-              BMR {target.basis.bmr} · TDEE {target.basis.tdee} · {target.basis.method}
-            </span>
-          )}
-          <button
-            className="ml-auto font-semibold text-accent"
-            onClick={async () => {
-              await recompute({});
-              toast({ message: "Targets recalculated from your latest weight" });
-            }}
-          >
-            Recalculate
-          </button>
-        </div>
+        {!target ? (
+          <div className="flex items-center gap-3">
+            <p className="flex-1 text-[13px] leading-snug text-muted">
+              Add your height and a weight so we can estimate your daily targets.
+            </p>
+            <Button size="sm" onClick={() => setSheet("profile")}>
+              Add
+            </Button>
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-3 gap-x-3 gap-y-4">
+              <Stat label="Calories" value={target.kcal} unit="kcal" />
+              <Stat label="Protein" value={target.protein} unit="g" tone="var(--accent)" />
+              <Stat label="Fiber" value={target.fiber} unit="g" tone="var(--mint)" />
+              <Stat label="Carbs" value={target.carbs} unit="g" />
+              <Stat label="Fat" value={target.fat} unit="g" />
+              <Stat label="Water" value={target.waterMl} unit="ml" tone="var(--sky)" />
+            </div>
+            <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-line pt-3 text-[11.5px] text-muted">
+              <Pill tone={target?.source === "custom" ? "violet" : "amber"}>
+                {target?.source === "custom" ? "Your numbers" : "Estimated"}
+              </Pill>
+              {target?.basis && (
+                <span>
+                  BMR {target.basis.bmr} · TDEE {target.basis.tdee} · {target.basis.method}
+                </span>
+              )}
+              <button
+                className="ml-auto font-semibold text-accent"
+                onClick={async () => {
+                  try {
+                      await recompute({});
+                      toast({ message: "Targets recalculated from your latest weight" });
+                  } catch (e) {
+                    toast({ message: errorText(e), tone: "var(--rose)" });
+                  }
+                }}
+              >
+                Recalculate
+              </button>
+            </div>
+          </>
+        )}
       </Card>
 
       {/* Goals */}
@@ -616,6 +633,7 @@ function ProfileSheet({ open, onClose, profile }: { open: boolean; onClose: () =
           loading={busy}
           onClick={async () => {
             setBusy(true);
+            try {
             await save({
               name: d.name,
               sex: d.sex,
@@ -633,8 +651,8 @@ function ProfileSheet({ open, onClose, profile }: { open: boolean; onClose: () =
               bedtime: d.bedtime,
               wakeTime: d.wakeTime,
             });
-            await recompute({});
-            setBusy(false);
+            // Without a weight yet there is nothing to estimate from; the profile still saves.
+            await recompute({}).catch(() => {});
             onClose();
             toast({
               message: "Profile updated",
@@ -646,6 +664,11 @@ function ProfileSheet({ open, onClose, profile }: { open: boolean; onClose: () =
                 },
               },
             });
+            } catch (e) {
+              toast({ message: errorText(e), tone: "var(--rose)" });
+            } finally {
+              setBusy(false);
+            }
           }}
         >
           Save changes

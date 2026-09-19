@@ -494,7 +494,7 @@ export function Stat({
   className?: string;
 }) {
   return (
-    <div className={cn("min-w-0 rounded-2xl border border-line bg-surface-2 p-2.5 sm:p-3.5", className)}>
+    <div className={cn("min-w-0", className)}>
       {/* Labels and subs wrap instead of truncating: three of these share ~240px on a 320px phone. */}
       <div className="line-clamp-2 break-words text-[10px] font-semibold uppercase leading-tight tracking-wide text-muted sm:text-[11px] sm:tracking-wider">
         {label}

@@ -13,11 +13,11 @@ import {
   Dumbbell,
   HeartPulse,
   House,
-  LayoutGrid,
+  ChevronRight,
+  Menu,
   Moon,
   Scale,
   TrendingUp,
-  User,
   Users,
   UtensilsCrossed,
 } from "lucide-react";
@@ -33,14 +33,15 @@ const TABS = [
   { href: "/progress", label: "Progress", icon: TrendingUp },
 ];
 
-// Phones get four tabs; everything else lives behind "More".
-const MOBILE_TABS = TABS.slice(0, 3);
+// Phones get four tabs; the rest opens from the avatar in the top bar.
+const MOBILE_TABS = TABS.filter((t) => t.href !== "/recover");
 const MORE_PAGES = [
-  ...TABS.slice(3),
+  { href: "/recover", label: "Recover", icon: Moon },
   { href: "/family", label: "Family", icon: Users },
   { href: "/timeline", label: "Timeline", icon: Activity },
-  { href: "/me", label: "Profile", icon: User },
 ];
+// Task screens bring their own sticky header with a back button.
+const FOCUS_ROUTES = ["/eat/add", "/train/session"];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useConvexAuth();
@@ -51,6 +52,22 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [sheet, setSheet] = useState<null | "weight" | "sleep" | "checkin">(null);
   const logWater = useMutation(api.nutrition.logWater);
   const toast = useToast();
+  const focus = FOCUS_ROUTES.some((r) => pathname.startsWith(r));
+  const initial = (me?.profile?.name ?? me?.email ?? "?").slice(0, 1).toUpperCase();
+
+  // Top bar slides away while scrolling down and returns on any scroll up.
+  const [barHidden, setBarHidden] = useState(false);
+  useEffect(() => {
+    let last = window.scrollY;
+    const onScroll = () => {
+      const y = window.scrollY;
+      if (Math.abs(y - last) < 6) return;
+      setBarHidden(y > last && y > 56);
+      last = y;
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) router.replace("/welcome");
@@ -158,27 +175,67 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </aside>
 
       <div className="min-w-0 flex-1">
-        <div className="mx-auto max-w-2xl px-4 pb-28 pt-[calc(var(--safe-top)_+_1.25rem)] sm:px-6 lg:max-w-3xl lg:pb-12">
+        {!focus && (
+          <header
+            className={cn(
+              "sticky top-0 z-40 border-b border-line bg-bg/90 pt-[var(--safe-top)] backdrop-blur-xl transition-transform duration-300 lg:hidden",
+              barHidden && !more && "-translate-y-full"
+            )}
+          >
+            <div className="mx-auto flex h-12 max-w-2xl items-center justify-between px-4 sm:px-6">
+              <Link href="/home" className="flex items-center gap-2">
+                <Logo size={24} />
+                <span className="text-[15px] font-bold tracking-tight">FitOpe</span>
+              </Link>
+              <button
+                type="button"
+                onClick={() => setMore(true)}
+                aria-label="More options"
+                aria-haspopup="dialog"
+                className="flex items-center gap-1 rounded-full border border-line bg-surface py-0.5 pl-0.5 pr-2 active:scale-95"
+              >
+                <span className="grid h-7 w-7 place-items-center rounded-full bg-ink text-[12px] font-bold text-ground">
+                  {initial}
+                </span>
+                <Menu className="h-4 w-4 text-muted" />
+              </button>
+            </div>
+          </header>
+        )}
+        <div
+          className={cn(
+            "mx-auto max-w-2xl px-4 pb-24 sm:px-6 lg:max-w-3xl lg:pb-12 lg:pt-[calc(var(--safe-top)_+_1.25rem)]",
+            focus ? "pt-[calc(var(--safe-top)_+_1.25rem)]" : "pt-4"
+          )}
+        >
           {children}
         </div>
       </div>
 
       {/* Mobile tab bar — full width, docked to the bottom edge */}
-      <nav className="fixed inset-x-0 bottom-0 z-40 rounded-t-[24px] border-t border-line bg-surface/95 px-2 pt-1.5 pb-[max(8px,var(--safe-bottom))] shadow-[0_-6px_24px_rgba(0,0,0,0.06)] backdrop-blur-xl lg:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-40 rounded-t-[20px] border-t border-line bg-surface/95 px-2 pt-1 pb-[max(4px,var(--safe-bottom))] shadow-[0_-4px_16px_rgba(0,0,0,0.05)] backdrop-blur-xl lg:hidden">
         <div className="mx-auto flex max-w-md">
           {MOBILE_TABS.map((t) => (
             <TabButton key={t.href} href={t.href} icon={t.icon} label={t.label} active={pathname.startsWith(t.href)} />
           ))}
-          <TabButton
-            icon={LayoutGrid}
-            label="More"
-            active={more || MORE_PAGES.some((p) => pathname.startsWith(p.href))}
-            onClick={() => setMore(true)}
-          />
         </div>
       </nav>
 
       <Sheet open={more} onClose={() => setMore(false)} title="More">
+        <Link
+          href="/me"
+          onClick={() => setMore(false)}
+          className="mb-4 flex items-center gap-3 rounded-2xl bg-surface-2 p-2.5"
+        >
+          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-ink text-[14px] font-bold text-ground">
+            {initial}
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block truncate text-[14px] font-semibold">{me?.profile?.name ?? "Your profile"}</span>
+            <span className="block truncate text-[12px] text-muted">{me?.email}</span>
+          </span>
+          <ChevronRight className="h-4 w-4 shrink-0 text-muted" />
+        </Link>
         <div className="text-[12px] font-semibold uppercase tracking-wide text-muted">Quick log</div>
         <div className="mt-2 grid grid-cols-2 gap-2">
           {(
@@ -240,38 +297,20 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   );
 }
 
-function TabButton({
-  href,
-  icon: Icon,
-  label,
-  active,
-  onClick,
-}: {
-  href?: string;
-  icon: any;
-  label: string;
-  active: boolean;
-  onClick?: () => void;
-}) {
-  const cls = cn(
-    "flex min-w-0 flex-1 flex-col items-center gap-0.5 py-1.5 transition-colors active:scale-95",
-    active ? "text-ink" : "text-muted"
-  );
-  const body = (
-    <>
-      <span className={cn("grid h-8 w-14 place-items-center rounded-full transition-colors", active && "bg-surface-2")}>
-        <Icon className={cn("h-5 w-5", active && "text-accent")} strokeWidth={active ? 2.4 : 2} />
+function TabButton({ href, icon: Icon, label, active }: { href: string; icon: any; label: string; active: boolean }) {
+  return (
+    <Link
+      href={href}
+      aria-current={active ? "page" : undefined}
+      className={cn(
+        "flex min-w-0 flex-1 flex-col items-center gap-0.5 py-1 transition-colors active:scale-95",
+        active ? "text-ink" : "text-muted"
+      )}
+    >
+      <span className={cn("grid h-7 w-12 place-items-center rounded-full transition-colors", active && "bg-surface-2")}>
+        <Icon className={cn("h-[18px] w-[18px]", active && "text-accent")} strokeWidth={active ? 2.4 : 2} />
       </span>
-      <span className="text-[11px] font-semibold tracking-tight">{label}</span>
-    </>
-  );
-  return href ? (
-    <Link href={href} aria-current={active ? "page" : undefined} className={cls}>
-      {body}
+      <span className="text-[10.5px] font-semibold tracking-tight">{label}</span>
     </Link>
-  ) : (
-    <button type="button" onClick={onClick} aria-haspopup="dialog" className={cls}>
-      {body}
-    </button>
   );
 }
