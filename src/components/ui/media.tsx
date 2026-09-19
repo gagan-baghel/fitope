@@ -291,33 +291,6 @@ export function TagChip({ icon: Icon, children }: { icon?: any; children: React.
   );
 }
 
-/** Circular icon button in a scrolling row — Future Pro's "More workouts". */
-export function CircleAction({
-  icon: Icon,
-  label,
-  onClick,
-  active,
-}: {
-  icon: any;
-  label: string;
-  onClick?: () => void;
-  active?: boolean;
-}) {
-  return (
-    <button onClick={onClick} className="flex w-14 shrink-0 flex-col items-center gap-1">
-      <span
-        className={cn(
-          "grid h-12 w-12 place-items-center rounded-full border transition-all active:scale-95",
-          active ? "border-transparent bg-ink text-ground" : "border-line bg-surface text-ink"
-        )}
-      >
-        <Icon className="h-[18px] w-[18px]" strokeWidth={1.9} />
-      </span>
-      <span className="w-full truncate text-center text-[10px] font-medium text-muted">{label}</span>
-    </button>
-  );
-}
-
 export function Accordion({
   title,
   subtitle,

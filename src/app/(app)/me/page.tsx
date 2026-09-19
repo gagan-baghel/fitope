@@ -304,7 +304,7 @@ export default function Me() {
         <div className="flex items-start gap-3 rounded-2xl bg-surface-2 p-3.5">
           <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-mint" />
           <p className="text-[12.5px] leading-relaxed text-muted">
-            Everything you log is tied to your account and visible only to you. Photos, meals, weights
+            Everything you log is tied to your account and visible only to you. Meals, weights
             and workouts are never shared with other users.
           </p>
         </div>
@@ -549,7 +549,7 @@ export default function Me() {
                   setReminderDraft({
                     ...reminderDraft,
                     kind: v,
-                    label: { workout: "Train", meal: "Log your meal", water: "Drink water", sleep: "Wind down", weigh_in: "Weigh in", photo: "Progress photo" }[v as string],
+                    label: { workout: "Train", meal: "Log your meal", water: "Drink water", sleep: "Wind down", weigh_in: "Weigh in" }[v as string],
                   })
                 }
                 options={[
@@ -558,7 +558,6 @@ export default function Me() {
                   { value: "water", label: "Water" },
                   { value: "sleep", label: "Bedtime" },
                   { value: "weigh_in", label: "Weigh in" },
-                  { value: "photo", label: "Progress photo" },
                 ]}
               />
             </Field>

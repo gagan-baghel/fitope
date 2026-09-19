@@ -1,9 +1,10 @@
 import { v } from "convex/values";
-import { mutation, query, throttle, HOUR } from "./lib/functions";
+import { mutation, query } from "./lib/functions";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { requireUser, todayFor, addDays, daysBetween } from "./lib/util";
 import { trendSeries, linearSlopePerWeek, readiness } from "./lib/fitness";
 import { targetsOn } from "./profiles";
+import { reminderKind } from "./schema";
 
 const measurements = v.object({
   waist: v.optional(v.number()),
@@ -286,75 +287,6 @@ export const checkinHistory = query({
   },
 });
 
-/* --------------------------------- photos --------------------------------- */
-
-export const generateUploadUrl = mutation({
-  args: {},
-  handler: async (ctx) => {
-    const userId = await requireUser(ctx);
-    await throttle(ctx, userId, "upload", { max: 30, windowMs: HOUR });
-    return await ctx.storage.generateUploadUrl();
-  },
-});
-
-export const savePhoto = mutation({
-  args: {
-    storageId: v.id("_storage"),
-    pose: v.string(),
-    date: v.optional(v.string()),
-    weightKg: v.optional(v.number()),
-    notes: v.optional(v.string()),
-  },
-  handler: async (ctx, { storageId, pose, date, weightKg, notes }) => {
-    const userId = await requireUser(ctx);
-    // Upload URLs accept any bytes; only keep real, reasonably sized images, and never let one
-    // stored file be attached twice (it would survive the first owner deleting it).
-    const meta = await ctx.db.system.get(storageId);
-    const bad = !meta || !meta.contentType?.startsWith("image/") || meta.size > 10 * 1024 * 1024;
-    const taken = await ctx.db
-      .query("progressPhotos")
-      .withIndex("by_storage", (q) => q.eq("storageId", storageId))
-      .first();
-    if (bad || taken) {
-      if (bad && meta) await ctx.storage.delete(storageId);
-      throw new Error("Upload a photo (JPG/PNG/HEIC, up to 10 MB)");
-    }
-    return await ctx.db.insert("progressPhotos", {
-      userId,
-      storageId,
-      pose,
-      date: date ?? (await todayFor(ctx, userId)),
-      weightKg,
-      notes,
-    });
-  },
-});
-
-export const listPhotos = query({
-  args: {},
-  handler: async (ctx) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) return [];
-    const rows = await ctx.db
-      .query("progressPhotos")
-      .withIndex("by_user_date", (q) => q.eq("userId", userId))
-      .order("desc")
-      .collect();
-    return await Promise.all(rows.map(async (p) => ({ ...p, url: await ctx.storage.getUrl(p.storageId) })));
-  },
-});
-
-export const deletePhoto = mutation({
-  args: { id: v.id("progressPhotos") },
-  handler: async (ctx, { id }) => {
-    const userId = await requireUser(ctx);
-    const p = await ctx.db.get(id);
-    if (!p || p.userId !== userId) throw new Error("Not found");
-    await ctx.storage.delete(p.storageId);
-    await ctx.db.delete(id);
-  },
-});
-
 /* -------------------------------- reminders ------------------------------- */
 
 export const listReminders = query({
@@ -372,7 +304,7 @@ export const listReminders = query({
 export const upsertReminder = mutation({
   args: {
     id: v.optional(v.id("reminders")),
-    kind: v.string(),
+    kind: reminderKind,
     label: v.string(),
     time: v.string(),
     days: v.array(v.number()),

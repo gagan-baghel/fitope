@@ -185,10 +185,6 @@ export const home = query({
               return true;
             case "weigh_in":
               return !bodyRows.some((b) => b.date === d && b.weightKg != null);
-            case "photo":
-              return true;
-            default:
-              return true;
           }
         })
         .map((r) => ({ _id: r._id, kind: r.kind, label: r.label, time: r.time })),
@@ -203,7 +199,7 @@ export const timeline = query({
     const userId = await getAuthUserId(ctx);
     if (!userId) return [];
     const from = addDays((await todayFor(ctx, userId)), -Math.min(Math.max(days ?? 14, 1), 90) + 1);
-    const [workouts, meals, sleep, body, photos, checkins] = await Promise.all([
+    const [workouts, meals, sleep, body, checkins] = await Promise.all([
       ctx.db
         .query("workouts")
         .withIndex("by_user_date", (q) => q.eq("userId", userId).gte("date", from))
@@ -221,10 +217,6 @@ export const timeline = query({
         .withIndex("by_user_date", (q) => q.eq("userId", userId).gte("date", from))
         .collect(),
       ctx.db
-        .query("progressPhotos")
-        .withIndex("by_user_date", (q) => q.eq("userId", userId).gte("date", from))
-        .collect(),
-      ctx.db
         .query("checkins")
         .withIndex("by_user_date", (q) => q.eq("userId", userId).gte("date", from))
         .collect(),
@@ -234,7 +226,6 @@ export const timeline = query({
       ...meals.map((x) => x.date),
       ...sleep.map((x) => x.date),
       ...body.map((x) => x.date),
-      ...photos.map((x) => x.date),
       ...checkins.map((x) => x.date),
     ]);
     return [...dates]
@@ -251,7 +242,6 @@ export const timeline = query({
           },
           sleepMinutes: sleep.filter((s) => s.date === date).reduce((a, s) => a + s.minutes, 0) || null,
           body: body.find((b) => b.date === date) ?? null,
-          photos: photos.filter((p) => p.date === date).length,
           checkin: checkins.find((c) => c.date === date) ?? null,
         };
       });

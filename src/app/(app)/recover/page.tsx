@@ -42,8 +42,9 @@ export default function Recover() {
       <header className="flex min-w-0 items-center justify-between gap-3 pt-1">
         <h1 className="min-w-0 text-[22px] font-bold tracking-tight sm:text-[26px]">Recovery</h1>
         <div className="flex shrink-0 gap-1.5">
-          <Button size="sm" variant="soft" onClick={() => setSheet("checkin")}>
-            <HeartPulse className="h-4 w-4" /> Check in
+          {/* Icon-only on phones so the title keeps its room at 320px. */}
+          <Button size="sm" variant="soft" onClick={() => setSheet("checkin")} aria-label="Check in">
+            <HeartPulse className="h-4 w-4" /> <span className="hidden sm:inline">Check in</span>
           </Button>
           <Button size="sm" onClick={() => setSheet("sleep")}>
             <Plus className="h-4 w-4" /> Sleep
