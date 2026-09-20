@@ -62,11 +62,45 @@ async function verifyPassword(password: string, stored: string) {
 
 /* ------------------------------ membership ------------------------------ */
 
-async function membershipOf(ctx: QueryCtx, userId: Id<"users">) {
+/** Every circle this user belongs to. Circles never see one another. */
+async function membershipsOf(ctx: QueryCtx, userId: Id<"users">) {
   return await ctx.db
     .query("circleMembers")
     .withIndex("by_user", (q) => q.eq("userId", userId))
-    .first();
+    .collect();
+}
+
+async function profileOf(ctx: QueryCtx, userId: Id<"users">) {
+  return await ctx.db
+    .query("profiles")
+    .withIndex("by_user", (q) => q.eq("userId", userId))
+    .unique();
+}
+
+/** Write activeCircleId on the profile so membershipOf returns this circle. */
+async function setActive(ctx: MutationCtx, userId: Id<"users">, circleId: Id<"circles">) {
+  const profile = await profileOf(ctx, userId);
+  if (profile) await ctx.db.patch(profile._id, { activeCircleId: circleId });
+}
+
+/** After leaving, point activeCircleId at any remaining circle (or clear it). */
+async function repointActive(ctx: MutationCtx, userId: Id<"users">) {
+  const rest = await membershipsOf(ctx, userId);
+  const profile = await profileOf(ctx, userId);
+  if (profile) await ctx.db.patch(profile._id, { activeCircleId: rest[0]?.circleId });
+}
+
+/**
+ * The membership the app is currently acting on. Signature is deliberately unchanged from
+ * when a user could only be in one circle, so every read and write below stays scoped to a
+ * single circle without knowing there are others — which is what keeps two circles from
+ * ever leaking into each other.
+ */
+async function membershipOf(ctx: QueryCtx, userId: Id<"users">) {
+  const rows = await membershipsOf(ctx, userId);
+  if (rows.length <= 1) return rows[0] ?? null;
+  const active = (await profileOf(ctx, userId))?.activeCircleId;
+  return rows.find((r) => r.circleId === active) ?? rows[0];
 }
 
 async function membersOf(ctx: QueryCtx, circleId: Id<"circles">) {
@@ -74,6 +108,12 @@ async function membersOf(ctx: QueryCtx, circleId: Id<"circles">) {
     .query("circleMembers")
     .withIndex("by_circle", (q) => q.eq("circleId", circleId))
     .collect();
+}
+
+/** Look up a specific user's membership in a specific circle. */
+async function membershipIn(ctx: QueryCtx, userId: Id<"users">, circleId: Id<"circles">) {
+  const rows = await membershipsOf(ctx, userId);
+  return rows.find((r) => r.circleId === circleId) ?? null;
 }
 
 /** The caller must be an active member. Every family read/write goes through here. */
@@ -199,7 +239,17 @@ export const overview = query({
     const me = await membershipOf(ctx, userId);
     if (!me) return { circle: null };
     const circle = (await ctx.db.get(me.circleId))!;
-    if (me.status === "pending") return { circle: { name: circle.name }, me, members: [], pending: [], invites: [] };
+
+    // All circles this user belongs to — the switcher needs the full list.
+    const allMine = await membershipsOf(ctx, userId);
+    const myCircles = await Promise.all(
+      allMine.map(async (m) => {
+        const c = await ctx.db.get(m.circleId);
+        return { circleId: m.circleId, name: c?.name ?? "Family", isActive: m.circleId === me.circleId };
+      })
+    );
+
+    if (me.status === "pending") return { circle: { name: circle.name }, me, members: [], pending: [], invites: [], myCircles };
 
     const all = await membersOf(ctx, me.circleId);
     const active = all.filter((m) => m.status === "active");
@@ -255,7 +305,7 @@ export const overview = query({
         usesLeft: i.maxUses - i.uses,
       }));
 
-    return { circle: { _id: circle._id, name: circle.name }, me, members, pending, invites };
+    return { circle: { _id: circle._id, name: circle.name }, me, members, pending, invites, myCircles };
   },
 });
 
@@ -266,9 +316,9 @@ export const member = query({
     const viewerId = await getAuthUserId(ctx);
     if (!viewerId) return null;
     const viewer = await membershipOf(ctx, viewerId);
-    const m = await membershipOf(ctx, args.userId);
-    if (!viewer || !m || viewer.status !== "active" || m.status !== "active" || viewer.circleId !== m.circleId)
-      return null;
+    if (!viewer || viewer.status !== "active") return null;
+    const m = await membershipIn(ctx, args.userId, viewer.circleId);
+    if (!m || m.status !== "active") return null;
     const see = (k: ShareKey) => canSee(viewer, m, k);
     const n = Math.min(Math.max(args.days ?? 7, 1), 30);
     const to = localDate(m.timezone);
@@ -356,10 +406,12 @@ export const createCircle = mutation({
   handler: async (ctx, { name, timezone }) => {
     const userId = await requireUser(ctx);
     await throttle(ctx, userId, "circle", { max: 5, windowMs: DAY });
-    if (await membershipOf(ctx, userId)) throw new Error("You are already in a family");
+    const mine = await membershipsOf(ctx, userId);
+    if (mine.length >= L.maxCircles) throw new Error(`You can be in at most ${L.maxCircles} circles`);
     const clean = name.trim().slice(0, 40) || "My family";
     const circleId = await ctx.db.insert("circles", { name: clean, ownerId: userId, createdAt: Date.now() });
     await ctx.db.insert("circleMembers", newMember(circleId, userId, "owner", "active", timezone));
+    await setActive(ctx, userId, circleId);
     return circleId;
   },
 });
@@ -441,7 +493,9 @@ export const joinCircle = mutation({
     const userId = await requireUser(ctx);
     // Per-user cap on top of the per-invite lockout, so one account can't sweep many invites.
     await throttle(ctx, userId, "join", { max: 10, windowMs: HOUR });
-    if (await membershipOf(ctx, userId)) return { ok: false as const, error: "You are already in a family" };
+    const mine = await membershipsOf(ctx, userId);
+    if (mine.length >= L.maxCircles)
+      return { ok: false as const, error: `You can be in at most ${L.maxCircles} circles` };
     const inv = await ctx.db
       .query("circleInvites")
       .withIndex("by_code", (q) => q.eq("code", normalizeCode(code)))
@@ -449,8 +503,10 @@ export const joinCircle = mutation({
     if (!inv || inv.revoked || inv.expiresAt < Date.now() || inv.uses >= inv.maxUses)
       return { ok: false as const, error: "This invite is not valid anymore" };
 
+    if (mine.some((m) => m.circleId === inv.circleId))
+      return { ok: false as const, error: "You are already in this circle" };
     const members = await membersOf(ctx, inv.circleId);
-    if (members.length >= L.maxMembers) return { ok: false as const, error: "This family is full" };
+    if (members.length >= L.maxMembers) return { ok: false as const, error: "This circle is full" };
 
     let status: "active" | "pending" = "pending";
     const pw = password?.trim().toUpperCase();
@@ -471,6 +527,7 @@ export const joinCircle = mutation({
 
     await ctx.db.patch(inv._id, { uses: inv.uses + 1 });
     await ctx.db.insert("circleMembers", newMember(inv.circleId, userId, "member", status, timezone));
+    await setActive(ctx, userId, inv.circleId);
 
     const circle = (await ctx.db.get(inv.circleId))!;
     const name = await displayName(ctx, userId);
@@ -489,8 +546,9 @@ export const cancelRequest = mutation({
   args: {},
   handler: async (ctx) => {
     const userId = await requireUser(ctx);
-    const me = await membershipOf(ctx, userId);
-    if (me?.status === "pending") await ctx.db.delete(me._id);
+    const pending = (await membershipsOf(ctx, userId)).filter((m) => m.status === "pending");
+    for (const m of pending) await ctx.db.delete(m._id);
+    await repointActive(ctx, userId);
   },
 });
 
@@ -518,8 +576,8 @@ export const removeMember = mutation({
   handler: async (ctx, { userId }) => {
     const { me } = await requireOwner(ctx);
     if (userId === me.userId) throw new Error("Use Leave instead");
-    const m = await membershipOf(ctx, userId);
-    if (!m || m.circleId !== me.circleId) throw new Error("Not found");
+    const m = await membershipIn(ctx, userId, me.circleId);
+    if (!m) throw new Error("Not found");
     await detach(ctx, m);
   },
 });
@@ -529,16 +587,32 @@ export const leaveCircle = mutation({
   handler: async (ctx) => {
     const userId = await requireUser(ctx);
     const me = await membershipOf(ctx, userId);
-    if (me) await detach(ctx, me);
+    if (me) {
+      await detach(ctx, me);
+      await repointActive(ctx, userId);
+    }
   },
 });
+
+/** Switch which circle the Family screen is showing. */
+export const switchCircle = mutation({
+  args: { circleId: v.id("circles") },
+  handler: async (ctx, { circleId }) => {
+    const userId = await requireUser(ctx);
+    const mine = await membershipsOf(ctx, userId);
+    if (!mine.some((m) => m.circleId === circleId)) throw new Error("Not your circle");
+    await setActive(ctx, userId, circleId);
+  },
+});
+
+
 
 export const makeAdmin = mutation({
   args: { userId: v.id("users") },
   handler: async (ctx, { userId }) => {
     const { me } = await requireOwner(ctx);
-    const m = await membershipOf(ctx, userId);
-    if (!m || m.circleId !== me.circleId || m.status !== "active") throw new Error("Not found");
+    const m = await membershipIn(ctx, userId, me.circleId);
+    if (!m || m.status !== "active") throw new Error("Not found");
     await ctx.db.patch(m._id, { role: "owner" });
     await ctx.db.patch(me._id, { role: "member" });
     await ctx.db.patch(me.circleId, { ownerId: userId });
@@ -583,8 +657,8 @@ export const sendNudge = mutation({
     const { userId, me } = await requireActive(ctx);
     if (toId === userId) return { ok: false as const, error: "That's you!" };
     if (!(kind in NUDGES)) return { ok: false as const, error: "Unknown nudge" };
-    const to = await membershipOf(ctx, toId);
-    if (!to || to.circleId !== me.circleId || to.status !== "active") return { ok: false as const, error: "Not in your family" };
+    const to = await membershipIn(ctx, toId, me.circleId);
+    if (!to || to.status !== "active") return { ok: false as const, error: "Not in your family" };
 
     const now = Date.now();
     const sent = await ctx.db
@@ -670,10 +744,10 @@ async function detach(ctx: MutationCtx, m: Doc<"circleMembers">) {
       await ctx.db.patch(r._id, { mutedUserIds: r.mutedUserIds.filter((id) => id !== m.userId) });
 }
 
-/** Account deletion: leave the family and erase everything this user sent or received. */
+/** Account deletion: leave every family and erase everything this user sent or received. */
 export async function eraseFamilyData(ctx: MutationCtx, userId: Id<"users">) {
-  const me = await membershipOf(ctx, userId);
-  if (me) await detach(ctx, me);
+  const mine = await membershipsOf(ctx, userId);
+  for (const m of mine) await detach(ctx, m);
   const sent = await ctx.db.query("nudges").withIndex("by_from_to", (q) => q.eq("fromId", userId)).collect();
   const got = await ctx.db.query("nudges").withIndex("by_to", (q) => q.eq("toId", userId)).collect();
   const subs = await ctx.db.query("pushSubscriptions").withIndex("by_user", (q) => q.eq("userId", userId)).collect();
