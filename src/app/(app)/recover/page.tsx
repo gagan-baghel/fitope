@@ -38,9 +38,9 @@ export default function Recover() {
   }));
 
   return (
-    <div className="space-y-5">
-      <header className="flex min-w-0 items-center justify-between gap-3 pt-1">
-        <h1 className="min-w-0 text-[22px] font-bold tracking-tight sm:text-[26px]">Recovery</h1>
+    <div className="space-y-3">
+      <header className="flex min-w-0 items-center justify-between gap-2 pt-1">
+        <h1 className="min-w-0 text-[20px] font-bold tracking-tight sm:text-[26px]">Recovery</h1>
         <div className="flex shrink-0 gap-1.5">
           {/* Icon-only on phones so the title keeps its room at 320px. */}
           <Button size="sm" variant="soft" onClick={() => setSheet("checkin")} aria-label="Check in">
@@ -54,32 +54,35 @@ export default function Recover() {
 
       {/* Readiness */}
       <Card>
-        {/* Stacks on phones — side by side the ring leaves the advice column
-            too narrow to read on a 320px screen. */}
-        <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:gap-5 sm:text-left">
+        <div className="flex min-w-0 items-center gap-3">
           <Ring
             value={readiness!.score}
             max={100}
-            size={112}
-            stroke={12}
+            size={76}
+            stroke={9}
+            className="shrink-0"
             color={readiness!.score >= 70 ? "var(--mint)" : readiness!.score >= 45 ? "var(--amber)" : "var(--rose)"}
           >
             <div className="text-center">
-              <div className="tabular text-[26px] font-bold leading-none">{readiness!.score}</div>
-              <div className="mt-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted">ready</div>
+              <div className="tabular text-[20px] font-bold leading-none">{readiness!.score}</div>
+              <div className="text-[9px] font-semibold uppercase tracking-wider text-muted">ready</div>
             </div>
           </Ring>
           <div className="min-w-0 flex-1">
-            <p className="text-[14px] font-medium leading-snug">{readiness!.advice}</p>
-            <div className="mt-2.5 flex flex-wrap justify-center gap-1.5 sm:justify-start">
+            <p className="text-[13px] font-medium leading-snug">{readiness!.advice}</p>
+            <div className="mt-1.5 flex flex-wrap gap-1">
               {readiness!.reasons.map((r: string) => (
                 <Pill key={r}>{r}</Pill>
               ))}
             </div>
           </div>
         </div>
-        <div className="mt-4 grid grid-cols-3 gap-2.5 border-t border-line pt-4">
-          <Stat label="Slept" value={readiness!.sleepMinutes ? hhmm(readiness!.sleepMinutes) : "–"} sub={`target ${hhmm(readiness!.sleepTarget)}`} />
+        <div className="mt-3 grid grid-cols-3 gap-2 border-t border-line pt-3">
+          <Stat
+            label="Slept"
+            value={readiness!.sleepMinutes ? hhmm(readiness!.sleepMinutes) : "–"}
+            sub={readiness!.sleepTarget ? `of ${hhmm(readiness!.sleepTarget)}` : undefined}
+          />
           <Stat
             label="7-day load"
             value={(readiness!.weeklyVolume / 1000).toFixed(1)}
@@ -90,11 +93,10 @@ export default function Recover() {
                 : "first week"
             }
           />
-          <Stat label="Days since rest" value={readiness!.daysSinceRest} sub={readiness!.daysSinceRest >= 6 ? "consider a day off" : "fine"} />
+          <Stat label="Since rest" value={readiness!.daysSinceRest} unit="d" sub={readiness!.daysSinceRest >= 6 ? "take a day off" : "fine"} />
         </div>
-        <p className="mt-3 text-[11.5px] leading-relaxed text-muted">
-          Readiness is a training suggestion built from what you logged — sleep, soreness, energy,
-          stress and recent load. It is not a medical or physiological measurement.
+        <p className="mt-2 text-[11px] leading-snug text-muted">
+          A training suggestion from what you logged — not a medical measurement.
         </p>
       </Card>
 
@@ -112,17 +114,27 @@ export default function Recover() {
       {/* Sleep */}
       <Card>
         <SectionTitle>Sleep</SectionTitle>
-        <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           <Stat label="Average" value={hhmm(sleep.avgMinutes)} tone="var(--violet)" />
-          <Stat label="Consistency" value={sleep.consistency} unit="%" sub={`±${sleep.bedtimeSpreadMin ?? 0} min bedtime`} />
-          <Stat label="On target" value={sleep.adherence} unit="%" sub={`of ${sleep.loggedNights} nights`} />
+          <Stat
+            label="Consistency"
+            value={sleep.consistency}
+            unit="%"
+            sub={sleep.bedtimeSpreadMin ? `±${sleep.bedtimeSpreadMin} min` : undefined}
+          />
+          <Stat
+            label="On target"
+            value={sleep.adherence}
+            unit="%"
+            sub={sleep.loggedNights ? `of ${sleep.loggedNights} nights` : undefined}
+          />
           <Stat label="Target" value={hhmm(sleep.target)} />
         </div>
-        <div className="mt-4 h-44">
+        <div className="mt-2.5 h-40">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData} margin={{ top: 4, right: 4, left: -22, bottom: 0 }}>
+            <BarChart data={chartData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
               <XAxis dataKey="date" tick={{ fontSize: 10, fill: "var(--muted)" }} tickLine={false} axisLine={false} interval="preserveStartEnd" />
-              <YAxis tick={{ fontSize: 10, fill: "var(--muted)" }} tickLine={false} axisLine={false} domain={[0, 10]} />
+              <YAxis tick={{ fontSize: 10, fill: "var(--muted)" }} tickLine={false} axisLine={false} domain={[0, 10]} width={26} />
               <Tooltip
                 cursor={{ fill: "var(--surface-2)" }}
                 contentStyle={{
@@ -138,28 +150,28 @@ export default function Recover() {
             </BarChart>
           </ResponsiveContainer>
         </div>
-        <p className="mt-1 text-[11.5px] text-muted">
-          Dashed line is your {hhmm(sleep.target)} target. Gaps are nights you did not log.
-        </p>
+        {!!sleep.target && (
+          <p className="mt-1 text-[11px] text-muted">Dashed line is your {hhmm(sleep.target)} target.</p>
+        )}
       </Card>
 
       {/* Check-ins */}
       <Card>
         <SectionTitle
           action={
-            <button onClick={() => setSheet("checkin")} className="text-[12.5px] font-semibold text-accent">
+            <button onClick={() => setSheet("checkin")} className="text-[12px] font-semibold text-accent">
               Add today
             </button>
           }
         >
-          Energy, soreness & stress
+          Energy, soreness, stress
         </SectionTitle>
         {checkins && checkins.length > 1 ? (
-          <div className="h-40">
+          <div className="h-36">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={checkins.map((c: any) => ({ ...c, date: c.date.slice(5) }))} margin={{ top: 4, right: 4, left: -28, bottom: 0 }}>
-                <XAxis dataKey="date" tick={{ fontSize: 10, fill: "var(--muted)" }} tickLine={false} axisLine={false} />
-                <YAxis domain={[1, 5]} ticks={[1, 3, 5]} tick={{ fontSize: 10, fill: "var(--muted)" }} tickLine={false} axisLine={false} />
+              <LineChart data={checkins.map((c: any) => ({ ...c, date: c.date.slice(5) }))} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
+                <XAxis dataKey="date" tick={{ fontSize: 10, fill: "var(--muted)" }} tickLine={false} axisLine={false} minTickGap={20} />
+                <YAxis domain={[1, 5]} ticks={[1, 3, 5]} tick={{ fontSize: 10, fill: "var(--muted)" }} tickLine={false} axisLine={false} width={20} />
                 <Tooltip
                   contentStyle={{ background: "var(--surface-3)", border: "1px solid var(--line)", borderRadius: 12, fontSize: 12 }}
                 />
@@ -170,21 +182,17 @@ export default function Recover() {
             </ResponsiveContainer>
           </div>
         ) : (
-          <EmptyState
-            icon={<HeartPulse className="h-5 w-5" />}
-            title="No check-ins yet"
-            body="Two taps a day is enough to make the readiness score meaningful."
-          />
+          <EmptyState icon={<HeartPulse className="h-5 w-5" />} title="No check-ins yet" body="Two taps a day makes readiness meaningful." />
         )}
-        <div className="mt-3 flex gap-3 text-[11.5px]">
-          <span className="flex items-center gap-1.5">
-            <span className="h-2 w-2 rounded-full bg-accent" /> Energy
+        <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-muted">
+          <span className="flex items-center gap-1">
+            <span className="h-1.5 w-1.5 rounded-full bg-accent" /> Energy
           </span>
-          <span className="flex items-center gap-1.5">
-            <span className="h-2 w-2 rounded-full bg-rose" /> Soreness
+          <span className="flex items-center gap-1">
+            <span className="h-1.5 w-1.5 rounded-full bg-rose" /> Soreness
           </span>
-          <span className="flex items-center gap-1.5">
-            <span className="h-2 w-2 rounded-full bg-amber" /> Stress
+          <span className="flex items-center gap-1">
+            <span className="h-1.5 w-1.5 rounded-full bg-amber" /> Stress
           </span>
         </div>
       </Card>
@@ -193,21 +201,21 @@ export default function Recover() {
       <section>
         <SectionTitle>Sleep log</SectionTitle>
         {(sleep.sessions ?? []).length === 0 ? (
-          <EmptyState icon={<Moon className="h-5 w-5" />} title="No nights logged" body="Log last night and the trends start building." />
+          <EmptyState icon={<Moon className="h-5 w-5" />} title="No nights logged" body="Log last night to start the trend." />
         ) : (
           <Card className="divide-y divide-line p-0">
             {(sleep.sessions ?? []).map((s: any) => (
-              <div key={s._id} className="flex items-center gap-3 px-4 py-3">
+              <div key={s._id} className="flex min-w-0 items-center gap-2 px-3 py-2">
                 <BedDouble className="h-4 w-4 shrink-0 text-violet" />
                 <div className="min-w-0 flex-1">
-                  <div className="text-[13.5px] font-semibold">{prettyDate(s.date)}</div>
-                  <div className="tabular text-[11.5px] text-muted">
+                  <div className="truncate text-[13px] font-semibold">{prettyDate(s.date)}</div>
+                  <div className="tabular truncate text-[11px] text-muted">
                     {new Date(s.bedAt).toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit" })} →{" "}
                     {new Date(s.wakeAt).toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit" })}
-                    {s.quality ? ` · felt ${["", "awful", "poor", "ok", "good", "great"][s.quality]}` : ""}
+                    {s.quality ? ` · ${["", "awful", "poor", "ok", "good", "great"][s.quality]}` : ""}
                   </div>
                 </div>
-                <div className="tabular text-[13.5px] font-bold">{hhmm(s.minutes)}</div>
+                <div className="tabular shrink-0 text-[13px] font-bold">{hhmm(s.minutes)}</div>
                 <ConfirmButton variant="ghost" onConfirm={() => deleteSleep({ id: s._id })}>
                   <Trash2 className="h-4 w-4" />
                 </ConfirmButton>

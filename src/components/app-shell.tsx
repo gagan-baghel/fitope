@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { cn, deviceTimezone } from "@/lib/utils";
 import {
   Activity,
@@ -77,6 +77,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     if (me && !me.profile?.onboardingComplete) router.replace("/onboarding");
   }, [me, router]);
 
+  // Top the shared exercise/food library up when the deployment is behind the current seed
+  // version. Guarded by a ref so a re-render mid-flight cannot fire it twice.
+  const ensureLibrary = useMutation(api.seed.ensureLibrary);
+  const seeding = useRef(false);
+  useEffect(() => {
+    if (!me?.libraryStale || seeding.current) return;
+    seeding.current = true;
+    ensureLibrary({}).catch(() => {
+      seeding.current = false;
+    });
+  }, [me?.libraryStale, ensureLibrary]);
+
   // "Today" is computed server-side in this zone; keep it current (travel, new device).
   const setTimezone = useMutation(api.profiles.setTimezone);
   useEffect(() => {
@@ -100,7 +112,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   // instead of one after the other (each hop is a full round trip to the backend).
   if (isLoading || !isAuthenticated) {
     return (
-      <div className="mx-auto max-w-lg space-y-4 px-5 pt-[calc(var(--safe-top)_+_1.25rem)] pb-5">
+      <div className="gutter-x mx-auto max-w-lg space-y-3 pt-[calc(var(--safe-top)_+_1.25rem)] pb-5">
         <Skeleton className="h-24 w-full" />
         <Skeleton className="h-56 w-full" />
         <Skeleton className="h-40 w-full" />
@@ -182,7 +194,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               barHidden && !more && "-translate-y-full"
             )}
           >
-            <div className="mx-auto flex h-12 max-w-2xl items-center justify-between px-4 sm:px-6">
+            <div className="gutter-x mx-auto flex h-12 max-w-2xl items-center justify-between">
               <Link href="/home" className="flex items-center gap-2">
                 <Logo size={24} />
                 <span className="text-[15px] font-bold tracking-tight">FitOpe</span>
@@ -204,8 +216,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         )}
         <div
           className={cn(
-            "mx-auto max-w-2xl px-4 pb-24 sm:px-6 lg:max-w-3xl lg:pb-12 lg:pt-[calc(var(--safe-top)_+_1.25rem)]",
-            focus ? "pt-[calc(var(--safe-top)_+_1.25rem)]" : "pt-4"
+            /* 12px gutters on phones: 16 on each side plus a 16px card inset left content
+               ~30% narrower than the screen. Desktop keeps the roomier 24. */
+            "gutter-x mx-auto max-w-2xl pb-24 lg:max-w-3xl lg:pb-12 lg:pt-[calc(var(--safe-top)_+_1.25rem)]",
+            focus ? "pt-[calc(var(--safe-top)_+_1rem)]" : "pt-3.5"
           )}
         >
           {children}

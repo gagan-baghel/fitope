@@ -74,3 +74,10 @@ export const timeOf = (ts: number) =>
 export function errorText(e: any, fallback = "Something went wrong — try again") {
   return typeof e?.data === "string" ? e.data : fallback;
 }
+
+/** ["height","age"] -> "height and age". Keeps prompt copy readable without branching at each call. */
+export const listOf = (items?: string[]) => {
+  const xs = items ?? [];
+  if (xs.length <= 1) return xs[0] ?? "details";
+  return `${xs.slice(0, -1).join(", ")} and ${xs[xs.length - 1]}`;
+};

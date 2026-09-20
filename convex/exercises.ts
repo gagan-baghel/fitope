@@ -72,6 +72,8 @@ export const create = mutation({
     category: v.string(),
     pattern: v.string(),
     difficulty: v.string(),
+    sanskrit: v.optional(v.string()),
+    holdSec: v.optional(v.number()),
     instructions: v.optional(v.array(v.string())),
   },
   handler: async (ctx, args) => {
@@ -79,13 +81,15 @@ export const create = mutation({
     return await ctx.db.insert("exercises", {
       ownerUserId: userId,
       name: args.name.trim(),
-      searchName: norm(`${args.name} ${args.primaryMuscles.join(" ")} ${args.equipment.join(" ")}`),
+      searchName: norm(`${args.name} ${args.sanskrit ?? ""} ${args.primaryMuscles.join(" ")} ${args.equipment.join(" ")}`),
       primaryMuscles: args.primaryMuscles,
       secondaryMuscles: args.secondaryMuscles ?? [],
       equipment: args.equipment,
       category: args.category,
       pattern: args.pattern,
       difficulty: args.difficulty,
+      sanskrit: args.sanskrit?.trim() || undefined,
+      holdSec: args.holdSec,
       instructions: args.instructions ?? [],
     });
   },

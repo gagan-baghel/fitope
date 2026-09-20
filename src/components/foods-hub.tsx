@@ -27,12 +27,16 @@ export function FoodsHub({ initialTab = "foods" }: { initialTab?: "foods" | "rec
   const router = useRouter();
 
   return (
-    <div className="space-y-4">
-      <header className="flex items-center gap-3 pt-1">
-        <button onClick={() => router.push("/eat")} className="-m-1.5 rounded-xl p-3 text-muted hover:bg-surface-2 hover:text-ink">
+    <div className="space-y-3">
+      <header className="flex min-w-0 items-center gap-2">
+        <button
+          onClick={() => router.push("/eat")}
+          className="-m-1.5 shrink-0 rounded-xl p-3 text-muted hover:bg-surface-2 hover:text-ink"
+          aria-label="Back"
+        >
           <ArrowLeft className="h-5 w-5" />
         </button>
-        <h1 className="flex-1 text-[22px] font-bold tracking-tight">My food library</h1>
+        <h1 className="min-w-0 flex-1 truncate text-[20px] font-bold tracking-tight">My food library</h1>
       </header>
       <Segmented
         value={tab}
@@ -57,26 +61,26 @@ function MyFoods() {
   const [per100, setPer100] = useState<any>(null);
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       <Button className="w-full" onClick={() => setCreating(true)}>
         <Plus className="h-4 w-4" /> New custom food
       </Button>
       {foods === undefined ? null : foods.length === 0 ? (
         <EmptyState
           title="No custom foods yet"
-          body="Create one when the library is missing something you eat often — a home recipe, a local brand, your protein shake."
+          body="Add the things only you eat — a home recipe, a local brand, your shake."
         />
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           {foods.map((f: any) => (
-            <Card key={f._id} className="flex items-center gap-3 py-3.5">
+            <Card key={f._id} className="flex min-w-0 items-center gap-1.5">
               <div className="min-w-0 flex-1">
-                <div className="truncate text-[14px] font-semibold">{f.name}</div>
-                <div className="tabular text-[11.5px] text-muted">
+                <div className="truncate text-[13.5px] font-semibold">{f.name}</div>
+                <div className="tabular line-clamp-2 text-[11px] leading-snug text-muted">
                   {f.per100.kcal}&nbsp;kcal · P&nbsp;{f.per100.protein} · C&nbsp;{f.per100.carbs} · F&nbsp;{f.per100.fat} · Fib{"\u00a0"}
                   {f.per100.fiber} / 100 g
                 </div>
-                <div className="mt-1.5 flex flex-wrap gap-1">
+                <div className="mt-1 flex flex-wrap gap-1">
                   {f.servings.slice(0, 3).map((s: any) => (
                     <Pill key={s.label}>
                       {s.label} {s.grams}g
@@ -89,7 +93,7 @@ function MyFoods() {
                   setEditing(f);
                   setPer100(f.per100);
                 }}
-                className="rounded-xl p-2 text-muted hover:bg-surface-2 hover:text-ink"
+                className="grid h-10 w-10 shrink-0 place-items-center rounded-xl text-muted hover:bg-surface-2 hover:text-ink"
                 aria-label="Edit"
               >
                 <Pencil className="h-4 w-4" />
@@ -129,8 +133,8 @@ function MyFoods() {
         }
       >
         {editing && per100 && (
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-2">
               {(["kcal", "protein", "carbs", "fat", "fiber"] as const).map((k) => (
                 <Field key={k} label={k === "kcal" ? "Calories" : `${titleCase(k)} (g)`}>
                   <Stepper
@@ -142,9 +146,8 @@ function MyFoods() {
                 </Field>
               ))}
             </div>
-            <p className="text-[12px] leading-relaxed text-muted">
-              Meals you already logged keep the numbers they were saved with. Only future entries use
-              the new values.
+            <p className="text-[11.5px] leading-snug text-muted">
+              Meals you already logged keep their saved numbers.
             </p>
           </div>
         )}
@@ -160,7 +163,7 @@ function Recipes() {
   const toast = useToast();
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       <Button className="w-full" onClick={() => setBuilding(true)}>
         <CookingPot className="h-4 w-4" /> Build a recipe
       </Button>
@@ -168,16 +171,16 @@ function Recipes() {
         <EmptyState
           icon={<CookingPot className="h-5 w-5" />}
           title="No recipes yet"
-          body="Add the ingredients once and FitOpe works out the nutrition per serving. Great for dal, curries and anything you cook in batches."
+          body="Add the ingredients once and get the nutrition per serving."
         />
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           {recipes.map((r: any) => (
             <Card key={r._id}>
-              <div className="flex items-start gap-3">
+              <div className="flex min-w-0 items-start gap-2">
                 <div className="min-w-0 flex-1">
-                  <div className="text-[15px] font-bold">{r.name}</div>
-                  <div className="tabular text-[12px] text-muted">
+                  <div className="truncate text-[14px] font-bold">{r.name}</div>
+                  <div className="tabular truncate text-[11.5px] text-muted">
                     {r.servings} servings · {Math.round(r.gramsTotal)} g total
                   </div>
                 </div>
@@ -191,7 +194,7 @@ function Recipes() {
                   <Trash2 className="h-4 w-4" />
                 </ConfirmButton>
               </div>
-              <div className="mt-3 grid grid-cols-5 gap-1.5 text-center">
+              <div className="mt-2 grid grid-cols-5 gap-1 text-center">
                 {(
                   [
                     ["kcal", r.perServing.kcal],
@@ -201,13 +204,13 @@ function Recipes() {
                     ["Fib", r.perServing.fiber],
                   ] as const
                 ).map(([k, v]) => (
-                  <div key={k} className="rounded-xl bg-surface-2 py-2">
-                    <div className="tabular text-[14px] font-bold">{v}</div>
-                    <div className="text-[10px] text-muted">{k}</div>
+                  <div key={k} className="min-w-0 rounded-xl bg-surface-2 py-1.5">
+                    <div className="tabular truncate text-[13px] font-bold">{v}</div>
+                    <div className="truncate text-[10px] text-muted">{k}</div>
                   </div>
                 ))}
               </div>
-              <div className="mt-3 text-[11.5px] text-muted">
+              <div className="mt-2 line-clamp-2 text-[11px] leading-snug text-muted">
                 {r.ingredients.map((i: any) => `${i.food.name} ${i.grams}g`).join(" · ")}
               </div>
             </Card>
@@ -279,29 +282,33 @@ function RecipeBuilder({ open, onClose }: { open: boolean; onClose: () => void }
         </Button>
       }
     >
-      <div className="space-y-4">
+      <div className="space-y-3">
         <Field label="Recipe name">
           <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Sunday chole" />
         </Field>
-        <Field label="How many servings does it make?">
+        <Field label="Servings it makes">
           <Stepper value={servings} onChange={setServings} step={1} min={1} max={50} suffix="servings" />
         </Field>
 
         <div>
-          <div className="mb-2 text-[12px] font-semibold text-muted">Ingredients</div>
+          <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted">Ingredients</div>
           <div className="space-y-1.5">
             {items.map((i, idx) => (
-              <div key={idx} className="flex items-center gap-2 rounded-xl bg-surface-2 px-3 py-2">
-                <span className="min-w-0 flex-1 truncate text-[13px] font-semibold">{i.food.name}</span>
+              <div key={idx} className="flex min-w-0 items-center gap-1.5 rounded-xl bg-surface-2 px-2.5 py-1.5">
+                <span className="min-w-0 flex-1 truncate text-[12.5px] font-semibold">{i.food.name}</span>
                 <Stepper
                   value={i.grams}
                   onChange={(v) => setItems((p) => p.map((x, j) => (j === idx ? { ...x, grams: v ?? 0 } : x)))}
                   step={25}
                   max={5000}
                   suffix="g"
-                  className="w-28 sm:w-32"
+                  className="w-32 shrink-0"
                 />
-                <button onClick={() => setItems((p) => p.filter((_, j) => j !== idx))} className="text-muted hover:text-rose">
+                <button
+                  onClick={() => setItems((p) => p.filter((_, j) => j !== idx))}
+                  className="grid h-10 w-8 shrink-0 place-items-center text-muted hover:text-rose"
+                  aria-label={`Remove ${i.food.name}`}
+                >
                   <X className="h-4 w-4" />
                 </button>
               </div>
@@ -320,10 +327,10 @@ function RecipeBuilder({ open, onClose }: { open: boolean; onClose: () => void }
                     setItems((p) => [...p, { food: f, grams: f.servings[0].grams }]);
                     setQ("");
                   }}
-                  className="flex w-full items-center gap-2 rounded-xl border border-line bg-surface px-3 py-2 text-left text-[13px] hover:border-accent/40"
+                  className="flex min-h-[40px] w-full items-center gap-2 rounded-xl border border-line bg-surface px-3 py-2 text-left text-[12.5px] hover:border-accent/40"
                 >
-                  <span className="flex-1 truncate">{f.name}</span>
-                  <Plus className="h-3.5 w-3.5 text-muted" />
+                  <span className="min-w-0 flex-1 truncate">{f.name}</span>
+                  <Plus className="h-3.5 w-3.5 shrink-0 text-muted" />
                 </button>
               ))}
             </div>
@@ -331,9 +338,9 @@ function RecipeBuilder({ open, onClose }: { open: boolean; onClose: () => void }
         </div>
 
         {items.length > 0 && (
-          <div className="rounded-2xl border border-line bg-surface-2 p-4">
-            <div className="mb-2 text-[12px] font-semibold text-muted">Per serving</div>
-            <div className="grid grid-cols-5 gap-1.5 text-center">
+          <div className="rounded-2xl border border-line bg-surface-2 p-3">
+            <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted">Per serving</div>
+            <div className="grid grid-cols-5 gap-1 text-center">
               {(
                 [
                   ["kcal", Math.round(per(total.kcal))],
@@ -343,9 +350,9 @@ function RecipeBuilder({ open, onClose }: { open: boolean; onClose: () => void }
                   ["Fib", per(total.fiber)],
                 ] as const
               ).map(([k, v]) => (
-                <div key={k} className="rounded-xl bg-surface py-2">
-                  <div className="tabular text-[15px] font-bold">{v}</div>
-                  <div className="text-[10px] text-muted">{k}</div>
+                <div key={k} className="min-w-0 rounded-xl bg-surface py-1.5">
+                  <div className="tabular truncate text-[13px] font-bold">{v}</div>
+                  <div className="truncate text-[10px] text-muted">{k}</div>
                 </div>
               ))}
             </div>

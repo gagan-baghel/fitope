@@ -28,7 +28,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { ChevronRight, Plus, Ruler, Scale, Sparkles, Trophy } from "lucide-react";
+import { Plus, Ruler, Scale, Sparkles, Trophy } from "lucide-react";
 import { cn, prettyDate, titleCase } from "@/lib/utils";
 import { useUnits } from "@/lib/units";
 
@@ -51,14 +51,12 @@ export default function Progress() {
   }));
 
   return (
-    <div className="space-y-5">
-      <header className="flex min-w-0 items-center justify-between gap-3 pt-1">
-        <h1 className="min-w-0 text-[22px] font-bold tracking-tight sm:text-[26px]">Progress</h1>
-        <div className="flex shrink-0 gap-1.5">
-          <Button size="sm" onClick={() => setLogging(true)}>
-            <Plus className="h-4 w-4" /> Weigh in
-          </Button>
-        </div>
+    <div className="space-y-3">
+      <header className="flex min-w-0 items-center justify-between gap-2 pt-1">
+        <h1 className="min-w-0 text-[20px] font-bold tracking-tight sm:text-[26px]">Progress</h1>
+        <Button size="sm" className="shrink-0" onClick={() => setLogging(true)}>
+          <Plus className="h-4 w-4" /> Weigh in
+        </Button>
       </header>
 
       <Segmented
@@ -75,12 +73,12 @@ export default function Progress() {
       {/* Weekly summary */}
       {summary && (
         <Card className="border-accent/20 bg-gradient-to-br from-accent-soft/40 to-surface">
-          <div className="mb-3 flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-accent" />
-            <span className="text-[13px] font-semibold">Last 7 days</span>
+          <div className="mb-2 flex items-center gap-1.5">
+            <Sparkles className="h-3.5 w-3.5 text-accent" />
+            <span className="text-[12px] font-semibold">Last 7 days</span>
           </div>
-          <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
-            <Stat label="Sessions" value={summary.workouts} sub={`${summary.minutes} min`} />
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <Stat label="Sessions" value={summary.workouts} sub={summary.minutes ? `${summary.minutes} min` : undefined} />
             <Stat label="Volume" value={(summary.volume / 1000).toFixed(1)} unit="t" />
             <Stat label="Avg protein" value={summary.avgProtein} unit="g" tone="var(--data)" />
             <Stat label="Avg sleep" value={`${Math.floor(summary.avgSleep / 60)}h ${summary.avgSleep % 60}m`} />
@@ -95,7 +93,7 @@ export default function Progress() {
             data.weight.slopePerWeek !== 0 ? (
               <Pill tone={data.weight.slopePerWeek < 0 ? "mint" : "amber"}>
                 {data.weight.slopePerWeek > 0 ? "+" : ""}
-                {u.outWeight(data.weight.slopePerWeek)} {u.weightUnit} / week
+                {u.outWeight(data.weight.slopePerWeek)} {u.weightUnit}/wk
               </Pill>
             ) : undefined
           }
@@ -106,14 +104,14 @@ export default function Progress() {
           <EmptyState
             icon={<Scale className="h-5 w-5" />}
             title="Not enough weigh-ins yet"
-            body="Log your weight a few times a week. The trend line filters out day-to-day water noise."
+            body="A few logs a week and the trend line appears."
             action={<Button onClick={() => setLogging(true)}>Log weight</Button>}
           />
         ) : (
           <>
-            <div className="h-52">
+            <div className="h-40">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={weightData} margin={{ top: 6, right: 6, left: -20, bottom: 0 }}>
+                <AreaChart data={weightData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
                   <defs>
                     <linearGradient id="wg" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="0%" stopColor="var(--data)" stopOpacity={0.3} />
@@ -127,6 +125,7 @@ export default function Progress() {
                     tick={{ fontSize: 10, fill: "var(--muted)" }}
                     tickLine={false}
                     axisLine={false}
+                    width={36}
                   />
                   <Tooltip
                     contentStyle={{ background: "var(--surface-3)", border: "1px solid var(--line)", borderRadius: 12, fontSize: 12 }}
@@ -137,7 +136,7 @@ export default function Progress() {
                 </AreaChart>
               </ResponsiveContainer>
             </div>
-            <div className="mt-2 grid grid-cols-3 gap-2.5">
+            <div className="mt-2 grid grid-cols-3 gap-2">
               <Stat label="Now" value={u.outWeight(body.latest?.weightKg) ?? "–"} unit={u.weightUnit} />
               <Stat
                 label="Change"
@@ -145,12 +144,9 @@ export default function Progress() {
                 unit={u.weightUnit}
                 tone={data.weight.change < 0 ? "var(--mint)" : data.weight.change > 0 ? "var(--amber)" : undefined}
               />
-              <Stat label="Logs" value={data.weight.points.length} sub="weigh-ins" />
+              <Stat label="Weigh-ins" value={data.weight.points.length} />
             </div>
-            <p className="mt-2 text-[11.5px] text-muted">
-              The filled line is your trend weight — an exponentially weighted average. Dots are the
-              raw numbers you logged.
-            </p>
+            <p className="mt-1.5 text-[11px] text-muted">Filled line is trend weight; dots are raw logs.</p>
           </>
         )}
       </Card>
@@ -159,12 +155,12 @@ export default function Progress() {
       {body.measurements.length > 0 && (
         <Card>
           <SectionTitle>Measurements</SectionTitle>
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             {measurementDeltas(body.measurements).map((m) => (
-              <div key={m.key} className="flex items-center gap-3 rounded-xl bg-surface-2 px-3.5 py-2.5">
-                <Ruler className="h-4 w-4 text-muted" />
-                <span className="flex-1 text-[13.5px] font-semibold capitalize">{m.key}</span>
-                <span className="tabular text-[12px] text-muted">
+              <div key={m.key} className="flex min-w-0 items-center gap-2 rounded-xl bg-surface-2 px-2.5 py-2">
+                <Ruler className="h-3.5 w-3.5 shrink-0 text-muted" />
+                <span className="min-w-0 flex-1 truncate text-[13px] font-semibold capitalize">{m.key}</span>
+                <span className="tabular shrink-0 text-[11.5px] text-muted">
                   {u.outLength(m.first)} → {u.length(m.last)}
                 </span>
                 <Pill tone={m.delta < 0 ? "mint" : m.delta > 0 ? "sky" : "muted"}>
@@ -181,25 +177,21 @@ export default function Progress() {
       <Card>
         <SectionTitle>Strength progression</SectionTitle>
         {data.strength.length === 0 || data.strength.every((s: any) => s.points.length < 2) ? (
-          <EmptyState
-            icon={<Trophy className="h-5 w-5" />}
-            title="Log two sessions of the same lift"
-            body="Estimated 1RM curves appear once there is something to compare."
-          />
+          <EmptyState icon={<Trophy className="h-5 w-5" />} title="Log a lift twice" body="Estimated 1RM curves need two sessions to compare." />
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-2.5">
             {data.strength
               .filter((s: any) => s.points.length > 1)
               .map((s: any) => (
-                <div key={s.exerciseId}>
-                  <div className="mb-1 flex items-baseline justify-between">
-                    <span className="text-[13.5px] font-semibold">{s.name}</span>
-                    <span className={cn("tabular text-[12px] font-semibold", s.change >= 0 ? "text-mint" : "text-rose")}>
+                <div key={s.exerciseId} className="min-w-0">
+                  <div className="flex min-w-0 items-baseline justify-between gap-2">
+                    <span className="min-w-0 truncate text-[13px] font-semibold">{s.name}</span>
+                    <span className={cn("tabular shrink-0 text-[11.5px] font-semibold", s.change >= 0 ? "text-mint" : "text-rose")}>
                       {s.change > 0 ? "+" : ""}
-                      {s.change} kg est. 1RM
+                      {s.change} kg 1RM
                     </span>
                   </div>
-                  <div className="h-20">
+                  <div className="h-14">
                     <ResponsiveContainer width="100%" height="100%">
                       <LineChart data={s.points.map((p: any) => ({ ...p, date: p.date.slice(5) }))}>
                         <Tooltip
@@ -222,34 +214,32 @@ export default function Progress() {
       {data.muscles.some((m: any) => m.sets > 0) && (
         <Card>
           <SectionTitle>Muscle group balance</SectionTitle>
-          <div className="h-56">
+          <div className="h-44">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={data.muscles.filter((m: any) => m.sets > 0)} layout="vertical" margin={{ left: 22, right: 8 }}>
+              <BarChart data={data.muscles.filter((m: any) => m.sets > 0)} layout="vertical" margin={{ top: 0, right: 4, left: 0, bottom: 0 }}>
                 <XAxis type="number" hide />
                 <YAxis
                   type="category"
                   dataKey="muscle"
-                  tick={{ fontSize: 11, fill: "var(--muted)" }}
+                  tick={{ fontSize: 10, fill: "var(--muted)" }}
                   tickLine={false}
                   axisLine={false}
-                  width={70}
+                  width={54}
                 />
                 <Tooltip
                   cursor={{ fill: "var(--surface-2)" }}
                   contentStyle={{ background: "var(--surface-3)", border: "1px solid var(--line)", borderRadius: 12, fontSize: 12 }}
                   formatter={(v: any) => [`${v} sets`, "Logged"]}
                 />
-                <Bar dataKey="sets" fill="var(--data)" radius={[0, 6, 6, 0]} barSize={12} />
+                <Bar dataKey="sets" fill="var(--data)" radius={[0, 6, 6, 0]} barSize={10} />
               </BarChart>
             </ResponsiveContainer>
           </div>
           {(() => {
             const neglected = data.muscles.filter((m: any) => m.sets === 0);
             return neglected.length ? (
-              <p className="mt-2 text-[12px] text-muted">
-                Nothing logged for{" "}
-                <span className="text-ink">{neglected.map((m: any) => m.muscle).join(", ")}</span> in this
-                window.
+              <p className="mt-1.5 text-[11px] text-muted">
+                Nothing logged for <span className="text-ink">{neglected.map((m: any) => m.muscle).join(", ")}</span>.
               </p>
             ) : null;
           })()}
@@ -260,22 +250,22 @@ export default function Progress() {
       <Card>
         <SectionTitle>Nutrition adherence</SectionTitle>
         {data.nutrition.loggedDays === 0 ? (
-          <EmptyState title="No meals logged in this window" body="Nutrition analytics need a few logged days to say anything useful." />
+          <EmptyState title="No meals logged in this window" body="Log a few days to see adherence." />
         ) : (
           <>
-            <div className="grid grid-cols-3 gap-2.5">
+            <div className="grid grid-cols-3 gap-2">
               <Stat label="Protein hit" value={data.nutrition.proteinAdherence} unit="%" tone="var(--data)" sub={`avg ${data.nutrition.avgProtein} g`} />
               <Stat label="Fiber hit" value={data.nutrition.fiberAdherence} unit="%" tone="var(--mint)" sub={`avg ${data.nutrition.avgFiber} g`} />
-              <Stat label="Calories in range" value={data.nutrition.kcalAdherence} unit="%" sub={`avg ${data.nutrition.avgKcal}`} />
+              <Stat label="Kcal in range" value={data.nutrition.kcalAdherence} unit="%" sub={`avg ${data.nutrition.avgKcal}`} />
             </div>
-            <div className="mt-4 h-40">
+            <div className="mt-2.5 h-36">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
                   data={data.nutrition.days.map((d: any) => ({ ...d, date: d.date.slice(5) }))}
-                  margin={{ top: 4, right: 4, left: -22, bottom: 0 }}
+                  margin={{ top: 4, right: 4, left: 0, bottom: 0 }}
                 >
                   <XAxis dataKey="date" tick={{ fontSize: 10, fill: "var(--muted)" }} tickLine={false} axisLine={false} minTickGap={20} />
-                  <YAxis tick={{ fontSize: 10, fill: "var(--muted)" }} tickLine={false} axisLine={false} />
+                  <YAxis tick={{ fontSize: 10, fill: "var(--muted)" }} tickLine={false} axisLine={false} width={34} />
                   <Tooltip
                     cursor={{ fill: "var(--surface-2)" }}
                     contentStyle={{ background: "var(--surface-3)", border: "1px solid var(--line)", borderRadius: 12, fontSize: 12 }}
@@ -284,7 +274,7 @@ export default function Progress() {
                 </BarChart>
               </ResponsiveContainer>
             </div>
-            <p className="mt-1 text-[11.5px] text-muted">Daily protein, {data.nutrition.loggedDays} logged days.</p>
+            <p className="mt-1 text-[11px] text-muted">Daily protein, {data.nutrition.loggedDays} logged days.</p>
           </>
         )}
       </Card>
@@ -292,12 +282,12 @@ export default function Progress() {
       {/* Training volume */}
       {data.weeks.length > 0 && (
         <Card>
-          <SectionTitle>Training volume by week</SectionTitle>
-          <div className="h-40">
+          <SectionTitle>Volume by week</SectionTitle>
+          <div className="h-36">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={data.weeks.map((w: any) => ({ ...w, week: w.week.slice(5), tonnes: Math.round(w.volume / 100) / 10 }))} margin={{ top: 4, right: 4, left: -24, bottom: 0 }}>
-                <XAxis dataKey="week" tick={{ fontSize: 10, fill: "var(--muted)" }} tickLine={false} axisLine={false} />
-                <YAxis tick={{ fontSize: 10, fill: "var(--muted)" }} tickLine={false} axisLine={false} />
+              <BarChart data={data.weeks.map((w: any) => ({ ...w, week: w.week.slice(5), tonnes: Math.round(w.volume / 100) / 10 }))} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
+                <XAxis dataKey="week" tick={{ fontSize: 10, fill: "var(--muted)" }} tickLine={false} axisLine={false} minTickGap={16} />
+                <YAxis tick={{ fontSize: 10, fill: "var(--muted)" }} tickLine={false} axisLine={false} width={34} />
                 <Tooltip
                   cursor={{ fill: "var(--surface-2)" }}
                   contentStyle={{ background: "var(--surface-3)", border: "1px solid var(--line)", borderRadius: 12, fontSize: 12 }}
@@ -307,8 +297,8 @@ export default function Progress() {
               </BarChart>
             </ResponsiveContainer>
           </div>
-          <div className="mt-3 grid grid-cols-3 gap-2.5">
-            <Stat label="Sessions" value={data.totals.workouts} sub={`${data.totals.skipped} skipped`} />
+          <div className="mt-2 grid grid-cols-3 gap-2">
+            <Stat label="Sessions" value={data.totals.workouts} sub={data.totals.skipped ? `${data.totals.skipped} skipped` : undefined} />
             <Stat label="Sets" value={data.totals.sets} />
             <Stat label="Time" value={Math.round(data.totals.minutes / 60)} unit="h" />
           </div>
@@ -316,21 +306,23 @@ export default function Progress() {
       )}
 
       {/* Insights */}
-      {insights && insights.length > 0 && (
+      {!!insights?.length && (
         <section>
           <SectionTitle>Read of your data</SectionTitle>
-          <div className="space-y-2.5">
+          <div className="space-y-2">
             {insights.map((i: any, idx: number) => (
               <div
                 key={idx}
                 className={cn(
-                  "rounded-2xl border p-4",
+                  "min-w-0 rounded-2xl border p-2.5",
                   i.tone === "good" ? "border-mint/25 bg-mint/[0.06]" : i.tone === "warn" ? "border-amber/25 bg-amber/[0.06]" : "border-line bg-surface"
                 )}
               >
-                <div className="text-[14px] font-semibold">{i.title}</div>
-                <p className="mt-1 text-[13px] leading-relaxed text-ink-2">{i.detail}</p>
-                <Pill className="mt-2">{titleCase(i.kind)}</Pill>
+                <div className="flex min-w-0 items-center justify-between gap-2">
+                  <span className="min-w-0 truncate text-[13px] font-semibold">{i.title}</span>
+                  <Pill className="shrink-0">{titleCase(i.kind)}</Pill>
+                </div>
+                <p className="mt-1 text-[12.5px] leading-snug text-ink-2">{i.detail}</p>
               </div>
             ))}
           </div>
@@ -340,32 +332,29 @@ export default function Progress() {
       {/* Milestones */}
       <section>
         <SectionTitle>Milestones</SectionTitle>
-        <div className="grid grid-cols-2 gap-2.5">
+        <div className="grid grid-cols-2 gap-2">
           {data.milestones.map((m: any) => (
             <div
               key={m.label}
               className={cn(
-                "rounded-2xl border p-3.5",
+                "min-w-0 rounded-2xl border p-2.5",
                 m.unlocked ? "border-accent/25 bg-accent-soft/40" : "border-line bg-surface"
               )}
             >
-              <div className={cn("text-[13px] font-semibold", m.unlocked ? "text-ink" : "text-muted")}>{m.label}</div>
+              <div className={cn("truncate text-[12.5px] font-semibold", m.unlocked ? "text-ink" : "text-muted")}>{m.label}</div>
               {m.next ? (
                 <>
-                  <BarMeter value={m.value} max={m.next} className="mt-2" height={5} />
-                  <div className="tabular mt-1.5 text-[11px] text-muted">
+                  <BarMeter value={m.value} max={m.next} className="mt-1.5" height={4} />
+                  <div className="tabular mt-1 text-[11px] text-muted">
                     {m.value} / {m.next} {m.unit}
                   </div>
                 </>
               ) : (
-                <div className="mt-1.5 text-[11px] text-accent">Top tier reached</div>
+                <div className="mt-1 text-[11px] text-accent">Top tier reached</div>
               )}
             </div>
           ))}
         </div>
-        <p className="mt-2 text-[11.5px] text-muted">
-          Counted from your own history. Nothing resets, nothing is lost by taking a week off.
-        </p>
       </section>
 
       {/* PRs */}
@@ -374,13 +363,13 @@ export default function Progress() {
           <SectionTitle>Recent personal records</SectionTitle>
           <Card className="divide-y divide-line p-0">
             {data.prs.map((p: any) => (
-              <div key={p._id} className="flex items-center gap-3 px-4 py-3">
-                <Trophy className="h-4 w-4 text-amber" />
+              <div key={p._id} className="flex min-w-0 items-center gap-2 px-3 py-2">
+                <Trophy className="h-3.5 w-3.5 shrink-0 text-amber" />
                 <div className="min-w-0 flex-1">
-                  <div className="truncate text-[13.5px] font-semibold">{p.exercise?.name}</div>
-                  <div className="text-[11.5px] text-muted">{prettyDate(p.date)}</div>
+                  <div className="truncate text-[13px] font-semibold">{p.exercise?.name}</div>
+                  <div className="truncate text-[11px] text-muted">{prettyDate(p.date)}</div>
                 </div>
-                <div className="tabular text-[13.5px] font-bold text-accent">{p.value} kg</div>
+                <div className="tabular shrink-0 text-[13px] font-bold text-accent">{p.value} kg</div>
               </div>
             ))}
           </Card>

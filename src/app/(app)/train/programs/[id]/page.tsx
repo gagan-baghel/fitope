@@ -50,8 +50,8 @@ export default function ProgramEditor() {
   const exMap = new Map(data.exercises.map((e: any) => [e._id, e]));
 
   return (
-    <div className="space-y-4">
-      <header className="flex items-center gap-3 pt-1">
+    <div className="space-y-3">
+      <header className="flex items-center gap-2">
         <button onClick={() => router.push("/train/programs")} className="-m-1.5 rounded-xl p-3 text-muted hover:bg-surface-2 hover:text-ink">
           <ArrowLeft className="h-5 w-5" />
         </button>
@@ -59,9 +59,9 @@ export default function ProgramEditor() {
           <input
             defaultValue={data.program.name}
             onBlur={(e) => e.target.value !== data.program.name && updateProgram({ id: data.program._id, name: e.target.value })}
-            className="w-full bg-transparent text-[20px] font-bold tracking-tight outline-none"
+            className="w-full bg-transparent text-[18px] font-bold tracking-tight outline-none"
           />
-          <div className="text-[12px] text-muted">{data.program.description ?? `${data.days.length} sessions`}</div>
+          <div className="truncate text-[11.5px] text-muted">{data.program.description ?? `${data.days.length} sessions`}</div>
         </div>
         {!data.program.isActive && (
           <Button
@@ -78,11 +78,11 @@ export default function ProgramEditor() {
 
       {data.days.map((day: any) => (
         <Card key={day._id}>
-          <div className="flex items-start gap-3">
+          <div className="flex items-start gap-1.5">
             <div className="min-w-0 flex-1">
-              <div className="text-[16px] font-bold">{day.title}</div>
-              <div className="text-[12px] capitalize text-muted">
-                {day.weekday != null ? DAY_NAMES[day.weekday] : `Day ${day.order + 1}`} · {day.focus} · ~{day.estMinutes} min
+              <div className="truncate text-[14.5px] font-bold">{day.title}</div>
+              <div className="truncate text-[11.5px] capitalize text-muted">
+                {day.weekday != null ? DAY_NAMES[day.weekday] : `Day ${day.order + 1}`} · {day.focus} · {day.estMinutes}m
               </div>
             </div>
             <Button size="sm" variant="soft" onClick={() => setEditing({ ...day, items: [...day.items] })}>
@@ -100,29 +100,29 @@ export default function ProgramEditor() {
               <Play className="h-4 w-4" />
             </Button>
           </div>
-          <div className="mt-3 space-y-1.5">
+          <div className="mt-2 space-y-1">
             {day.items.map((it: Item, i: number) => (
-              <div key={i} className="flex items-center gap-3 rounded-xl bg-surface-2 px-3 py-2.5 sm:px-3.5">
-                <span className="w-4 shrink-0 text-[11px] font-bold text-muted">{i + 1}</span>
+              <div key={i} className="flex items-center gap-2 rounded-xl bg-surface-2 px-2.5 py-1.5">
+                <span className="w-3 shrink-0 text-[11px] font-bold text-muted">{i + 1}</span>
                 {/* Scheme drops under the name on phones so the name is never cut. */}
                 <div className="flex min-w-0 flex-1 flex-col sm:flex-row sm:items-center sm:gap-3">
-                  <span className="min-w-0 text-[13px] font-semibold leading-snug sm:flex-1 sm:truncate">
+                  <span className="min-w-0 text-[12.5px] font-semibold leading-snug sm:flex-1 sm:truncate">
                     {(exMap.get(it.exerciseId) as any)?.name ?? "Exercise"}
                   </span>
-                  <span className="tabular shrink-0 text-[12px] text-muted">
-                    {it.sets} × {it.reps} · {it.restSec}s
+                  {/* A timed pose reads "45s hold", so the "1 ×" prefix is dropped. */}
+                  <span className="tabular shrink-0 text-[11px] text-muted">
+                    {it.sets > 1 ? `${it.sets} × ${it.reps}` : it.reps} · {it.restSec}s
                   </span>
                 </div>
               </div>
             ))}
-            {day.items.length === 0 && <p className="text-[13px] text-muted">No exercises in this session yet.</p>}
+            {day.items.length === 0 && <p className="text-[12px] text-muted">No exercises yet.</p>}
           </div>
         </Card>
       ))}
 
       <Button
         variant="soft"
-        size="lg"
         className="w-full"
         onClick={() =>
           setEditing({
@@ -221,8 +221,8 @@ function DayEditor({
           </div>
         }
       >
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-2">
             <Field label="Title">
               <Input value={d.title} onChange={(e) => setD({ ...d, title: e.target.value })} />
             </Field>
@@ -230,7 +230,7 @@ function DayEditor({
               <Input value={d.focus} onChange={(e) => setD({ ...d, focus: e.target.value })} placeholder="chest, triceps" />
             </Field>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-2">
             <Field label="Scheduled day">
               <Select
                 value={d.weekday ?? ""}
@@ -250,12 +250,12 @@ function DayEditor({
           </div>
 
           <div>
-            <div className="mb-2 text-[12px] font-semibold uppercase tracking-wider text-muted">Exercises</div>
-            <div className="space-y-2">
+            <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted">Exercises</div>
+            <div className="space-y-1.5">
               {d.items.map((it: Item, i: number) => (
-                <div key={i} className="rounded-2xl border border-line bg-surface-2 p-3">
+                <div key={i} className="rounded-2xl border border-line bg-surface-2 p-2.5">
                   <div className="flex items-center gap-2">
-                    <span className="line-clamp-2 min-w-0 flex-1 text-[13.5px] font-semibold leading-snug">{nameOf(it.exerciseId)}</span>
+                    <span className="line-clamp-2 min-w-0 flex-1 text-[13px] font-semibold leading-snug">{nameOf(it.exerciseId)}</span>
                     <button onClick={() => move(i, -1)} className="rounded-lg p-1 text-muted hover:text-ink" aria-label="Move up">
                       <ArrowUp className="h-3.5 w-3.5" />
                     </button>
@@ -270,7 +270,7 @@ function DayEditor({
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>
                   </div>
-                  <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                  <div className="mt-1.5 grid grid-cols-2 gap-1.5 sm:grid-cols-3">
                     <Field label="Sets">
                       <Stepper value={it.sets} onChange={(v) => patchItem(i, { sets: v ?? 3 })} step={1} min={1} max={12} />
                     </Field>
@@ -284,13 +284,13 @@ function DayEditor({
                   <Input
                     value={it.notes ?? ""}
                     onChange={(e) => patchItem(i, { notes: e.target.value })}
-                    placeholder="Note (optional) — e.g. leave 2 reps in reserve"
-                    className="mt-2 py-2 text-[13px]"
+                    placeholder="Note (optional)"
+                    className="mt-1.5 py-2"
                   />
                 </div>
               ))}
             </div>
-            <Button variant="soft" className="mt-2 w-full" onClick={() => setPicker(true)}>
+            <Button variant="soft" className="mt-1.5 w-full" onClick={() => setPicker(true)}>
               <Plus className="h-4 w-4" /> Add exercise
             </Button>
           </div>

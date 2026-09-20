@@ -73,7 +73,7 @@ export default function OnboardingPage() {
 
   if (me === undefined) {
     return (
-      <main className="mx-auto max-w-lg space-y-4 px-5 py-10">
+      <main className="mx-auto max-w-lg space-y-3 px-3 py-8 sm:px-6">
         <div className="skeleton h-2 w-full rounded-full" />
         <div className="skeleton h-10 w-2/3 rounded-2xl" />
         <div className="skeleton h-64 w-full rounded-3xl" />
@@ -185,15 +185,15 @@ function Onboarding({ me }: { me: any }) {
   ][step];
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-lg flex-col px-5 pb-10 pt-6">
-      <header className="mb-6">
-        <div className="mb-4 flex items-center gap-3">
+    <main className="mx-auto flex min-h-dvh max-w-lg flex-col px-3 pb-8 pt-5 sm:px-6">
+      <header className="mb-4">
+        <div className="flex items-center gap-2">
           {step > 0 && (
             <button onClick={() => setStep(step - 1)} className="-m-1.5 rounded-xl p-3 text-muted hover:bg-surface-2 hover:text-ink">
               <ArrowLeft className="h-5 w-5" />
             </button>
           )}
-          <div className="flex flex-1 gap-1">
+          <div className="flex min-w-0 flex-1 gap-1">
             {STEPS.map((s, i) => (
               <div
                 key={s}
@@ -201,7 +201,7 @@ function Onboarding({ me }: { me: any }) {
               />
             ))}
           </div>
-          <span className="tabular text-[12px] font-semibold text-muted">
+          <span className="tabular shrink-0 text-[11.5px] font-semibold text-muted">
             {step + 1}/{STEPS.length}
           </span>
         </div>
@@ -209,11 +209,11 @@ function Onboarding({ me }: { me: any }) {
 
       <div key={step} className="flex-1 animate-rise">
         {step === 0 && (
-          <Step title="Let's set up your profile" sub="Used to estimate calories and protein. You can change any of it later.">
+          <Step title="Set up your profile" sub="Used to estimate calories and protein. Editable later.">
             <Field label="What should we call you?">
               <Input value={d.name} onChange={(e) => set({ name: e.target.value })} placeholder="Your name" />
             </Field>
-            <Field label="Sex" hint="Only used for the calorie formula. Choose 'Prefer not to say' to use a neutral estimate.">
+            <Field label="Sex" hint="Calorie formula only.">
               <OptionGrid
                 cols={3}
                 value={d.sex}
@@ -225,7 +225,7 @@ function Onboarding({ me }: { me: any }) {
                 ]}
               />
             </Field>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-2.5">
               <Field label="Birth year">
                 <Input
                   inputMode="numeric"
@@ -243,7 +243,7 @@ function Onboarding({ me }: { me: any }) {
                 />
               </Field>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-2.5">
               <Field label="Current weight (kg)">
                 <Input
                   inputMode="decimal"
@@ -283,7 +283,7 @@ function Onboarding({ me }: { me: any }) {
         )}
 
         {step === 2 && (
-          <Step title="Where are you starting from?" sub="Honest answers give better plans than optimistic ones.">
+          <Step title="Where are you starting from?" sub="Honest beats optimistic.">
             <Field label="Training experience">
               <OptionGrid
                 cols={1}
@@ -313,7 +313,7 @@ function Onboarding({ me }: { me: any }) {
         )}
 
         {step === 3 && (
-          <Step title="When can you train?" sub="We'll fit the split to the days you actually have.">
+          <Step title="When can you train?" sub="The split fits the days you have.">
             <Field label={`Sessions per week — ${d.daysPerWeek}`}>
               <input
                 type="range"
@@ -325,7 +325,7 @@ function Onboarding({ me }: { me: any }) {
               />
             </Field>
             <Field label="Preferred days">
-              <div className="flex gap-1.5">
+              <div className="flex gap-1">
                 {DAY_LABELS.map((l, i) => (
                   <button
                     key={i}
@@ -365,7 +365,7 @@ function Onboarding({ me }: { me: any }) {
         )}
 
         {step === 4 && (
-          <Step title="What can you train with?" sub="Pick everything you have access to. Bodyweight is always included.">
+          <Step title="What can you train with?" sub="Bodyweight is always included.">
             <OptionGrid
               multi
               value={d.equipment}
@@ -387,7 +387,7 @@ function Onboarding({ me }: { me: any }) {
         )}
 
         {step === 5 && (
-          <Step title="How do you eat?" sub="Shapes food suggestions. The whole database stays searchable either way.">
+          <Step title="How do you eat?" sub="Shapes suggestions; search still covers everything.">
             <Field label="Diet preference">
               <OptionGrid
                 value={d.dietPreference}
@@ -400,7 +400,7 @@ function Onboarding({ me }: { me: any }) {
                 ]}
               />
             </Field>
-            <Field label="Anything to avoid?" hint="Comma separated — e.g. peanuts, lactose">
+            <Field label="Anything to avoid?" hint="Comma separated">
               <Input
                 value={d.allergies.join(", ")}
                 onChange={(e) => set({ allergies: e.target.value.split(",").map((s) => s.trim()).filter(Boolean) })}
@@ -411,8 +411,8 @@ function Onboarding({ me }: { me: any }) {
         )}
 
         {step === 6 && (
-          <Step title="Sleep schedule" sub="Sets your sleep target and feeds the recovery score.">
-            <div className="grid grid-cols-2 gap-3">
+          <Step title="Sleep schedule" sub="Sets your sleep target and recovery score.">
+            <div className="grid grid-cols-2 gap-2.5">
               <Field label="Usual bedtime">
                 <Input type="time" value={d.bedtime} onChange={(e) => set({ bedtime: e.target.value })} />
               </Field>
@@ -420,19 +420,19 @@ function Onboarding({ me }: { me: any }) {
                 <Input type="time" value={d.wakeTime} onChange={(e) => set({ wakeTime: e.target.value })} />
               </Field>
             </div>
-            <Card className="bg-surface-2 p-4">
-              <div className="text-[13px] text-muted">That&apos;s a target of</div>
-              <div className="text-[28px] font-bold text-accent">{preview.sleepLabel}</div>
+            <Card className="flex items-baseline justify-between gap-2 bg-surface-2">
+              <span className="text-[12.5px] text-muted">Target</span>
+              <span className="text-[20px] font-bold text-accent">{preview.sleepLabel}</span>
             </Card>
           </Step>
         )}
 
         {step === 7 && (
           <Step
-            title="Here's your starting point"
-            sub="Estimates from your height, weight, age and activity — every one is editable later."
+            title="Your starting point"
+            sub="Estimated from your height, weight, age and activity."
           >
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-2.5">
               <Stat label="Calories" value={preview.kcal} unit="kcal" />
               <Stat label="Protein" value={preview.protein} unit="g" tone="var(--accent)" />
               <Stat label="Carbs" value={preview.carbs} unit="g" />
@@ -440,34 +440,28 @@ function Onboarding({ me }: { me: any }) {
               <Stat label="Fiber" value={preview.fiber} unit="g" tone="var(--mint)" />
               <Stat label="Water" value={preview.water} unit="ml" tone="var(--sky)" />
             </div>
-            <div className="rounded-2xl border border-line bg-surface-2 p-4 text-[12.5px] leading-relaxed text-muted">
-              <Pill tone="amber" className="mb-2">
+            <div className="rounded-2xl border border-line bg-surface-2 p-3 text-[12px] leading-snug text-muted">
+              <Pill tone="amber" className="mb-1.5">
                 Estimate
               </Pill>
-              <p>
-                Calculated with the Mifflin-St Jeor equation and your activity level. Real-world
-                results vary — after two weeks of logging, adjust using your own trend weight rather
-                than the formula.
-              </p>
+              <p>Mifflin-St Jeor. After two weeks, tune it against your own trend weight.</p>
             </div>
-            <div className="space-y-2.5 pt-1">
+            <div className="space-y-2 pt-0.5">
               <Button size="lg" className="w-full" loading={busy} onClick={() => finish(false)}>
                 <Check className="h-4 w-4" /> Start clean
               </Button>
               <Button size="lg" variant="soft" className="w-full" loading={busy} onClick={() => finish(true)}>
                 <Sparkles className="h-4 w-4" /> Start with 6 weeks of sample data
               </Button>
-              <p className="px-2 text-center text-[11.5px] text-muted">
-                Sample data is clearly labelled and can be wiped in one tap from Settings.
-              </p>
+              <p className="text-center text-[11px] text-muted">Sample data is labelled and wipes in one tap.</p>
             </div>
           </Step>
         )}
       </div>
 
       {step < STEPS.length - 1 && (
-        <footer className="sticky bottom-0 -mx-5 mt-6 bg-gradient-to-t from-bg via-bg to-transparent px-5 pt-4 pb-[max(0.5rem,var(--safe-bottom))]">
-          <div className="flex gap-3">
+        <footer className="sticky bottom-0 -mx-3 mt-4 bg-gradient-to-t from-bg via-bg to-transparent px-3 pt-3 pb-[max(0.5rem,var(--safe-bottom))] sm:-mx-6 sm:px-6">
+          <div className="flex gap-2">
             <Button variant="ghost" size="lg" onClick={() => persist(step + 1)}>
               Skip
             </Button>
@@ -483,10 +477,10 @@ function Onboarding({ me }: { me: any }) {
 
 function Step({ title, sub, children }: { title: string; sub?: string; children: React.ReactNode }) {
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       <div>
-        <h1 className="text-[26px] font-bold leading-tight tracking-tight">{title}</h1>
-        {sub && <p className="mt-1.5 text-[13.5px] leading-relaxed text-muted">{sub}</p>}
+        <h1 className="text-[20px] font-bold leading-tight tracking-tight">{title}</h1>
+        {sub && <p className="mt-1 text-[12.5px] leading-snug text-muted">{sub}</p>}
       </div>
       {children}
     </div>

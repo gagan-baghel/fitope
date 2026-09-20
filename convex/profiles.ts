@@ -2,7 +2,8 @@ import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./lib/functions";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { requireUser, todayFor, safeTz } from "./lib/util";
-import { computeTargets } from "./lib/fitness";
+import { computeTargets, PROFILE_DEFAULTS } from "./lib/fitness";
+import { libraryStale } from "./seed";
 
 const profileFields = {
   timezone: v.optional(v.string()),
@@ -52,17 +53,68 @@ export const me = query({
       profile,
       targets,
       currentWeightKg: latestWeight?.weightKg ?? profile?.startWeightKg,
+      // The shell tops the shared library up when this flips, so new content (the yoga
+      // library) reaches users who onboarded before it existed without a manual seed run.
+      libraryStale: await libraryStale(ctx),
     };
   },
 });
 
-export async function currentTargets(ctx: any, userId: any) {
+/** The newest row the user actually has. Null when targets were never computed. */
+export async function storedTargets(ctx: any, userId: any) {
   const rows = await ctx.db
     .query("targets")
     .withIndex("by_user_date", (q: any) => q.eq("userId", userId))
     .order("desc")
     .take(1);
   return rows[0] ?? null;
+}
+
+/**
+ * Targets for a user who never finished the profile: computed live from whatever they did
+ * give us, with documented stand-ins for the rest. Not written to the DB — the moment the
+ * real fields land, `recalcTargets` replaces this with a stored row.
+ *
+ * Every screen reads targets through `currentTargets`/`targetsOn`, so this is the single
+ * place that stops "0 g" and "– kcal" from reaching the UI.
+ */
+async function provisionalTargets(ctx: any, userId: any) {
+  const profile = await ctx.db
+    .query("profiles")
+    .withIndex("by_user", (q: any) => q.eq("userId", userId))
+    .unique();
+  const latest = await ctx.db
+    .query("bodyMetrics")
+    .withIndex("by_user_date", (q: any) => q.eq("userId", userId))
+    .order("desc")
+    .filter((q: any) => q.neq(q.field("weightKg"), undefined))
+    .first();
+  const weightKg = latest?.weightKg ?? profile?.startWeightKg ?? PROFILE_DEFAULTS.weightKg;
+  const heightCm = profile?.heightCm ?? PROFILE_DEFAULTS.heightCm;
+  const age = profile?.birthYear
+    ? new Date().getFullYear() - profile.birthYear
+    : PROFILE_DEFAULTS.age;
+  const t = computeTargets({
+    weightKg,
+    heightCm,
+    age,
+    sex: profile?.sex,
+    activityLevel: profile?.activityLevel,
+    goal: profile?.goal,
+    targetWeightKg: profile?.targetWeightKg,
+    sleepTargetMinutes: sleepTargetFrom(profile),
+  });
+  // What the user still owes us, so the UI can name it instead of showing a bare guess.
+  const missing = [
+    profile?.heightCm ? null : "height",
+    latest?.weightKg ?? profile?.startWeightKg ? null : "weight",
+    profile?.birthYear ? null : "age",
+  ].filter(Boolean) as string[];
+  return { userId, effectiveFrom: "", ...t, source: "provisional", missing, createdAt: Date.now() };
+}
+
+export async function currentTargets(ctx: any, userId: any) {
+  return (await storedTargets(ctx, userId)) ?? (await provisionalTargets(ctx, userId));
 }
 
 /** Targets as they were on a given date — keeps history honest when a user changes goals. */
@@ -74,6 +126,16 @@ export async function targetsOn(ctx: any, userId: any, date: string) {
     .take(1);
   if (rows[0]) return rows[0];
   return await currentTargets(ctx, userId);
+}
+
+/** Bedtime + wake time is a better sleep target than a flat 8h when the user gave both. */
+function sleepTargetFrom(profile: any) {
+  if (!profile?.bedtime || !profile?.wakeTime) return 480;
+  const [bh, bm] = profile.bedtime.split(":").map(Number);
+  const [wh, wm] = profile.wakeTime.split(":").map(Number);
+  let mins = wh * 60 + wm - (bh * 60 + bm);
+  if (mins <= 0) mins += 1440;
+  return mins;
 }
 
 /** Keeps "today" right when the user travels or first opens the app on a new device. */
@@ -158,16 +220,10 @@ export async function recalcTargets(ctx: any, userId: any, source: string) {
     .filter((q: any) => q.neq(q.field("weightKg"), undefined))
     .first();
   const weightKg = latest?.weightKg ?? profile?.startWeightKg;
+  // Height and weight are what make the estimate meaningful; without either there is nothing
+  // to store, and `provisionalTargets` keeps the screens populated until they arrive.
   if (!profile?.heightCm || !weightKg) return null;
-  const age = profile.birthYear ? new Date().getFullYear() - profile.birthYear : 30;
-  let sleepMinutes = 480;
-  if (profile.bedtime && profile.wakeTime) {
-    const [bh, bm] = profile.bedtime.split(":").map(Number);
-    const [wh, wm] = profile.wakeTime.split(":").map(Number);
-    let mins = wh * 60 + wm - (bh * 60 + bm);
-    if (mins <= 0) mins += 1440;
-    sleepMinutes = mins;
-  }
+  const age = profile.birthYear ? new Date().getFullYear() - profile.birthYear : PROFILE_DEFAULTS.age;
   const t = computeTargets({
     weightKg,
     heightCm: profile.heightCm,
@@ -176,7 +232,7 @@ export async function recalcTargets(ctx: any, userId: any, source: string) {
     activityLevel: profile.activityLevel,
     goal: profile.goal,
     targetWeightKg: profile.targetWeightKg,
-    sleepTargetMinutes: sleepMinutes,
+    sleepTargetMinutes: sleepTargetFrom(profile),
   });
   const date = (await todayFor(ctx, userId));
   const existingToday = await ctx.db

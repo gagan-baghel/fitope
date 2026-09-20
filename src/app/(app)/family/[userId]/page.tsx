@@ -22,9 +22,9 @@ export default function FamilyMember() {
   const [nudging, setNudging] = useState(false);
   const u = useUnits();
 
-  if (d === undefined || overview === undefined) return <Skeleton className="h-96 w-full" />;
+  if (d === undefined || overview === undefined) return <Skeleton className="h-64 w-full" />;
   if (d === null)
-    return <EmptyState icon={<Lock className="h-5 w-5" />} title="🔒" action={<Link href="/family" className="font-semibold text-accent">← Family</Link>} />;
+    return <EmptyState icon={<Lock className="h-5 w-5" />} title="Private" action={<Link href="/family" className="font-semibold text-accent">← Family</Link>} />;
 
   const row = overview?.members?.find((m: any) => m.userId === d.userId);
   const iAmOwner = overview?.me?.role === "owner";
@@ -32,21 +32,21 @@ export default function FamilyMember() {
     d.weight && d.weight.length > 1 ? Math.round((d.weight[d.weight.length - 1].trend - d.weight[0].trend) * 10) / 10 : null;
 
   return (
-    <div className="space-y-4">
-      <header className="flex items-center gap-3 pt-1">
-        <button onClick={() => router.back()} className="-ml-2 rounded-xl p-2 text-muted hover:bg-surface-2" aria-label="Back">
+    <div className="space-y-3">
+      <header className="flex items-center gap-2">
+        <button onClick={() => router.back()} className="-ml-2 shrink-0 rounded-xl p-2 text-muted hover:bg-surface-2" aria-label="Back">
           <ArrowLeft className="h-5 w-5" />
         </button>
-        <Avatar name={d.name} size={48} />
+        <Avatar name={d.name} size={40} />
         <div className="min-w-0 flex-1">
-          <h1 className="truncate text-[20px] font-bold">{d.name}</h1>
-          {d.paused && <div className="flex items-center gap-1 text-[12px] text-muted"><Pause className="h-3 w-3" /> paused</div>}
+          <h1 className="truncate text-[18px] font-bold">{d.name}</h1>
+          {d.paused && <div className="flex items-center gap-1 text-[11px] text-muted"><Pause className="h-3 w-3" /> paused</div>}
         </div>
         {!d.isMe && (
           <button
             onClick={() => setNudging(true)}
             disabled={!row?.nudgesLeft}
-            className="grid h-12 w-12 place-items-center rounded-2xl bg-accent text-[22px] text-accent-ink active:scale-90 disabled:opacity-35"
+            className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-accent text-[20px] text-accent-ink active:scale-90 disabled:opacity-35"
             aria-label="Nudge"
           >
             👋
@@ -54,55 +54,82 @@ export default function FamilyMember() {
         )}
       </header>
 
-      <Week emoji="🍽️" series={d.kcal} target={d.targets?.kcal} color="var(--amber)" fmt={(v) => `${v}`} />
-      <Week emoji="🥚" series={d.protein} target={d.targets?.protein} color="var(--rose)" fmt={(v) => `${v}g`} />
-      <Week emoji="💧" series={d.water} target={d.targets?.waterMl} color="var(--sky)" fmt={(v) => `${(v / 1000).toFixed(1)}L`} />
-      <Week emoji="😴" series={d.sleep} target={d.targets?.sleepMinutes} color="var(--violet)" fmt={(v) => hhmm(v)} />
+      <div className="text-[11.5px] text-muted">Last 7 days · bars are days, the dashed line is the goal</div>
+
+      <div className="grid gap-2 sm:grid-cols-2">
+        <Week emoji="🍽️" label="Calories" series={d.kcal} target={d.targets?.kcal} color="var(--amber)" fmt={(v) => `${v}`} />
+        <Week emoji="🥚" label="Protein" series={d.protein} target={d.targets?.protein} color="var(--rose)" fmt={(v) => `${v} g`} />
+        <Week emoji="💧" label="Water" series={d.water} target={d.targets?.waterMl} color="var(--sky)" fmt={(v) => `${(v / 1000).toFixed(1)} L`} />
+        <Week emoji="😴" label="Sleep" series={d.sleep} target={d.targets?.sleepMinutes} color="var(--violet)" fmt={(v) => hhmm(v)} />
+      </div>
 
       <Card>
-        <div className="mb-3 text-[22px] leading-none">💪</div>
+        <div className="mb-2 flex min-w-0 items-center gap-1.5">
+          <span className="shrink-0 text-[16px] leading-none">💪</span>
+          <span className="min-w-0 flex-1 truncate text-[13px] font-bold">Workouts</span>
+          {d.workouts && (
+            <span className="tabular shrink-0 text-[11.5px] text-muted">
+              {d.workouts.filter((w: any) => w.value?.status === "completed").length} of {d.workouts.length} days
+            </span>
+          )}
+        </div>
         {d.workouts ? (
-          <div className="grid grid-cols-7 gap-1.5">
-            {d.workouts.map((w: any) => (
-              <div key={w.date} className="flex flex-col items-center gap-1">
-                <div
-                  className={cn(
-                    "grid aspect-square w-full place-items-center rounded-xl text-[16px]",
-                    w.value?.status === "completed" ? "bg-mint/20" : w.value ? "bg-surface-2" : "bg-surface-2/50"
-                  )}
-                  title={w.value?.title}
-                >
-                  {w.value?.status === "completed" ? "✅" : w.value?.status === "skipped" ? "➖" : ""}
+          <>
+            <div className="grid grid-cols-7 gap-1">
+              {d.workouts.map((w: any) => (
+                <div key={w.date} className="flex min-w-0 flex-col items-center gap-0.5">
+                  <div
+                    className={cn(
+                      "grid aspect-square w-full place-items-center rounded-lg text-[14px]",
+                      w.value?.status === "completed" ? "bg-mint/20" : w.value ? "bg-surface-2" : "bg-surface-2/50"
+                    )}
+                    title={w.value?.title ?? "No session"}
+                  >
+                    {w.value?.status === "completed" ? "✅" : w.value?.status === "skipped" ? "➖" : ""}
+                  </div>
+                  <span className="text-[10px] text-muted">{DAY_LABELS[new Date(w.date + "T00:00:00").getDay()]}</span>
                 </div>
-                <span className="text-[10px] text-muted">{DAY_LABELS[new Date(w.date + "T00:00:00").getDay()]}</span>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+            {/* Three glyphs with no key is a puzzle, not a chart. */}
+            <div className="mt-2 flex flex-wrap gap-x-3 gap-y-0.5 text-[10.5px] text-muted">
+              <span>✅ trained</span>
+              <span>➖ rest</span>
+              <span>▫️ nothing logged</span>
+            </div>
+          </>
         ) : (
-          <Lock className="h-4 w-4 text-muted" aria-label="Private" />
+          <p className="flex items-center gap-1.5 text-[11.5px] text-muted">
+            <Lock className="h-3.5 w-3.5" /> Not shared
+          </p>
         )}
       </Card>
 
       {d.weight && d.weight.length > 0 && (
-        <Card className="flex items-center gap-3">
-          <span className="text-[22px] leading-none">⚖️</span>
-          <span className="tabular text-[20px] font-bold">{u.weight(d.weight[d.weight.length - 1].value)}</span>
+        <Card className="flex min-w-0 items-center gap-2">
+          <span className="shrink-0 text-[16px] leading-none">⚖️</span>
+          <div className="min-w-0 flex-1">
+            <div className="text-[11.5px] font-semibold text-ink-2">Weight</div>
+            <div className="tabular truncate text-[17px] font-bold">{u.weight(d.weight[d.weight.length - 1].value)}</div>
+          </div>
           {weightDelta != null && (
-            <span className="tabular text-[13px] text-muted">
-              {weightDelta > 0 ? "↑" : weightDelta < 0 ? "↓" : "→"} {u.weight(Math.abs(weightDelta))} · 60d
+            <span className="tabular shrink-0 text-right text-[11px] text-muted">
+              {weightDelta > 0 ? "↑" : weightDelta < 0 ? "↓" : "→"} {u.weight(Math.abs(weightDelta))}
+              <br />
+              over 60 days
             </span>
           )}
         </Card>
       )}
 
       {!d.isMe && (
-        <div className="space-y-2 pt-2">
+        <div className="space-y-1.5 pt-1">
           <button
             onClick={() => setMuted({ userId: d.userId, muted: !d.muted })}
-            className="flex w-full items-center gap-3 rounded-2xl border border-line px-4 py-3 text-left"
+            className="flex w-full items-center gap-2.5 rounded-2xl border border-line px-3 py-2.5 text-left"
           >
-            {d.muted ? <BellOff className="h-5 w-5 text-muted" /> : <Bell className="h-5 w-5" />}
-            <span className="flex-1 text-[14px] font-semibold">{d.muted ? "Unmute" : "Mute"} {d.name.split(" ")[0]}</span>
+            {d.muted ? <BellOff className="h-5 w-5 shrink-0 text-muted" /> : <Bell className="h-5 w-5 shrink-0" />}
+            <span className="min-w-0 flex-1 truncate text-[13px] font-semibold">{d.muted ? "Unmute" : "Mute"} {d.name.split(" ")[0]}</span>
           </button>
           {iAmOwner && (
             <>
@@ -133,12 +160,14 @@ export default function FamilyMember() {
 /** Seven bars, one per day, with the target as a line — readable without any numbers. */
 function Week({
   emoji,
+  label,
   series,
   target,
   color,
   fmt,
 }: {
   emoji: string;
+  label: string;
   series: { date: string; value: number }[] | null;
   target?: number;
   color: string;
@@ -146,37 +175,47 @@ function Week({
 }) {
   if (!series)
     return (
-      <Card className="flex items-center gap-3">
-        <span className="text-[22px] leading-none">{emoji}</span>
-        <Lock className="h-4 w-4 text-muted" aria-label="Private" />
+      <Card className="flex min-w-0 items-center gap-1.5">
+        <span className="shrink-0 text-[16px] leading-none">{emoji}</span>
+        <span className="min-w-0 flex-1 truncate text-[13px] font-bold">{label}</span>
+        <span className="flex shrink-0 items-center gap-1 text-[11px] text-muted">
+          <Lock className="h-3 w-3" /> Private
+        </span>
       </Card>
     );
-  const max = Math.max(target ?? 0, ...series.map((s) => s.value), 1);
+  // An absent target arrives as 0 as often as undefined — treat both as "no target" so the
+  // card never shows "🎯 0" or pins the goal line to the floor.
+  const goal = target || null;
+  const max = Math.max(goal ?? 0, ...series.map((s) => s.value), 1);
   const last = series[series.length - 1];
   return (
     <Card>
-      <div className="mb-3 flex items-center gap-2">
-        <span className="text-[22px] leading-none">{emoji}</span>
-        <span className="tabular flex-1 text-[17px] font-bold">{fmt(last.value)}</span>
-        {target != null && <span className="tabular text-[12px] text-muted">🎯 {fmt(target)}</span>}
+      <div className="mb-0.5 flex min-w-0 items-center gap-1.5">
+        <span className="shrink-0 text-[16px] leading-none">{emoji}</span>
+        <span className="min-w-0 flex-1 truncate text-[12px] font-semibold text-ink-2">{label}</span>
+        {goal != null && <span className="tabular shrink-0 text-[10.5px] text-muted">Goal {fmt(goal)}</span>}
       </div>
-      <div className="relative flex h-24 items-end gap-1.5">
-        {target != null && (
-          <div className="pointer-events-none absolute inset-x-0 border-t border-dashed border-ink/25" style={{ bottom: `${(target / max) * 100}%` }} />
+      <div className="mb-2 flex min-w-0 items-baseline gap-1.5">
+        <span className="tabular min-w-0 truncate text-[17px] font-bold">{fmt(last.value)}</span>
+        <span className="shrink-0 text-[10.5px] text-muted">today</span>
+      </div>
+      <div className="relative flex h-16 items-end gap-1">
+        {goal != null && (
+          <div className="pointer-events-none absolute inset-x-0 border-t border-dashed border-ink/25" style={{ bottom: `${(goal / max) * 100}%` }} />
         )}
         {series.map((s) => (
-          <div key={s.date} className="flex h-full flex-1 flex-col justify-end">
+          <div key={s.date} className="flex h-full min-w-0 flex-1 flex-col justify-end">
             <div
-              className="w-full rounded-t-lg"
-              style={{ height: `${Math.max(s.value ? 4 : 0, (s.value / max) * 100)}%`, background: color, opacity: target && s.value >= target ? 1 : 0.6 }}
+              className="w-full rounded-t-md"
+              style={{ height: `${Math.max(s.value ? 4 : 0, (s.value / max) * 100)}%`, background: color, opacity: goal && s.value >= goal ? 1 : 0.6 }}
               title={`${s.date}: ${fmt(s.value)}`}
             />
           </div>
         ))}
       </div>
-      <div className="mt-1 flex gap-1.5">
+      <div className="mt-1 flex gap-1">
         {series.map((s) => (
-          <span key={s.date} className="flex-1 text-center text-[10px] text-muted">
+          <span key={s.date} className="min-w-0 flex-1 text-center text-[10px] text-muted">
             {DAY_LABELS[new Date(s.date + "T00:00:00").getDay()]}
           </span>
         ))}

@@ -13,7 +13,7 @@ export function Card({
   ...rest
 }: React.HTMLAttributes<HTMLDivElement> & { as?: any }) {
   return (
-    <As className={cn("card p-4", className)} {...rest}>
+    <As className={cn("card p-3.5", className)} {...rest}>
       {children}
     </As>
   );
@@ -29,8 +29,8 @@ export function SectionTitle({
   className?: string;
 }) {
   return (
-    <div className={cn("mb-3 flex min-w-0 items-end justify-between gap-3", className)}>
-      <h2 className="min-w-0 text-[15px] font-semibold leading-tight tracking-tight text-ink">{children}</h2>
+    <div className={cn("mb-2.5 flex min-w-0 items-end justify-between gap-2", className)}>
+      <h2 className="min-w-0 text-[12.5px] font-bold uppercase tracking-[0.05em] leading-tight text-muted">{children}</h2>
       {/* Text links here are ~18px tall; pad the hit area to ~44px without moving anything. */}
       {action && (
         <div className="shrink-0 [&>a]:-my-3 [&>a]:inline-flex [&>a]:py-3 [&>button]:-my-3 [&>button]:py-3">{action}</div>
@@ -96,7 +96,7 @@ export function Chip({
   return (
     <button
       className={cn(
-        "shrink-0 rounded-full border px-3.5 py-2 text-[13px] font-medium transition-all active:scale-95",
+        "inline-flex min-h-10 shrink-0 items-center rounded-full border px-3.5 text-[13px] font-medium transition-all active:scale-95",
         active
           ? "border-transparent bg-ink text-ground"
           : "border-line bg-surface text-ink-2 hover:border-ink/25 hover:text-ink",
@@ -237,7 +237,7 @@ export function OptionGrid<T extends string>({
 }) {
   const selected = (v: T) => (Array.isArray(value) ? value.includes(v) : value === v);
   return (
-    <div className={cn("grid gap-2.5", cols === 1 ? "grid-cols-1" : cols === 3 ? "grid-cols-3" : "grid-cols-2")}>
+    <div className={cn("grid gap-2", cols === 1 ? "grid-cols-1" : cols === 3 ? "grid-cols-3" : "grid-cols-2")}>
       {options.map((o) => (
         <button
           key={o.value}
@@ -249,7 +249,7 @@ export function OptionGrid<T extends string>({
             } else onChange(o.value);
           }}
           className={cn(
-            "relative rounded-2xl border p-3.5 text-left transition-all active:scale-[0.98]",
+            "relative rounded-xl border p-3 text-left transition-all active:scale-[0.98]",
             selected(o.value)
               ? "border-accent bg-accent-soft"
               : "border-line bg-surface-2 hover:border-ink/20"
@@ -384,12 +384,12 @@ export function Sheet({
         aria-modal="true"
         className={cn(
           "relative flex max-h-[92dvh] w-full animate-sheet flex-col overflow-hidden border border-line bg-surface shadow-2xl",
-          "rounded-t-[28px] sm:rounded-[28px]",
+          "rounded-t-[20px] sm:rounded-[20px]",
           size === "lg" ? "sm:max-w-2xl" : size === "full" ? "sm:max-w-4xl" : "sm:max-w-md"
         )}
       >
         {title && (
-          <div className="flex shrink-0 items-center justify-between gap-3 border-b border-line px-5 py-4">
+          <div className="flex shrink-0 items-center justify-between gap-3 border-b border-line px-4 py-3">
             <div className="min-w-0 truncate text-[15px] font-semibold">{title}</div>
             <button
               onClick={onClose}
@@ -400,9 +400,9 @@ export function Sheet({
             </button>
           </div>
         )}
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-4">{children}</div>
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-3.5">{children}</div>
         {footer && (
-          <div className="shrink-0 border-t border-line bg-surface px-5 pt-3.5 pb-[max(0.875rem,var(--safe-bottom))]">
+          <div className="shrink-0 border-t border-line bg-surface px-4 pt-3 pb-[max(0.75rem,var(--safe-bottom))]">
             {footer}
           </div>
         )}
@@ -414,7 +414,7 @@ export function Sheet({
 export function ConfirmButton({
   onConfirm,
   children,
-  confirmLabel = "Tap again to confirm",
+  confirmLabel = "Confirm?",
   className,
   variant = "danger",
   size = "sm",
@@ -465,11 +465,11 @@ export function EmptyState({
   className?: string;
 }) {
   return (
-    <div className={cn("flex flex-col items-center rounded-[22px] border border-dashed border-line px-6 py-7 text-center", className)}>
-      {icon && <div className="mb-2.5 grid h-10 w-10 place-items-center rounded-2xl bg-surface-2 text-muted">{icon}</div>}
+    <div className={cn("flex flex-col items-center rounded-2xl border border-dashed border-line px-5 py-6 text-center", className)}>
+      {icon && <div className="mb-2 grid h-9 w-9 place-items-center rounded-xl bg-surface-2 text-muted">{icon}</div>}
       <div className="text-[14px] font-semibold text-ink">{title}</div>
-      {body && <p className="mt-1.5 max-w-xs text-[12.5px] leading-relaxed text-muted">{body}</p>}
-      {action && <div className="mt-3.5">{action}</div>}
+      {body && <p className="mt-1.5 max-w-xs text-[12.5px] leading-snug text-muted">{body}</p>}
+      {action && <div className="mt-3">{action}</div>}
     </div>
   );
 }
@@ -596,7 +596,7 @@ export function Stepper({
     <div className={cn("flex items-center gap-1 rounded-xl border border-line bg-surface-2", className)}>
       <button
         type="button"
-        className="h-10 w-9 rounded-l-xl text-muted transition-colors hover:bg-surface-3 hover:text-ink"
+        className="h-10 w-9 shrink-0 rounded-l-xl text-muted transition-colors hover:bg-surface-3 hover:text-ink"
         onClick={() => onChange(Math.max(min, Math.round(((value ?? 0) - step) * 100) / 100))}
         aria-label="Decrease"
       >
@@ -612,10 +612,10 @@ export function Stepper({
         }}
         className="tabular w-full min-w-0 bg-transparent py-2 text-center text-[15px] font-semibold outline-none"
       />
-      {suffix && <span className="pr-1 text-[11px] text-muted">{suffix}</span>}
+      {suffix && <span className="shrink-0 pr-1 text-[11px] text-muted">{suffix}</span>}
       <button
         type="button"
-        className="h-10 w-9 rounded-r-xl text-muted transition-colors hover:bg-surface-3 hover:text-ink"
+        className="h-10 w-9 shrink-0 rounded-r-xl text-muted transition-colors hover:bg-surface-3 hover:text-ink"
         onClick={() => onChange(Math.min(max, Math.round(((value ?? 0) + step) * 100) / 100))}
         aria-label="Increase"
       >

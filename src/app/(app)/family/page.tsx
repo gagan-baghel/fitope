@@ -38,7 +38,7 @@ export default function Family() {
     if (data?.me && data.me.timezone !== tz()) updateSharing({ timezone: tz() });
   }, [data?.me, updateSharing]);
 
-  if (data === undefined) return <Skeleton className="h-96 w-full" />;
+  if (data === undefined) return <Skeleton className="h-64 w-full" />;
   if (!data?.circle) return <NoFamily />;
   if (data.me?.status === "pending") return <Waiting name={data.circle.name} />;
   return <FamilyHome data={data} />;
@@ -57,11 +57,11 @@ function NoFamily() {
 
   const first = me?.profile?.name?.split(" ")[0];
   return (
-    <div className="space-y-5 pt-6 text-center">
-      <div className="text-[72px] leading-none">👨‍👩‍👧‍👦</div>
-      <h1 className="text-[26px] font-bold tracking-tight">Family</h1>
-      <p className="mx-auto max-w-xs text-[14px] text-muted">🍽️ 💧 💪 😴 — see each other, cheer each other.</p>
-      <div className="mx-auto grid max-w-sm gap-3 pt-2">
+    <div className="space-y-3 pt-4 text-center">
+      <div className="text-[56px] leading-none">👨‍👩‍👧‍👦</div>
+      <h1 className="text-[20px] font-bold tracking-tight">Family</h1>
+      <p className="mx-auto max-w-xs text-[13px] text-muted">🍽️ 💧 💪 😴 — see each other, cheer each other.</p>
+      <div className="mx-auto grid max-w-sm gap-2 pt-1">
         <Button size="lg" onClick={() => { setName(first ? `${first}'s family` : ""); setSheet("create"); }}>
           <UserPlus className="h-5 w-5" /> Create family
         </Button>
@@ -124,7 +124,7 @@ function JoinSheet({ open, onClose, initialCode }: { open: boolean; onClose: () 
         </Button>
       }
     >
-      <div className="space-y-3">
+      <div className="space-y-2.5">
         <Input
           value={c.length > 4 ? `${c.slice(0, 4)}-${c.slice(4, 8)}` : c}
           onChange={(e) => setCode(normalizeCode(e.target.value).slice(0, 8))}
@@ -132,15 +132,15 @@ function JoinSheet({ open, onClose, initialCode }: { open: boolean; onClose: () 
           autoCapitalize="characters"
           autoComplete="off"
           aria-label="Invite code"
-          className="text-center font-mono text-[24px] font-bold tracking-[0.2em]"
+          className="text-center font-mono text-[20px] font-bold tracking-[0.18em]"
         />
-        {peek?.valid === false && <p className="text-center text-[13px] text-rose">❌ Code not valid</p>}
+        {peek?.valid === false && <p className="text-center text-[12.5px] text-rose">❌ Code not valid</p>}
         {peek?.valid && (
-          <div className="flex items-center gap-3 rounded-2xl bg-surface-2 p-3 text-left">
-            <span className="text-[30px] leading-none">👨‍👩‍👧‍👦</span>
-            <div className="min-w-0">
-              <div className="truncate text-[15px] font-bold">{peek.familyName}</div>
-              <div className="truncate text-[12px] text-muted">👋 {peek.invitedBy}</div>
+          <div className="flex items-center gap-2.5 rounded-2xl bg-surface-2 p-2.5 text-left">
+            <span className="text-[24px] leading-none">👨‍👩‍👧‍👦</span>
+            <div className="min-w-0 flex-1">
+              <div className="truncate text-[13.5px] font-bold">{peek.familyName}</div>
+              <div className="truncate text-[11.5px] text-muted">👋 {peek.invitedBy}</div>
             </div>
           </div>
         )}
@@ -155,13 +155,13 @@ function JoinSheet({ open, onClose, initialCode }: { open: boolean; onClose: () 
                 autoCapitalize="characters"
                 autoComplete="off"
                 aria-label="Password"
-                className="pl-12 text-center font-mono text-[20px] font-bold tracking-[0.15em]"
+                className="pl-12 text-center font-mono text-[18px] font-bold tracking-[0.15em]"
               />
             </div>
-            <p className="mt-1.5 text-center text-[11.5px] text-muted">No password? Tap Join — the admin will let you in ⏳</p>
+            <p className="mt-1.5 text-center text-[11px] text-muted">No password? Tap Join — the admin approves ⏳</p>
           </div>
         )}
-        {error && <p className="text-center text-[13px] font-semibold text-rose">{error}</p>}
+        {error && <p className="text-center text-[12.5px] font-semibold text-rose">{error}</p>}
       </div>
     </Sheet>
   );
@@ -170,10 +170,10 @@ function JoinSheet({ open, onClose, initialCode }: { open: boolean; onClose: () 
 function Waiting({ name }: { name: string }) {
   const cancel = useMutation(api.family.cancelRequest);
   return (
-    <div className="space-y-4 pt-10 text-center">
-      <div className="animate-pulse text-[72px] leading-none">⏳</div>
-      <h1 className="text-[22px] font-bold">{name}</h1>
-      <p className="text-[14px] text-muted">Waiting for the admin 👑</p>
+    <div className="space-y-3 pt-8 text-center">
+      <div className="animate-pulse text-[56px] leading-none">⏳</div>
+      <h1 className="truncate text-[20px] font-bold">{name}</h1>
+      <p className="text-[13px] text-muted">Waiting for the admin 👑</p>
       <Button variant="ghost" onClick={() => cancel({})}>
         <X className="h-4 w-4" /> Cancel
       </Button>
@@ -190,10 +190,10 @@ function FamilyHome({ data }: { data: any }) {
   const isOwner = data.me.role === "owner";
 
   return (
-    <div className="space-y-4">
-      <header className="flex items-center gap-2 pt-1">
-        <span className="text-[28px] leading-none">👨‍👩‍👧‍👦</span>
-        <h1 className="min-w-0 flex-1 truncate text-[22px] font-bold tracking-tight">{data.circle.name}</h1>
+    <div className="space-y-3">
+      <header className="flex items-center gap-2">
+        <span className="shrink-0 text-[22px] leading-none">👨‍👩‍👧‍👦</span>
+        <h1 className="min-w-0 flex-1 truncate text-[20px] font-bold tracking-tight">{data.circle.name}</h1>
         <Button size="icon" variant="soft" onClick={() => setSheet("settings")} aria-label="Settings">
           <Settings className="h-5 w-5" />
         </Button>
@@ -203,11 +203,11 @@ function FamilyHome({ data }: { data: any }) {
       </header>
 
       {data.pending.map((p: any) => (
-        <Card key={p.memberId} className="flex items-center gap-3 border-amber/40 bg-amber/[0.08]">
-          <Avatar name={p.name} size={44} />
+        <Card key={p.memberId} className="flex items-center gap-2 border-amber/40 bg-amber/[0.08]">
+          <Avatar name={p.name} size={36} />
           <div className="min-w-0 flex-1">
-            <div className="truncate text-[15px] font-semibold">{p.name}</div>
-            <div className="text-[12px] text-muted">👋 wants to join</div>
+            <div className="truncate text-[13.5px] font-semibold">{p.name}</div>
+            <div className="text-[11px] text-muted">👋 wants to join</div>
           </div>
           <Button size="icon" variant="danger" onClick={() => respond({ memberId: p.memberId, approve: false })} aria-label="Decline">
             <X className="h-5 w-5" />
@@ -218,7 +218,7 @@ function FamilyHome({ data }: { data: any }) {
         </Card>
       ))}
 
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid gap-2 sm:grid-cols-2">
         {data.members.map((m: any) => (
           <MemberCard key={m.userId} m={m} onNudge={() => setNudgeTo(m)} />
         ))}
@@ -227,10 +227,10 @@ function FamilyHome({ data }: { data: any }) {
       {data.members.length === 1 && (
         <button
           onClick={() => setSheet("invite")}
-          className="flex w-full flex-col items-center gap-2 rounded-[22px] border border-dashed border-line py-8 text-muted active:scale-[0.99]"
+          className="flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-line py-4 text-muted active:scale-[0.99]"
         >
-          <UserPlus className="h-8 w-8" />
-          <span className="text-[14px] font-semibold">Invite family</span>
+          <UserPlus className="h-5 w-5" />
+          <span className="text-[13px] font-semibold">Invite family</span>
         </button>
       )}
 
@@ -241,38 +241,51 @@ function FamilyHome({ data }: { data: any }) {
   );
 }
 
-function Hidden() {
-  return <Lock className="h-3.5 w-3.5 text-muted/60" aria-label="Private" />;
-}
-
+/**
+ * One member's day. Every row names what it is and what the goal is: the previous version
+ * was a bare emoji, a bar and a number, so "🍽️ ▬▬▬ 1290" gave no way to tell what was being
+ * measured or whether 1290 was good. Protein and meal count were fetched and never shown.
+ */
 function MemberCard({ m, onNudge }: { m: any; onNudge: () => void }) {
   const s = m.summary;
   const u = useUnits();
   const progress = dayProgress(s);
+  const paused = m.paused && !m.isMe;
   const Head: any = m.isMe ? "div" : Link;
+  const shares = !!(s.meals || s.water || s.workout || s.sleep || s.body);
+
   return (
-    <Card className="space-y-3">
-      <div className="flex items-center gap-3">
-        <Head href={`/family/${m.userId}`} className="flex min-w-0 flex-1 items-center gap-3">
-          <Avatar name={m.name} size={52} ring={progress ?? 0} />
-          <div className="min-w-0">
-            <div className="flex items-center gap-1.5">
-              <span className="truncate text-[16px] font-bold">{m.isMe ? "You" : m.name}</span>
-              {m.role === "owner" && <Crown className="h-4 w-4 shrink-0 text-amber" aria-label="Admin" />}
+    <Card className="space-y-2.5">
+      <div className="flex items-center gap-2.5">
+        <Head href={`/family/${m.userId}`} className="flex min-w-0 flex-1 items-center gap-2.5">
+          <Avatar name={m.name} size={44} ring={progress ?? 0} />
+          <div className="min-w-0 flex-1">
+            <div className="flex min-w-0 items-center gap-1">
+              <span className="min-w-0 truncate text-[14px] font-bold">{m.isMe ? "You" : m.name}</span>
+              {m.role === "owner" && <Crown className="h-3.5 w-3.5 shrink-0 text-amber" aria-label="Admin" />}
               {m.muted && <BellOff className="h-3.5 w-3.5 shrink-0 text-muted" aria-label="Muted" />}
             </div>
-            {m.paused && !m.isMe ? (
-              <div className="flex items-center gap-1 text-[12px] text-muted"><Pause className="h-3 w-3" /> paused</div>
-            ) : progress != null ? (
-              <div className="tabular text-[12px] text-muted">{Math.round(progress * 100)}% today</div>
-            ) : null}
+            {/* The avatar ring is a percentage of nothing obvious unless it says so. */}
+            <div className="truncate text-[11px] text-muted">
+              {paused ? (
+                "Sharing paused"
+              ) : progress != null ? (
+                <>
+                  <span className="tabular font-semibold text-ink-2">{Math.round(progress * 100)}%</span> of today&apos;s goals
+                </>
+              ) : shares ? (
+                "Nothing logged today"
+              ) : (
+                "Shares nothing yet"
+              )}
+            </div>
           </div>
         </Head>
         {!m.isMe && (
           <button
             onClick={onNudge}
             disabled={m.nudgesLeft === 0}
-            className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-accent text-[22px] text-accent-ink transition-all active:scale-90 disabled:opacity-35"
+            className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-accent text-[20px] text-accent-ink transition-all active:scale-90 disabled:opacity-35"
             aria-label={`Nudge ${m.name}`}
           >
             👋
@@ -281,41 +294,94 @@ function MemberCard({ m, onNudge }: { m: any; onNudge: () => void }) {
         {!m.isMe && <ChevronRight className="h-4 w-4 shrink-0 text-muted" />}
       </div>
 
-      {!(m.paused && !m.isMe) && (
-        <div className="space-y-2">
-          <Row emoji="🍽️" hidden={!s.meals} value={s.meals?.kcal} max={s.meals?.kcalTarget} color="var(--amber)" label={s.meals && `${s.meals.kcal}`} />
-          <Row
-            emoji="💧"
-            hidden={!s.water}
+      {paused ? (
+        <p className="rounded-xl bg-surface-2 px-3 py-2 text-[11.5px] text-muted">
+          {m.name.split(" ")[0]} has paused sharing. Nothing from today is visible.
+        </p>
+      ) : (
+        <div className="space-y-2 border-t border-line pt-2.5">
+          <Metric
+            icon="🍽️"
+            label="Calories"
+            shared={!!s.meals}
+            value={s.meals?.kcal}
+            max={s.meals?.kcalTarget}
+            text={s.meals && `${s.meals.kcal}`}
+            goal={s.meals && `${s.meals.kcalTarget}`}
+            note={s.meals ? (s.meals.count ? `${s.meals.count} meal${s.meals.count === 1 ? "" : "s"}` : "nothing logged") : undefined}
+            color="var(--amber)"
+          />
+          {/* Protein comes down with the meals summary and was simply never rendered. */}
+          <Metric
+            icon="🥚"
+            label="Protein"
+            shared={!!s.meals}
+            value={s.meals?.protein}
+            max={s.meals?.proteinTarget}
+            text={s.meals && `${s.meals.protein} g`}
+            goal={s.meals && `${s.meals.proteinTarget} g`}
+            color="var(--rose)"
+          />
+          <Metric
+            icon="💧"
+            label="Water"
+            shared={!!s.water}
             value={s.water?.ml}
             max={s.water?.target}
+            text={s.water && `${(s.water.ml / 1000).toFixed(1)} L`}
+            goal={s.water && `${((s.water.target || 0) / 1000).toFixed(1)} L`}
             color="var(--sky)"
-            label={s.water && `${(s.water.ml / 1000).toFixed(1)}L`}
           />
-          <div className="flex items-center gap-2.5">
-            <span className="w-6 text-center text-[17px]">💪</span>
-            {s.workout ? (
-              <div className="flex flex-1 items-center gap-1">
-                {Array.from({ length: Math.max(s.workout.weekTarget, s.workout.weekDone) }, (_, i) => (
-                  <span key={i} className={cn("h-2.5 flex-1 rounded-full", i < s.workout.weekDone ? "bg-mint" : "bg-surface-3")} />
-                ))}
-                <span className="ml-1.5 text-[14px]">{s.workout.today?.status === "completed" ? "✅" : ""}</span>
-              </div>
-            ) : (
-              <Hidden />
-            )}
-          </div>
-          <Row emoji="😴" hidden={!s.sleep} value={s.sleep?.minutes ?? 0} max={s.sleep?.target} color="var(--violet)" label={s.sleep && hhmm(s.sleep.minutes)} />
-          {s.body && (
-            <div className="flex items-center gap-2.5">
-              <span className="w-6 text-center text-[17px]">⚖️</span>
-              <span className="tabular text-[13px] font-semibold">{u.weight(s.body.weightKg)}</span>
-              {s.body.changeWeek != null && (
-                <span className="tabular text-[12px] text-muted">
-                  {s.body.changeWeek > 0 ? "↑" : s.body.changeWeek < 0 ? "↓" : "→"} {u.weight(Math.abs(s.body.changeWeek))}
-                </span>
-              )}
+          <Metric
+            icon="💪"
+            label="Workouts"
+            shared={!!s.workout}
+            text={s.workout && `${s.workout.weekDone}`}
+            goal={s.workout && `${s.workout.weekTarget} this week`}
+            note={
+              s.workout
+                ? s.workout.today?.status === "completed"
+                  ? `✅ ${s.workout.today.title}`
+                  : s.workout.today
+                    ? `Today: ${s.workout.today.title}`
+                    : "Rest day today"
+                : undefined
+            }
+          >
+            <div className="mt-1.5 flex gap-1">
+              {Array.from({ length: Math.max(s.workout?.weekTarget ?? 0, s.workout?.weekDone ?? 0, 1) }, (_, i) => (
+                <span
+                  key={i}
+                  className={cn("h-1.5 flex-1 rounded-full", i < (s.workout?.weekDone ?? 0) ? "bg-mint" : "bg-surface-3")}
+                />
+              ))}
             </div>
+          </Metric>
+          <Metric
+            icon="😴"
+            label="Sleep"
+            shared={!!s.sleep}
+            value={s.sleep?.minutes ?? 0}
+            max={s.sleep?.target}
+            text={s.sleep && (s.sleep.minutes ? hhmm(s.sleep.minutes) : "Not logged")}
+            /* No goal alongside "Not logged" — "Not logged / 8h" reads as a measurement. */
+            goal={s.sleep?.minutes ? hhmm(s.sleep.target) : null}
+            color="var(--violet)"
+          />
+          {s.body ? (
+            <Metric
+              icon="⚖️"
+              label="Weight"
+              shared
+              text={u.weight(s.body.weightKg)}
+              note={
+                s.body.changeWeek != null
+                  ? `${s.body.changeWeek > 0 ? "↑" : s.body.changeWeek < 0 ? "↓" : "→"} ${u.weight(Math.abs(s.body.changeWeek))} this week`
+                  : "first weigh-in"
+              }
+            />
+          ) : (
+            <Metric icon="⚖️" label="Weight" shared={false} />
           )}
         </div>
       )}
@@ -323,18 +389,53 @@ function MemberCard({ m, onNudge }: { m: any; onNudge: () => void }) {
   );
 }
 
-function Row({ emoji, hidden, value, max, color, label }: { emoji: string; hidden: boolean; value?: number; max?: number; color: string; label?: string | null }) {
+/**
+ * A labelled row: what it is, where they are, what they were aiming for. `children` replaces
+ * the bar for metrics a bar cannot express (a week of workouts).
+ */
+function Metric({
+  icon,
+  label,
+  shared,
+  value,
+  max,
+  text,
+  goal,
+  note,
+  color,
+  children,
+}: {
+  icon: string;
+  label: string;
+  shared: boolean;
+  value?: number;
+  max?: number;
+  text?: string | null;
+  goal?: string | null;
+  note?: string;
+  color?: string;
+  children?: React.ReactNode;
+}) {
   return (
-    <div className="flex items-center gap-2.5">
-      <span className="w-6 text-center text-[17px]">{emoji}</span>
-      {hidden ? (
-        <Hidden />
-      ) : (
-        <>
-          <Bar value={value ?? 0} max={max ?? 1} color={color} className="flex-1" height={10} />
-          <span className="tabular w-12 shrink-0 text-right text-[12px] font-semibold text-muted">{label}</span>
-        </>
-      )}
+    <div className="min-w-0">
+      <div className="flex min-w-0 items-baseline gap-1.5">
+        <span className="w-4 shrink-0 text-center text-[12px] leading-none">{icon}</span>
+        <span className="min-w-0 flex-1 truncate text-[11.5px] font-semibold text-ink-2">{label}</span>
+        {shared ? (
+          <span className="tabular shrink-0 text-[12px] font-bold">
+            {text}
+            {goal && <span className="font-medium text-muted"> / {goal}</span>}
+          </span>
+        ) : (
+          /* "Private" in words — a lone padlock glyph does not tell you whose choice it was. */
+          <span className="flex shrink-0 items-center gap-1 text-[11px] text-muted">
+            <Lock className="h-3 w-3" /> Private
+          </span>
+        )}
+      </div>
+      {shared &&
+        (children ?? (color ? <Bar value={value ?? 0} max={max || 1} color={color} className="mt-1" height={5} /> : null))}
+      {shared && note && <div className="mt-0.5 truncate pl-[22px] text-[10.5px] text-muted">{note}</div>}
     </div>
   );
 }
@@ -379,16 +480,16 @@ function InviteSheet({ open, onClose, invites }: { open: boolean; onClose: () =>
   return (
     <Sheet open={open} onClose={onClose} title="➕ Invite family">
       {!made ? (
-        <div className="space-y-4">
+        <div className="space-y-3">
           <button
             onClick={() => setUsePw((v) => !v)}
-            className={cn("flex w-full items-center gap-3 rounded-2xl border p-3.5 text-left", usePw ? "border-accent bg-accent-soft" : "border-line bg-surface-2")}
+            className={cn("flex w-full items-center gap-2.5 rounded-2xl border p-2.5 text-left", usePw ? "border-accent bg-accent-soft" : "border-line bg-surface-2")}
             aria-pressed={usePw}
           >
-            <Lock className="h-6 w-6 shrink-0" />
+            <Lock className="h-5 w-5 shrink-0" />
             <div className="min-w-0 flex-1">
-              <div className="text-[14px] font-semibold">Password</div>
-              <div className="text-[12px] text-muted">{usePw ? "⚡ Joins instantly" : "⏳ You approve each person"}</div>
+              <div className="text-[13.5px] font-semibold">Password</div>
+              <div className="truncate text-[11px] text-muted">{usePw ? "⚡ Joins instantly" : "⏳ You approve each person"}</div>
             </div>
             <span className={cn("relative h-7 w-12 shrink-0 rounded-full transition-colors", usePw ? "bg-accent" : "bg-surface-3")}>
               <span className={cn("absolute top-1 h-5 w-5 rounded-full bg-surface shadow transition-all", usePw ? "left-6" : "left-1")} />
@@ -399,10 +500,10 @@ function InviteSheet({ open, onClose, invites }: { open: boolean; onClose: () =>
               <Input
                 value={password}
                 onChange={(e) => setPassword(e.target.value.toUpperCase().slice(0, FAMILY_LIMITS.passwordMax))}
-                className="text-center font-mono text-[22px] font-bold tracking-[0.2em]"
+                className="min-w-0 text-center font-mono text-[18px] font-bold tracking-[0.15em]"
                 aria-label="Password"
               />
-              <Button size="icon" variant="soft" className="h-[52px] w-[52px] shrink-0" onClick={() => setPassword(randomToken(6))} aria-label="New password">
+              <Button size="icon" variant="soft" className="h-12 w-12 shrink-0" onClick={() => setPassword(randomToken(6))} aria-label="New password">
                 <RefreshCw className="h-5 w-5" />
               </Button>
             </div>
@@ -412,19 +513,19 @@ function InviteSheet({ open, onClose, invites }: { open: boolean; onClose: () =>
           </Button>
         </div>
       ) : (
-        <div className="space-y-4 text-center">
-          <div className="rounded-3xl bg-surface-2 p-5">
-            <div className="text-[11px] font-semibold uppercase tracking-wider text-muted">Code</div>
-            <div className="font-mono text-[34px] font-bold tracking-[0.12em]">{formatCode(made.code)}</div>
+        <div className="space-y-2.5 text-center">
+          <div className="rounded-2xl bg-surface-2 p-3">
+            <div className="text-[11px] font-semibold uppercase tracking-wide text-muted">Code</div>
+            <div className="font-mono text-[26px] font-bold tracking-[0.1em]">{formatCode(made.code)}</div>
             {made.password && (
               <>
-                <div className="mt-3 flex items-center justify-center gap-1 text-[11px] font-semibold uppercase tracking-wider text-muted">
+                <div className="mt-2 flex items-center justify-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-muted">
                   <Lock className="h-3 w-3" /> Password
                 </div>
-                <div className="font-mono text-[28px] font-bold tracking-[0.15em]">{made.password}</div>
+                <div className="font-mono text-[22px] font-bold tracking-[0.12em]">{made.password}</div>
               </>
             )}
-            <div className="mt-3 text-[12px] text-muted">⏱ {FAMILY_LIMITS.inviteHours}h · 👥 {FAMILY_LIMITS.inviteMaxUses}</div>
+            <div className="mt-2 text-[11px] text-muted">⏱ {FAMILY_LIMITS.inviteHours}h · 👥 {FAMILY_LIMITS.inviteMaxUses}</div>
           </div>
           <Button className="w-full" size="lg" onClick={share}>
             <Share2 className="h-5 w-5" /> Share
@@ -443,13 +544,13 @@ function InviteSheet({ open, onClose, invites }: { open: boolean; onClose: () =>
       )}
 
       {invites.length > 0 && (
-        <div className="mt-6 space-y-2 border-t border-line pt-4">
+        <div className="mt-4 space-y-1.5 border-t border-line pt-3">
           {invites.map((i) => (
-            <div key={i._id} className="flex items-center gap-3 rounded-2xl bg-surface-2 px-3.5 py-2.5">
-              {i.hasPassword ? <Lock className="h-4 w-4 text-muted" /> : <KeyRound className="h-4 w-4 text-muted" />}
-              <span className="flex-1 font-mono text-[15px] font-bold tracking-wider">{formatCode(i.code)}</span>
-              <span className="tabular text-[12px] text-muted">⏱ {Math.max(1, Math.round((i.expiresAt - now) / 3600000))}h</span>
-              <button onClick={() => revoke({ inviteId: i._id })} className="rounded-lg p-1.5 text-muted hover:text-rose" aria-label="Cancel invite">
+            <div key={i._id} className="flex items-center gap-2 rounded-2xl bg-surface-2 px-2.5 py-1.5">
+              {i.hasPassword ? <Lock className="h-4 w-4 shrink-0 text-muted" /> : <KeyRound className="h-4 w-4 shrink-0 text-muted" />}
+              <span className="min-w-0 flex-1 truncate font-mono text-[13.5px] font-bold tracking-wide">{formatCode(i.code)}</span>
+              <span className="tabular shrink-0 text-[11px] text-muted">⏱ {Math.max(1, Math.round((i.expiresAt - now) / 3600000))}h</span>
+              <button onClick={() => revoke({ inviteId: i._id })} className="-my-2 shrink-0 rounded-lg p-2 text-muted hover:text-rose" aria-label="Cancel invite">
                 <X className="h-4 w-4" />
               </button>
             </div>
@@ -487,11 +588,11 @@ function SettingsSheet({ open, onClose, me, isOwner, circleName }: { open: boole
 
   return (
     <Sheet open={open} onClose={onClose} title="⚙️ Family settings">
-      <div className="space-y-5">
+      <div className="space-y-3">
         {/* What I share */}
         <div>
-          <div className="mb-2 flex items-center gap-2 text-[12px] font-semibold uppercase tracking-wider text-muted">👀 Family can see</div>
-          <div className="space-y-1.5">
+          <div className="mb-1.5 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted">👀 Family can see</div>
+          <div className="space-y-1">
             {SHARE_ITEMS.map((it) => {
               const on = !!me.shares[it.key];
               return (
@@ -499,10 +600,10 @@ function SettingsSheet({ open, onClose, me, isOwner, circleName }: { open: boole
                   key={it.key}
                   onClick={() => update({ shares: { ...me.shares, [it.key]: !on } })}
                   aria-pressed={on}
-                  className="flex w-full items-center gap-3 rounded-2xl bg-surface-2 px-3.5 py-3 text-left"
+                  className="flex w-full items-center gap-2.5 rounded-2xl bg-surface-2 px-3 py-2.5 text-left"
                 >
-                  <span className="text-[22px] leading-none">{it.emoji}</span>
-                  <span className="flex-1 text-[14.5px] font-semibold">{it.label}</span>
+                  <span className="shrink-0 text-[18px] leading-none">{it.emoji}</span>
+                  <span className="min-w-0 flex-1 truncate text-[13.5px] font-semibold">{it.label}</span>
                   <Toggle on={on} />
                 </button>
               );
@@ -513,35 +614,35 @@ function SettingsSheet({ open, onClose, me, isOwner, circleName }: { open: boole
         <button
           onClick={() => update({ paused: !me.paused })}
           aria-pressed={me.paused}
-          className={cn("flex w-full items-center gap-3 rounded-2xl border px-3.5 py-3 text-left", me.paused ? "border-amber bg-amber/10" : "border-line")}
+          className={cn("flex w-full items-center gap-2.5 rounded-2xl border px-3 py-2.5 text-left", me.paused ? "border-amber bg-amber/10" : "border-line")}
         >
-          <Pause className="h-5 w-5" />
-          <span className="flex-1 text-[14.5px] font-semibold">Pause sharing</span>
+          <Pause className="h-5 w-5 shrink-0" />
+          <span className="min-w-0 flex-1 truncate text-[13.5px] font-semibold">Pause sharing</span>
           <Toggle on={me.paused} />
         </button>
 
         {push.state !== "unsupported" && push.state !== "loading" && (
           <div>
             {push.state === "ios-install" ? (
-              <div className="flex items-center gap-3 rounded-2xl bg-surface-2 px-3.5 py-3">
+              <div className="flex items-center gap-2.5 rounded-2xl bg-surface-2 px-3 py-2.5">
                 <Bell className="h-5 w-5 shrink-0" />
-                <span className="text-[13px]">
+                <span className="min-w-0 text-[12.5px]">
                   Tap <Share2 className="inline h-4 w-4" /> then <b>Add to Home Screen</b> to get 🔔
                 </span>
               </div>
             ) : push.state === "blocked" ? (
-              <div className="flex items-center gap-3 rounded-2xl bg-surface-2 px-3.5 py-3 text-muted">
+              <div className="flex items-center gap-2.5 rounded-2xl bg-surface-2 px-3 py-2.5 text-muted">
                 <BellOff className="h-5 w-5 shrink-0" />
-                <span className="text-[13px]">🔔 blocked in browser settings</span>
+                <span className="min-w-0 text-[12.5px]">🔔 blocked in browser settings</span>
               </div>
             ) : (
               <button
                 onClick={() => (push.state === "on" ? push.disable() : push.enable())}
                 aria-pressed={push.state === "on"}
-                className="flex w-full items-center gap-3 rounded-2xl border border-line px-3.5 py-3 text-left"
+                className="flex w-full items-center gap-2.5 rounded-2xl border border-line px-3 py-2.5 text-left"
               >
-                <Bell className="h-5 w-5" />
-                <span className="flex-1 text-[14.5px] font-semibold">Phone notifications</span>
+                <Bell className="h-5 w-5 shrink-0" />
+                <span className="min-w-0 flex-1 truncate text-[13.5px] font-semibold">Phone notifications</span>
                 <Toggle on={push.state === "on"} />
               </button>
             )}
@@ -550,8 +651,8 @@ function SettingsSheet({ open, onClose, me, isOwner, circleName }: { open: boole
 
         {isOwner && (
           <div className="flex gap-2">
-            <Input value={name} onChange={(e) => setName(e.target.value)} maxLength={40} aria-label="Family name" />
-            <Button variant="soft" className="h-[52px] shrink-0" disabled={!name.trim() || name === circleName} onClick={() => rename({ name })}>
+            <Input value={name} onChange={(e) => setName(e.target.value)} maxLength={40} aria-label="Family name" className="min-w-0" />
+            <Button variant="soft" className="h-12 shrink-0" disabled={!name.trim() || name === circleName} onClick={() => rename({ name })}>
               <Check className="h-5 w-5" />
             </Button>
           </div>

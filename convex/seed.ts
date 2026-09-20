@@ -2,12 +2,22 @@ import { v } from "convex/values";
 import { mutation, throttle, DAY } from "./lib/functions";
 import { requireUser, todayFor, addDays, norm, weekday } from "./lib/util";
 import { SEED_EXERCISES } from "./data/exercises";
+import { SEED_YOGA, YOGA_SUPERSEDES } from "./data/yoga";
 import { SEED_FOODS } from "./data/foods";
 import { nutrientsFor } from "./foods";
 import { e1rm } from "./lib/fitness";
 import { Id } from "./_generated/dataModel";
 
-const LIBRARY_VERSION = 1;
+export const LIBRARY_VERSION = 2;
+
+/** Whether the shared library still needs seeding/upgrading on this deployment. */
+export async function libraryStale(ctx: any) {
+  const meta = await ctx.db
+    .query("seedMeta")
+    .withIndex("by_key", (q: any) => q.eq("key", "library"))
+    .unique();
+  return !meta || meta.version < LIBRARY_VERSION;
+}
 
 /** Idempotent: fills the shared exercise + food library once. */
 export const ensureLibrary = mutation({
@@ -28,6 +38,24 @@ export const ensureLibrary = mutation({
     for (const e of SEED_EXERCISES) {
       if (haveEx.has(e.name)) continue;
       await ctx.db.insert("exercises", { ...e, isSample: false });
+      haveEx.add(e.name);
+    }
+
+    /* Yoga. A handful of the original mobility rows are the same pose as an asana here, so
+       those are rewritten in place — same document id, so plans and logged sets that already
+       reference them keep working — and only genuinely new poses are inserted. */
+    const yogaByName = new Map(SEED_YOGA.map((y) => [y.name, y]));
+    for (const row of existingEx) {
+      const replacement = yogaByName.get(YOGA_SUPERSEDES[row.name]);
+      if (!replacement) continue;
+      await ctx.db.patch(row._id, { ...replacement, isSample: false });
+      haveEx.delete(row.name);
+      haveEx.add(replacement.name);
+    }
+    for (const y of SEED_YOGA) {
+      if (haveEx.has(y.name)) continue;
+      await ctx.db.insert("exercises", { ...y, isSample: false });
+      haveEx.add(y.name);
     }
 
     const existingFood = await ctx.db
@@ -40,7 +68,7 @@ export const ensureLibrary = mutation({
       await ctx.db.insert("foods", f);
     }
 
-    const count = SEED_EXERCISES.length + SEED_FOODS.length;
+    const count = SEED_EXERCISES.length + SEED_YOGA.length + SEED_FOODS.length;
     if (meta) await ctx.db.patch(meta._id, { version: LIBRARY_VERSION, count });
     else await ctx.db.insert("seedMeta", { key: "library", version: LIBRARY_VERSION, count });
     return { skipped: false, count };

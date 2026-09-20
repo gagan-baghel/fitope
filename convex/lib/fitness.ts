@@ -40,6 +40,13 @@ export function bmr({
   return base - 78; // midpoint when unspecified
 }
 
+/**
+ * Stand-ins for the fields a half-finished profile is missing. A rough target the user can
+ * see and correct beats a screen full of "of 0 g" — every surface that shows one of these
+ * also says it is an estimate.
+ */
+export const PROFILE_DEFAULTS = { heightCm: 170, weightKg: 70, age: 30 };
+
 export function computeTargets(p: {
   weightKg: number;
   heightCm: number;

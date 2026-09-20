@@ -62,14 +62,14 @@ export default function Welcome() {
   }
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-6xl flex-col px-4 pt-[calc(var(--safe-top)_+_1rem)] pb-8 sm:px-6 lg:flex-row lg:items-center lg:gap-16 lg:py-16">
+    <main className="mx-auto flex min-h-dvh max-w-6xl flex-col px-3 pt-[calc(var(--safe-top)_+_0.75rem)] pb-6 sm:px-6 lg:flex-row lg:items-center lg:gap-16 lg:py-16">
       {/* Brand + pitch. On phones this is two short lines so the form is on the first screen. */}
       <section className="lg:flex-1">
         <div className="flex items-center gap-2.5">
           <Logo size={40} />
           <span className="text-[17px] font-bold tracking-tight">FitOpe</span>
         </div>
-        <h1 className="mt-5 text-[26px] font-bold leading-[1.1] tracking-tight sm:text-[40px] lg:mt-8 lg:text-[54px]">
+        <h1 className="mt-3 text-[22px] font-bold leading-[1.1] tracking-tight sm:text-[40px] lg:mt-8 lg:text-[54px]">
           Your body, <span className="text-muted lg:block lg:text-accent">tracked properly.</span>
         </h1>
         <p className="mt-4 hidden max-w-md text-[15px] leading-relaxed text-ink-2 lg:block">
@@ -87,14 +87,14 @@ export default function Welcome() {
         </div>
       </section>
 
-      <section className="mt-5 w-full animate-rise lg:mt-0 lg:max-w-sm">
+      <section className="mt-4 w-full animate-rise lg:mt-0 lg:max-w-sm">
         {invited && (
-          <div className="mb-3 flex items-center gap-3 rounded-2xl border border-mint/30 bg-mint/10 px-4 py-3">
-            <span className="text-[26px] leading-none">👨‍👩‍👧‍👦</span>
-            <span className="text-[13.5px] font-semibold">You&apos;re invited to a family. Sign in or create an account to join.</span>
+          <div className="mb-2 flex items-center gap-2 rounded-2xl border border-mint/30 bg-mint/10 px-3 py-2.5">
+            <span className="shrink-0 text-[20px] leading-none">👨‍👩‍👧‍👦</span>
+            <span className="min-w-0 text-[12.5px] font-semibold">You&apos;re invited to a family — sign in or create an account to join.</span>
           </div>
         )}
-        <div className="card p-4 sm:p-6">
+        <div className="card p-3 sm:p-6">
           <Segmented
             value={mode}
             onChange={setMode}
@@ -103,7 +103,7 @@ export default function Welcome() {
               { value: "signUp", label: "Create account" },
             ]}
           />
-          <form onSubmit={submit} className="mt-4 space-y-3">
+          <form onSubmit={submit} className="mt-3 space-y-2.5">
             {mode === "signUp" && (
               <IconInput icon={User}>
                 <Input name="name" placeholder="Your name" autoComplete="name" maxLength={60} className="pl-11" aria-label="Name" />
@@ -148,19 +148,19 @@ export default function Welcome() {
               {mode === "signUp" ? "Create account" : "Sign in"}
             </Button>
           </form>
-          <p className="mt-4 text-center text-[11.5px] leading-relaxed text-muted">
-            Not a medical device. Your data is private to you and the family you choose.
+          <p className="mt-3 text-center text-[11px] leading-snug text-muted">
+            Not a medical device. Your data stays private to you.
           </p>
         </div>
 
-        <InstallCard className="mt-3" />
+        <InstallCard className="mt-2" />
 
         {/* Phones: what the app does, as a compact strip under the form. */}
-        <div className="mt-5 grid grid-cols-2 gap-2 lg:hidden">
+        <div className="mt-3 grid grid-cols-2 gap-2 lg:hidden">
           {PILLARS.map((p) => (
-            <div key={p.title} className="flex items-center gap-2.5 rounded-2xl border border-line bg-surface/70 p-3">
-              <p.icon className="h-5 w-5 shrink-0 text-accent" />
-              <span className="text-[13px] font-semibold">{p.title}</span>
+            <div key={p.title} className="flex min-w-0 items-center gap-2 rounded-2xl border border-line bg-surface/70 px-2.5 py-2">
+              <p.icon className="h-4 w-4 shrink-0 text-accent" />
+              <span className="truncate text-[12.5px] font-semibold">{p.title}</span>
             </div>
           ))}
         </div>

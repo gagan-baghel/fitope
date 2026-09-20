@@ -77,8 +77,8 @@ export default function Session() {
   if (!workout) return <div className="py-20 text-center text-muted">Session not found.</div>;
 
   return (
-    <div className="space-y-4 pb-24">
-      <header className="sticky top-[var(--safe-top)] z-30 -mx-4 -mt-5 bg-bg/85 px-4 pb-3 pt-5 backdrop-blur-xl sm:-mx-6 sm:px-6">
+    <div className="space-y-3 pb-24">
+      <header className="sticky top-[var(--safe-top)] z-30 bleed -mt-4 bg-bg/85 pb-2.5 pt-4 backdrop-blur-xl">
         <div className="flex items-center gap-3">
           <button onClick={() => router.push("/train")} className="-m-1.5 rounded-xl p-3 text-muted hover:bg-surface-2 hover:text-ink">
             <ArrowLeft className="h-5 w-5" />
@@ -104,9 +104,7 @@ export default function Session() {
       </header>
 
       {(workout.exercises as any[]).length === 0 && (
-        <Card className="text-center">
-          <p className="text-[14px] text-muted">This session is empty. Add your first exercise.</p>
-        </Card>
+        <Card className="text-center text-[12.5px] text-muted">Nothing logged yet — add an exercise.</Card>
       )}
 
       {(workout.exercises as any[]).map((we, idx) => (
@@ -137,14 +135,14 @@ export default function Session() {
 
       {done && (
         <Card className="space-y-2">
-          <div className="text-[12px] font-semibold uppercase tracking-wider text-muted">Session notes</div>
-          <p className="text-[14px] text-ink-2">{workout.notes || "No notes for this session."}</p>
-          <div className="flex flex-wrap gap-2 pt-1">
-            {workout.rpe && <Pill tone="amber">RPE {workout.rpe}</Pill>}
-            {workout.durationMin && <Pill>{workout.durationMin} min</Pill>}
+          <div className="text-[11px] font-semibold uppercase tracking-wider text-muted">Session notes</div>
+          <p className="text-[12.5px] text-ink-2">{workout.notes || "No notes."}</p>
+          <div className="flex flex-wrap gap-1.5">
+            {!!workout.rpe && <Pill tone="amber">RPE {workout.rpe}</Pill>}
+            {!!workout.durationMin && <Pill>{workout.durationMin} min</Pill>}
             {workout.totalVolumeKg ? <Pill tone="accent">{workout.totalVolumeKg.toLocaleString("en-IN")} kg volume</Pill> : null}
           </div>
-          <div className="pt-2">
+          <div className="pt-1">
             <ConfirmButton
               onConfirm={async () => {
                 await removeWorkout({ id: workout._id });
@@ -197,29 +195,28 @@ export default function Session() {
           </Button>
         }
       >
-        <div className="space-y-4">
-          <div className="grid grid-cols-3 gap-2.5">
-            <div className="rounded-2xl bg-surface-2 p-3 text-center">
-              <div className="tabular text-[20px] font-bold">{totals.doneSets}</div>
+        <div className="space-y-3">
+          <div className="grid grid-cols-3 gap-1.5">
+            <div className="rounded-xl bg-surface-2 p-2 text-center">
+              <div className="tabular text-[18px] font-bold">{totals.doneSets}</div>
               <div className="text-[11px] text-muted">sets</div>
             </div>
-            <div className="rounded-2xl bg-surface-2 p-3 text-center">
-              <div className="tabular text-[20px] font-bold">{(totals.volume / 1000).toFixed(1)}t</div>
+            <div className="rounded-xl bg-surface-2 p-2 text-center">
+              <div className="tabular text-[18px] font-bold">{(totals.volume / 1000).toFixed(1)}t</div>
               <div className="text-[11px] text-muted">volume</div>
             </div>
-            <div className="rounded-2xl bg-surface-2 p-3 text-center">
-              <div className="tabular text-[20px] font-bold">{elapsed ?? "–"}</div>
+            <div className="rounded-xl bg-surface-2 p-2 text-center">
+              <div className="tabular text-[18px] font-bold">{elapsed ?? "–"}</div>
               <div className="text-[11px] text-muted">duration</div>
             </div>
           </div>
           {totals.doneSets < totals.sets && (
-            <div className="flex gap-2 rounded-2xl border border-amber/25 bg-amber/[0.07] p-3.5 text-[12.5px] text-ink-2">
+            <div className="flex gap-2 rounded-2xl border border-amber/25 bg-amber/[0.07] p-2.5 text-[12.5px] text-ink-2">
               <Info className="h-4 w-4 shrink-0 text-amber" />
-              {totals.sets - totals.doneSets} planned sets are unticked. Partial sessions still count —
-              only what you logged gets saved.
+              {totals.sets - totals.doneSets} sets unticked — only what you logged is saved.
             </div>
           )}
-          <Field label="How hard was it?" hint="Rate of perceived exertion, 1 easy to 10 all-out.">
+          <Field label="How hard was it?" hint="1 easy · 10 all-out">
             <Segmented
               value={rpe}
               onChange={setRpe}
@@ -227,7 +224,7 @@ export default function Session() {
             />
           </Field>
           <Field label="Notes (optional)">
-            <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Felt strong on the second lift…" />
+            <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Felt strong…" />
           </Field>
         </div>
       </Sheet>
@@ -255,26 +252,30 @@ function ExerciseBlock({
   const [menu, setMenu] = useState(false);
   const [info, setInfo] = useState(false);
   const ex = we.exercise;
+  // Yoga poses are timed holds, not weight x reps — one flag drives the whole row layout.
+  const timed = ex?.category === "yoga" || !!ex?.holdSec;
 
   return (
     <Card className="p-0">
-      <div className="flex items-start gap-3 p-4 pb-3">
+      <div className="flex items-start gap-2.5 p-3 pb-2">
         <div className="relative shrink-0">
-          <MediaTile muscles={ex?.primaryMuscles} category={ex?.category} size={44} radius={14} />
+          <MediaTile muscles={ex?.primaryMuscles} category={ex?.category} size={40} radius={13} />
           <span className="absolute -left-1.5 -top-1.5 grid h-5 w-5 place-items-center rounded-full bg-ink text-[10px] font-bold text-ground">
             {index + 1}
           </span>
         </div>
         <div className="min-w-0 flex-1">
-          <button onClick={() => setInfo(true)} className="text-left">
-            <div className="text-[15px] font-bold leading-tight">{ex?.name ?? "Exercise"}</div>
-            <div className="mt-0.5 truncate text-[11.5px] capitalize text-muted">
-              {ex?.primaryMuscles?.join(", ")}
-              {we.notes ? ` · ${we.notes}` : ""}
+          <button onClick={() => setInfo(true)} className="w-full min-w-0 text-left">
+            <div className="truncate text-[14px] font-bold leading-tight">{ex?.name ?? "Exercise"}</div>
+            <div className="truncate text-[11.5px] text-muted">
+              <span className={ex?.sanskrit ? "italic" : "capitalize"}>
+                {ex?.sanskrit ?? ex?.primaryMuscles?.join(", ")}
+              </span>
+              {ex?.holdSec ? ` · ${ex.holdSec}s hold` : we.notes && !ex?.sanskrit ? ` · ${we.notes}` : ""}
             </div>
           </button>
           {we.last && (
-            <div className="mt-2 inline-flex max-w-full items-center gap-1.5 whitespace-nowrap rounded-lg bg-surface-2 px-2.5 py-1 text-[11.5px] text-muted">
+            <div className="mt-1.5 inline-flex max-w-full items-center gap-1.5 whitespace-nowrap rounded-lg bg-surface-2 px-2 py-0.5 text-[11px] text-muted">
               <Flame className="h-3 w-3 shrink-0 text-amber" />
               {/* The date is the least useful part mid-set; drop it where it would force a wrap. */}
               <span className="hidden min-[360px]:inline">{prettyDate(we.last.date)}:</span>
@@ -293,7 +294,7 @@ function ExerciseBlock({
       </div>
 
       {menu && !readOnly && (
-        <div className="mx-4 mb-3 flex gap-2 rounded-xl bg-surface-2 p-2">
+        <div className="mx-3 mb-2 flex gap-2 rounded-xl bg-surface-2 p-1.5">
           <Button variant="ghost" size="sm" onClick={() => { setInfo(true); setMenu(false); }}>
             How to
           </Button>
@@ -303,11 +304,16 @@ function ExerciseBlock({
         </div>
       )}
 
-      <div className="px-4 pb-4">
-        <div className="mb-1.5 grid grid-cols-[26px_1fr_1fr_44px] items-center gap-2 px-1 text-[10.5px] font-semibold uppercase tracking-wider text-muted">
+      <div className="px-3 pb-3">
+        <div
+          className={cn(
+            "mb-1 grid items-center gap-1.5 px-0.5 text-[10.5px] font-semibold uppercase tracking-wider text-muted",
+            timed ? SET_GRID_TIMED : SET_GRID
+          )}
+        >
           <span>Set</span>
-          <span>Weight (kg)</span>
-          <span>Reps</span>
+          {!timed && <span>Weight</span>}
+          <span>{timed ? "Hold (sec)" : "Reps"}</span>
           <span className="text-right">Done</span>
         </div>
         <div className="space-y-1.5">
@@ -316,6 +322,7 @@ function ExerciseBlock({
               key={`${s._id}:${s.weightKg ?? ""}:${s.reps ?? ""}:${s.completed}`}
               set={s}
               index={i}
+              timed={timed}
               readOnly={readOnly}
               onToggle={onToggle}
               onDelete={() => onDeleteSet(s._id)}
@@ -325,7 +332,7 @@ function ExerciseBlock({
         {!readOnly && (
           <button
             onClick={onAddSet}
-            className="mt-2 w-full rounded-xl border border-dashed border-line py-2 text-[12.5px] font-semibold text-muted transition-colors hover:border-ink/25 hover:text-ink"
+            className="mt-1.5 h-10 w-full rounded-xl border border-dashed border-line text-[12.5px] font-semibold text-muted transition-colors hover:border-ink/25 hover:text-ink"
           >
             + Add set
           </button>
@@ -333,8 +340,18 @@ function ExerciseBlock({
       </div>
 
       <Sheet open={info} onClose={() => setInfo(false)} title={ex?.name}>
-        <div className="space-y-4">
-          <div className="flex flex-wrap gap-2">
+        <div className="space-y-3">
+          {ex?.sanskrit && (
+            <div className="flex items-center gap-2 rounded-xl bg-surface-2 px-3 py-2">
+              <span className="min-w-0 flex-1 truncate text-[13px] font-semibold italic">{ex.sanskrit}</span>
+              {!!ex.holdSec && (
+                <span className="tabular flex shrink-0 items-center gap-1 text-[12px] text-muted">
+                  <Timer className="h-3.5 w-3.5" /> {ex.holdSec}s
+                </span>
+              )}
+            </div>
+          )}
+          <div className="flex flex-wrap gap-1.5">
             {ex?.primaryMuscles?.map((m: string) => (
               <Pill key={m} tone="accent">
                 {m}
@@ -345,9 +362,9 @@ function ExerciseBlock({
             ))}
             {ex?.difficulty && <Pill tone="amber">{ex.difficulty}</Pill>}
           </div>
-          <ol className="space-y-2.5">
+          <ol className="space-y-2">
             {ex?.instructions?.map((c: string, i: number) => (
-              <li key={i} className="flex gap-3 text-[13.5px] leading-relaxed text-ink-2">
+              <li key={i} className="flex gap-2.5 text-[13px] leading-relaxed text-ink-2">
                 <span className="grid h-5 w-5 shrink-0 place-items-center rounded-md bg-surface-2 text-[11px] font-bold text-muted">
                   {i + 1}
                 </span>
@@ -361,15 +378,20 @@ function ExerciseBlock({
   );
 }
 
+const SET_GRID = "grid-cols-[22px_1fr_1fr_44px]";
+const SET_GRID_TIMED = "grid-cols-[22px_1fr_44px]";
+
 function SetRow({
   set,
   index,
+  timed,
   readOnly,
   onToggle,
   onDelete,
 }: {
   set: any;
   index: number;
+  timed?: boolean;
   readOnly: boolean;
   onToggle: (id: any, patch: any) => Promise<void>;
   onDelete: () => void;
@@ -377,38 +399,43 @@ function SetRow({
   // Remounted by its key whenever the server values change, so no prop-syncing effect.
   const [weight, setWeight] = useState<string>(set.weightKg?.toString() ?? "");
   const [reps, setReps] = useState<string>(set.reps?.toString() ?? "");
+  // Targets arrive as prose ("8-12", "45s hold"); the first number is the usable default.
+  const target = String(set.targetReps ?? "").match(/\d+/)?.[0];
 
   const commit = (patch: any) => onToggle(set._id, patch);
 
   return (
     <div
       className={cn(
-        "grid grid-cols-[26px_1fr_1fr_44px] items-center gap-2 rounded-xl px-1 py-1 transition-colors",
+        "grid items-center gap-1.5 rounded-xl px-0.5 py-1 transition-colors",
+        timed ? SET_GRID_TIMED : SET_GRID,
         set.completed && "bg-accent-soft/60"
       )}
     >
       <div className="text-center text-[12px] font-bold text-muted">{index + 1}</div>
-      <input
-        inputMode="decimal"
-        disabled={readOnly}
-        value={weight}
-        placeholder={set.targetReps ? "–" : "0"}
-        onChange={(e) => setWeight(e.target.value.replace(/[^0-9.]/g, ""))}
-        onBlur={() => weight !== (set.weightKg?.toString() ?? "") && commit({ weightKg: weight === "" ? 0 : Number(weight) })}
-        className="tabular h-10 w-full rounded-lg border border-line bg-surface-2 text-center text-[16px] font-semibold outline-none focus:border-accent/60 disabled:opacity-70"
-      />
+      {!timed && (
+        <input
+          inputMode="decimal"
+          disabled={readOnly}
+          value={weight}
+          placeholder={set.targetReps ? "–" : "0"}
+          onChange={(e) => setWeight(e.target.value.replace(/[^0-9.]/g, ""))}
+          onBlur={() => weight !== (set.weightKg?.toString() ?? "") && commit({ weightKg: weight === "" ? 0 : Number(weight) })}
+          className="tabular h-11 w-full rounded-lg border border-line bg-surface-2 text-center text-[16px] font-semibold outline-none focus:border-accent/60 disabled:opacity-70"
+        />
+      )}
       <input
         inputMode="numeric"
         disabled={readOnly}
         value={reps}
-        placeholder={set.targetReps ?? "0"}
+        placeholder={target ?? "0"}
         onChange={(e) => setReps(e.target.value.replace(/[^0-9]/g, ""))}
         onBlur={() => reps !== (set.reps?.toString() ?? "") && commit({ reps: reps === "" ? 0 : Number(reps) })}
-        className="tabular h-10 w-full rounded-lg border border-line bg-surface-2 text-center text-[16px] font-semibold outline-none focus:border-accent/60 disabled:opacity-70"
+        className="tabular h-11 w-full rounded-lg border border-line bg-surface-2 text-center text-[16px] font-semibold outline-none focus:border-accent/60 disabled:opacity-70"
       />
       <div className="flex justify-end gap-1">
         {readOnly ? (
-          <div className={cn("grid h-10 w-10 place-items-center rounded-lg", set.completed ? "text-accent" : "text-muted/40")}>
+          <div className={cn("grid h-11 w-11 place-items-center rounded-lg", set.completed ? "text-accent" : "text-muted/40")}>
             <Check className="h-4 w-4" strokeWidth={3} />
           </div>
         ) : (
@@ -418,13 +445,13 @@ function SetRow({
               // must not lose the value just because the field never blurred.
               const patch: any = { completed: !set.completed };
               if (!set.completed) {
-                patch.reps = reps === "" ? Number(set.targetReps?.split("-")[0] ?? 10) : Number(reps);
+                patch.reps = reps === "" ? Number(target ?? 10) : Number(reps);
                 patch.weightKg = weight === "" ? (set.weightKg ?? 0) : Number(weight);
               }
               commit(patch);
             }}
             className={cn(
-              "grid h-10 w-10 place-items-center rounded-lg border transition-all active:scale-90",
+              "grid h-11 w-11 place-items-center rounded-lg border transition-all active:scale-90",
               set.completed
                 ? "border-transparent bg-accent text-accent-ink"
                 : "border-line bg-surface-2 text-muted hover:border-accent/50"
@@ -454,7 +481,7 @@ function RestTimer({ rest, onDone }: { rest: { total: number; endsAt: number }; 
   }, [rest.endsAt, onDone]);
 
   return (
-    <div className="fixed inset-x-0 bottom-24 z-40 flex justify-center px-4 lg:bottom-8">
+    <div className="gutter-x fixed inset-x-0 bottom-24 z-40 flex justify-center lg:bottom-8">
       <div className="flex w-full max-w-sm animate-pop items-center gap-3 rounded-2xl border border-line bg-surface-3 px-4 py-3 shadow-xl">
         <Timer className="h-4 w-4 text-accent" />
         <div className="flex-1">
