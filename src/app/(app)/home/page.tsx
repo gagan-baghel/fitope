@@ -23,6 +23,7 @@ import {
   Plus,
   Scale,
   Sparkles,
+  UtensilsCrossed,
 } from "lucide-react";
 import { cn, hhmm, errorText } from "@/lib/utils";
 import { useUnits } from "@/lib/units";
@@ -118,57 +119,83 @@ export default function Home() {
         </Link>
       ))}
 
-      {/* Today's session. One full-width card, not a carousel: a card that ran to 82% of the
-          screen showed a third of the information and left the page edge-aligned wrong. */}
-      <article
-        className="relative overflow-hidden rounded-[20px] p-4 text-[color:var(--tile-ink)] shadow-[var(--shadow)]"
-        style={{ background: "var(--tile-3)" }}
-      >
-        <div className="hero-blob -right-10 -top-12 h-36 w-36" />
-        <div className="relative flex items-start gap-3">
-          <div className="min-w-0 flex-1">
-            <span className="hero-chip">
-              {done ? <Check className="h-3 w-3" /> : <Play className="h-3 w-3" />}
-              {done ? "Completed" : planned ? "Today" : "Rest day"}
-            </span>
-            {/* The plan name is its own line: inlined into the meta it wrapped and orphaned
-                the last word at 320px. */}
-            <div className="mt-2 truncate text-[11px] font-medium opacity-65">
-              {planned?.programName ?? (w ? "Logged session" : "No session scheduled")}
-            </div>
-            <h2 className="text-[21px] font-bold leading-tight tracking-tight">
-              {w?.title ?? planned?.title ?? "Recovery day"}
-            </h2>
-            <p className="mt-1 text-[12px] leading-snug opacity-75">
-              {done
-                ? `${w.setsDone} sets · ${w.durationMin ?? 0} min`
-                : planned
-                  ? `${planned.items.length} exercises · ~${planned.estMinutes} min`
-                  : "Mobility or a walk still counts"}
-            </p>
-          </div>
-          <MinutesRing
-            minutes={planned?.estMinutes ?? w?.durationMin ?? 0}
-            progress={done ? 1 : 0.35}
-            size={50}
-            track="rgba(0,0,0,0.10)"
-          />
-        </div>
-        <div className="relative mt-3.5 flex gap-2">
-          {done ? (
-            <Link href={`/train/session/${w._id}`} className="hero-cta flex-1 justify-center">
-              Review <ArrowRight className="h-4 w-4" />
+      {/* Hero carousel — swipeable cards with bleed so the first card respects the 14px gutter */}
+      <div className="no-scrollbar bleed flex snap-x snap-mandatory gap-3 overflow-x-auto">
+        {/* Workout card */}
+        <HeroCard
+          tone="var(--tile-3)"
+          chip={done ? "Completed" : planned ? "Today" : "Rest day"}
+          chipIcon={done ? Check : Play}
+          eyebrow={planned?.programName ?? (w ? "Logged session" : "No session scheduled")}
+          title={w?.title ?? planned?.title ?? "Recovery day"}
+          meta={
+            done
+              ? `${w.setsDone} sets · ${w.durationMin ?? 0} min`
+              : planned
+                ? `${planned.items.length} exercises · ~${planned.estMinutes} min`
+                : "Mobility or a walk still counts"
+          }
+          action={
+            done ? (
+              <Link href={`/train/session/${w._id}`} className="hero-cta">
+                Review <ArrowRight className="h-4 w-4" />
+              </Link>
+            ) : (
+              <button onClick={begin} disabled={starting} className="hero-cta">
+                <Play className="h-4 w-4" /> {w?.status === "in_progress" ? "Continue" : "Start workout"}
+              </button>
+            )
+          }
+          ring={
+            <MinutesRing
+              minutes={planned?.estMinutes ?? w?.durationMin ?? 0}
+              progress={done ? 1 : 0.35}
+              size={50}
+              track="rgba(0,0,0,0.10)"
+            />
+          }
+        />
+
+        {/* Fuel card */}
+        <HeroCard
+          tone="var(--tile-2)"
+          chip="Fuel"
+          chipIcon={UtensilsCrossed}
+          eyebrow={kcalTarget ? `${Math.round(n.kcal)} of ${kcalTarget} kcal` : `${Math.round(n.kcal)} kcal logged`}
+          title={kcalTarget ? `${kcalLeft} kcal left` : `${Math.round(n.kcal)} kcal`}
+          meta={`Protein ${Math.round(n.protein)} / ${t?.protein ?? 0} g · Fiber ${Math.round(n.fiber)} / ${t?.fiber ?? 0} g`}
+          action={
+            <Link href="/eat/add?meal=auto" className="hero-cta">
+              <Plus className="h-4 w-4" /> Log food
             </Link>
-          ) : (
-            <button onClick={begin} disabled={starting} className="hero-cta flex-1 justify-center">
-              <Play className="h-4 w-4" /> {w?.status === "in_progress" ? "Continue" : "Start workout"}
-            </button>
-          )}
-          <Link href="/eat/add?meal=auto" className="hero-cta shrink-0">
-            <Plus className="h-4 w-4" /> Food
-          </Link>
-        </div>
-      </article>
+          }
+          ring={
+            <Ring value={n.kcal} max={kcalTarget || 2000} size={50} stroke={5} color="var(--ink)" track="rgba(0,0,0,0.08)">
+              <span className="tabular text-[13px] font-bold">{pct(n.kcal, kcalTarget)}</span>
+            </Ring>
+          }
+        />
+
+        {/* Readiness card */}
+        <HeroCard
+          tone="var(--tile-1)"
+          chip="Readiness"
+          chipIcon={HeartPulse}
+          eyebrow={data.readiness?.reasons?.[0] ?? "Based on your logs"}
+          title={`${data.readiness?.score ?? 80} / 100`}
+          meta={data.readiness?.advice ?? "Good recovery"}
+          action={
+            <Link href="/recover" className="hero-cta">
+              Recovery <ArrowRight className="h-4 w-4" />
+            </Link>
+          }
+          ring={
+            <Ring value={data.readiness?.score ?? 80} max={100} size={50} stroke={5} color="var(--ink)" track="rgba(0,0,0,0.08)">
+              <span className="tabular text-[13px] font-bold">{data.readiness?.score ?? 80}</span>
+            </Ring>
+          }
+        />
+      </div>
 
       {/* Fuel — the headline number plus every macro in one card, four abreast */}
       <Card>
@@ -443,3 +470,47 @@ function MiniStat({
     </button>
   );
 }
+
+function HeroCard({
+  tone,
+  chip,
+  chipIcon: ChipIcon,
+  eyebrow,
+  title,
+  meta,
+  action,
+  ring,
+}: {
+  tone: string;
+  chip: string;
+  chipIcon?: any;
+  eyebrow: string;
+  title: string;
+  meta: string;
+  action: React.ReactNode;
+  ring?: React.ReactNode;
+}) {
+  return (
+    <article
+      className="relative w-[84%] shrink-0 snap-start overflow-hidden rounded-[22px] p-4 text-[color:var(--tile-ink)] shadow-[var(--shadow)] sm:w-[380px]"
+      style={{ background: tone }}
+    >
+      <div className="hero-blob -right-8 -top-10 h-36 w-36" />
+      <div className="hero-blob-2 -bottom-12 -right-3 h-32 w-32" />
+      <div className="relative">
+        <div className="flex items-start justify-between gap-3">
+          <span className="hero-chip">
+            {ChipIcon && <ChipIcon className="h-3.5 w-3.5" />}
+            {chip}
+          </span>
+          {ring}
+        </div>
+        <div className="mt-3 text-[11.5px] font-medium opacity-70">{eyebrow}</div>
+        <h2 className="mt-0.5 text-[20px] font-bold leading-[1.15] tracking-tight">{title}</h2>
+        <p className="mt-1 line-clamp-2 text-[12px] leading-snug opacity-75">{meta}</p>
+        <div className="mt-3">{action}</div>
+      </div>
+    </article>
+  );
+}
+
