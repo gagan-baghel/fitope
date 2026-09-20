@@ -64,10 +64,10 @@ export function useInstall() {
 
 function Step({ n, icon, children }: { n: number; icon: React.ReactNode; children: React.ReactNode }) {
   return (
-    <div className="flex items-center gap-3 rounded-2xl bg-surface-2 p-3">
-      <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-ink text-[13px] font-bold text-ground">{n}</span>
-      <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-line bg-surface text-sky">{icon}</span>
-      <span className="text-[14.5px] font-semibold leading-snug">{children}</span>
+    <div className="flex items-center gap-2.5 rounded-2xl bg-surface-2 p-2.5">
+      <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-ink text-[12px] font-bold text-ground">{n}</span>
+      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-line bg-surface text-sky">{icon}</span>
+      <span className="min-w-0 text-[13px] font-semibold leading-snug">{children}</span>
     </div>
   );
 }
@@ -75,7 +75,7 @@ function Step({ n, icon, children }: { n: number; icon: React.ReactNode; childre
 export function InstallGuide({ kind, open, onClose }: { kind: Kind; open: boolean; onClose: () => void }) {
   return (
     <Sheet open={open} onClose={onClose} title="📲 Install FitOpe">
-      <div className="space-y-2.5">
+      <div className="space-y-2">
         {kind === "ios-inapp" && (
           <>
             <Step n={1} icon={<EllipsisVertical className="h-5 w-5" />}>
@@ -112,7 +112,7 @@ export function InstallGuide({ kind, open, onClose }: { kind: Kind; open: boolea
             </Step>
           </>
         )}
-        <p className="pt-1 text-center text-[12px] text-muted">Opens full-screen like any app. No app store needed. 🔔 works too.</p>
+        <p className="pt-0.5 text-center text-[11.5px] text-muted">Opens full-screen. No app store needed.</p>
       </div>
     </Sheet>
   );
@@ -137,11 +137,11 @@ export function InstallCard({ className }: { className?: string }) {
   if (!canInstall || dismissed || hidden) return null;
   return (
     <>
-      <div className={cn("flex items-center gap-3 rounded-[22px] border border-line bg-surface p-3 shadow-[var(--shadow)]", className)}>
-        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-accent text-accent-ink">
+      <div className={cn("flex items-center gap-2 rounded-2xl border border-line bg-surface p-2.5 shadow-[var(--shadow)]", className)}>
+        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-accent text-accent-ink">
           <Smartphone className="h-5 w-5" />
         </span>
-        <span className="min-w-0 flex-1 text-[14px] font-semibold leading-tight">Install the app</span>
+        <span className="min-w-0 flex-1 truncate text-[13px] font-semibold leading-tight">Add to home screen</span>
         <Button size="sm" onClick={install}>
           <Download className="h-4 w-4" /> Install
         </Button>
@@ -152,7 +152,7 @@ export function InstallCard({ className }: { className?: string }) {
             } catch {}
             setHidden(true);
           }}
-          className="grid h-9 w-9 shrink-0 place-items-center rounded-xl text-muted hover:bg-surface-2"
+          className="grid h-10 w-10 shrink-0 place-items-center rounded-xl text-muted hover:bg-surface-2"
           aria-label="Not now"
         >
           <X className="h-4 w-4" />
@@ -169,10 +169,10 @@ export function InstallRow() {
   if (!canInstall) return null;
   return (
     <>
-      <button onClick={install} className="flex w-full items-center gap-3 rounded-2xl border border-line bg-surface-2 px-4 py-3 text-left">
-        <Smartphone className="h-5 w-5 shrink-0" />
-        <span className="flex-1 text-[14px] font-semibold">Install the app</span>
-        <Download className="h-4 w-4 text-muted" />
+      <button onClick={install} className="flex w-full items-center gap-2.5 rounded-2xl border border-line bg-surface-2 px-3 py-2.5 text-left">
+        <Smartphone className="h-4 w-4 shrink-0" />
+        <span className="min-w-0 flex-1 truncate text-[13px] font-semibold">Install the app</span>
+        <Download className="h-4 w-4 shrink-0 text-muted" />
       </button>
       <InstallGuide kind={kind} open={guide} onClose={closeGuide} />
     </>

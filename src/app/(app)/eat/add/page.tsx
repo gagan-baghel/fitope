@@ -12,6 +12,7 @@ import {
   Field,
   Input,
   Pill,
+  SectionTitle,
   Segmented,
   Sheet,
   Skeleton,
@@ -101,14 +102,21 @@ function AddFood() {
   })();
 
   return (
-    <div className="space-y-4 pb-28">
-      <header className="sticky top-[var(--safe-top)] z-30 -mx-4 -mt-5 space-y-3 bg-bg/90 px-4 pb-3 pt-5 backdrop-blur-xl sm:-mx-6 sm:px-6">
-        <div className="flex items-center gap-3">
-          <button onClick={() => router.push("/eat")} className="-m-1.5 rounded-xl p-3 text-muted hover:bg-surface-2 hover:text-ink">
+    <div className="space-y-3 pb-24">
+      <header className="sticky top-[var(--safe-top)] z-30 bleed -mt-4 space-y-2 bg-bg/90 pb-2 pt-4 backdrop-blur-xl">
+        <div className="flex min-w-0 items-center gap-2">
+          <button
+            onClick={() => router.push("/eat")}
+            className="-m-1.5 shrink-0 rounded-xl p-3 text-muted hover:bg-surface-2 hover:text-ink"
+            aria-label="Back"
+          >
             <ArrowLeft className="h-5 w-5" />
           </button>
-          <h1 className="flex-1 text-[18px] font-bold tracking-tight">Log food</h1>
-          <button onClick={() => setQuickAdd(true)} className="flex items-center gap-1 text-[12.5px] font-semibold text-accent">
+          <h1 className="min-w-0 flex-1 truncate text-[17px] font-bold tracking-tight">Log food</h1>
+          <button
+            onClick={() => setQuickAdd(true)}
+            className="flex shrink-0 items-center gap-1 py-2 text-[12px] font-semibold text-accent"
+          >
             <Zap className="h-3.5 w-3.5" /> Quick add
           </button>
         </div>
@@ -127,10 +135,10 @@ function AddFood() {
         </div>
       </header>
 
-      <div className="no-scrollbar flex gap-2 overflow-x-auto">
+      <div className="no-scrollbar bleed flex gap-1.5 overflow-x-auto">
         {[
           { k: "search", label: "All foods", icon: Utensils },
-          { k: "recent", label: "Recent & favourites", icon: Clock },
+          { k: "recent", label: "Recent", icon: Clock },
           { k: "mine", label: "My foods", icon: Star },
           { k: "recipes", label: "Recipes", icon: CookingPot },
         ].map((t) => (
@@ -145,34 +153,36 @@ function AddFood() {
         <>
           {!q && regulars.length > 0 && (
             <section>
-              <div className="mb-2 flex items-center gap-1.5 text-[12px] font-semibold uppercase tracking-wider text-muted">
-                <Clock className="h-3.5 w-3.5" /> Your regulars
-              </div>
+              <SectionTitle>
+                <span className="flex items-center gap-1.5">
+                  <Clock className="h-3.5 w-3.5 shrink-0" /> Your regulars
+                </span>
+              </SectionTitle>
               {/* One row that scrolls sideways, so it never pushes the food list down. */}
-              <div className="no-scrollbar -mx-4 flex snap-x scroll-px-4 gap-2 overflow-x-auto px-4 pb-1 sm:-mx-6 sm:scroll-px-6 sm:px-6">
+              <div className="no-scrollbar bleed flex snap-x gap-1.5 overflow-x-auto pb-1">
                 {regulars.map((e: any) => (
                   <button
                     key={e._id}
                     onClick={() => relog(e)}
-                    className="flex w-[132px] shrink-0 snap-start flex-col rounded-2xl border border-line bg-surface p-3 text-left transition-all active:scale-95 hover:border-accent/40"
+                    className="flex w-[118px] shrink-0 snap-start flex-col rounded-2xl border border-line bg-surface p-2.5 text-left transition-all active:scale-95 hover:border-accent/40"
                   >
                     <div className="flex items-start justify-between gap-1">
-                      <span className="line-clamp-2 min-h-[2.5em] text-[13px] font-semibold leading-tight">{e.name}</span>
-                      <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-accent text-accent-ink">
-                        <Plus className="h-3.5 w-3.5" />
+                      <span className="line-clamp-2 min-h-[2.4em] min-w-0 text-[12.5px] font-semibold leading-tight">{e.name}</span>
+                      <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-accent text-accent-ink">
+                        <Plus className="h-3 w-3" />
                       </span>
                     </div>
-                    <span className="tabular mt-1.5 text-[11.5px] text-muted">
+                    <span className="tabular mt-1 truncate text-[11px] text-muted">
                       {e.qty}&nbsp;{e.unitLabel} · {e.nutrients.kcal}&nbsp;kcal
                     </span>
-                    {e.timesLogged ? <span className="tabular mt-0.5 text-[11px] font-semibold text-accent">×{e.timesLogged}</span> : null}
+                    {e.timesLogged ? <span className="tabular text-[10.5px] font-semibold text-accent">×{e.timesLogged}</span> : null}
                   </button>
                 ))}
               </div>
             </section>
           )}
           {!q && (
-            <div className="no-scrollbar flex gap-2 overflow-x-auto pb-1">
+            <div className="no-scrollbar bleed flex gap-1.5 overflow-x-auto pb-1">
               <Chip active={!category} onClick={() => setCategory(undefined)}>
                 Everything
               </Chip>
@@ -184,16 +194,17 @@ function AddFood() {
             </div>
           )}
           {foods === undefined ? (
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               {Array.from({ length: 6 }).map((_, i) => (
-                <Skeleton key={i} className="h-16 w-full" />
+                <Skeleton key={i} className="h-14 w-full" />
               ))}
             </div>
           ) : foods.length === 0 ? (
             <Card className="text-center">
-              <p className="text-[14px] text-muted">No match for “{q}”.</p>
-              <Button className="mt-3" onClick={() => setCreating(true)}>
-                <Plus className="h-4 w-4" /> Create “{q || "a custom food"}”
+              <p className="truncate text-[12.5px] text-muted">No match for “{q}”.</p>
+              <Button className="mt-2 max-w-full" onClick={() => setCreating(true)}>
+                <Plus className="h-4 w-4 shrink-0" />
+                <span className="min-w-0 truncate">Create “{q || "a custom food"}”</span>
               </Button>
             </Card>
           ) : (
@@ -207,10 +218,10 @@ function AddFood() {
       )}
 
       {tab === "recent" && (
-        <div className="space-y-5">
-          {rf?.templates && rf.templates.length > 0 && (
+        <div className="space-y-3">
+          {!!rf?.templates?.length && (
             <section>
-              <div className="mb-2 text-[12px] font-semibold uppercase tracking-wider text-muted">Saved meals</div>
+              <SectionTitle>Saved meals</SectionTitle>
               <div className="space-y-1.5">
                 {rf.templates.map((t: any) => (
                   <button
@@ -219,18 +230,18 @@ function AddFood() {
                       const n = await logTemplate({ templateId: t._id, date, meal });
                       toast({ message: `${t.name} · ${n} items added` });
                     }}
-                    className="flex w-full items-center gap-3 rounded-2xl border border-line bg-surface px-4 py-3 text-left hover:border-accent/40"
+                    className="flex min-h-[44px] w-full items-center gap-2.5 rounded-2xl border border-line bg-surface px-3 py-2.5 text-left hover:border-accent/40"
                   >
-                    <CookingPot className="h-4 w-4 text-violet" />
-                    <div className="flex-1 text-[13.5px] font-semibold">{t.name}</div>
-                    <Plus className="h-4 w-4 text-muted" />
+                    <CookingPot className="h-4 w-4 shrink-0 text-violet" />
+                    <div className="min-w-0 flex-1 truncate text-[13px] font-semibold">{t.name}</div>
+                    <Plus className="h-4 w-4 shrink-0 text-muted" />
                   </button>
                 ))}
               </div>
             </section>
           )}
           <section>
-            <div className="mb-2 text-[12px] font-semibold uppercase tracking-wider text-muted">Most logged</div>
+            <SectionTitle>Most logged</SectionTitle>
             {rf?.favorites?.length ? (
               <div className="space-y-1.5">
                 {rf.favorites.map((e: any) => (
@@ -238,11 +249,11 @@ function AddFood() {
                 ))}
               </div>
             ) : (
-              <p className="text-[13px] text-muted">Log a few meals and your regulars show up here.</p>
+              <p className="text-[12.5px] text-muted">Log a few meals and your regulars show up here.</p>
             )}
           </section>
           <section>
-            <div className="mb-2 text-[12px] font-semibold uppercase tracking-wider text-muted">Recent</div>
+            <SectionTitle>Recent</SectionTitle>
             <div className="space-y-1.5">
               {(rf?.recents ?? []).map((e: any) => (
                 <PastEntryRow key={e._id} entry={e} onLog={() => relog(e)} />
@@ -253,7 +264,7 @@ function AddFood() {
       )}
 
       {tab === "mine" && (
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           <Button variant="soft" className="w-full" onClick={() => setCreating(true)}>
             <Plus className="h-4 w-4" /> Create a custom food
           </Button>
@@ -261,17 +272,16 @@ function AddFood() {
             <FoodRow key={f._id} food={f} onOpen={() => setSelected(f)} onQuick={() => quickLog(f._id, 1, f.servings[0].label, f.name)} />
           ))}
           {myFoods?.length === 0 && (
-            <p className="py-6 text-center text-[13px] text-muted">
-              Nothing yet. Custom foods are for the things only you eat — your mum&apos;s rajma, your gym&apos;s
-              shake, a packaged product.
+            <p className="py-4 text-center text-[12.5px] text-muted">
+              Nothing yet — custom foods are for the things only you eat.
             </p>
           )}
         </div>
       )}
 
       {tab === "recipes" && (
-        <div className="space-y-2">
-          <Link href="/eat/recipes">
+        <div className="space-y-1.5">
+          <Link href="/eat/recipes" className="block">
             <Button variant="soft" className="w-full">
               <Plus className="h-4 w-4" /> Build a recipe
             </Button>
@@ -283,15 +293,15 @@ function AddFood() {
                 await logEntry({ date, meal, recipeId: r._id, qty: 1 });
                 toast({ message: `${r.name} added` });
               }}
-              className="flex w-full items-center gap-3 rounded-2xl border border-line bg-surface px-4 py-3 text-left hover:border-accent/40"
+              className="flex w-full items-center gap-2.5 rounded-2xl border border-line bg-surface px-3 py-2.5 text-left hover:border-accent/40"
             >
               <div className="min-w-0 flex-1">
-                <div className="line-clamp-2 text-[13.5px] font-semibold leading-snug">{r.name}</div>
-                <div className="tabular text-[11.5px] text-muted">
+                <div className="line-clamp-2 text-[13px] font-semibold leading-snug">{r.name}</div>
+                <div className="tabular truncate text-[11px] text-muted">
                   {r.perServing.kcal} kcal · P {r.perServing.protein} · per serving
                 </div>
               </div>
-              <Plus className="h-4 w-4 text-muted" />
+              <Plus className="h-4 w-4 shrink-0 text-muted" />
             </button>
           ))}
         </div>
@@ -317,16 +327,16 @@ function FoodRow({ food, onOpen, onQuick }: { food: any; onOpen: () => void; onQ
   const s = food.servings[0];
   const per = Math.round((food.per100.kcal * s.grams) / 100);
   return (
-    <div className="flex items-center gap-3 rounded-[20px] border border-line bg-surface p-3 transition-colors hover:border-ink/15">
+    <div className="flex items-center gap-2.5 rounded-2xl border border-line bg-surface p-2.5 transition-colors hover:border-ink/15">
       <FoodTile category={food.category} />
       <button onClick={onOpen} className="min-w-0 flex-1 text-left">
-        <div className="flex items-start gap-2">
-          <span className={cn("mt-[7px] h-2 w-2 shrink-0 rounded-full", food.veg ? "bg-mint" : "bg-rose")} />
-          <span className="line-clamp-2 min-w-0 text-[14.5px] font-bold leading-snug">{food.name}</span>
-          {food.state === "raw" && <Pill tone="amber">raw</Pill>}
-          {food.ownerUserId && <Pill tone="violet">mine</Pill>}
+        <div className="flex min-w-0 items-start gap-1.5">
+          <span className={cn("mt-[6px] h-1.5 w-1.5 shrink-0 rounded-full", food.veg ? "bg-mint" : "bg-rose")} />
+          <span className="line-clamp-2 min-w-0 text-[13.5px] font-bold leading-tight">{food.name}</span>
+          {food.state === "raw" && <Pill tone="amber" className="shrink-0">raw</Pill>}
+          {food.ownerUserId && <Pill tone="violet" className="shrink-0">mine</Pill>}
         </div>
-        <div className="tabular mt-0.5 truncate text-[12px] text-muted">
+        <div className="tabular mt-0.5 truncate text-[11px] text-muted">
           {per} kcal · {s.label === "g" || s.label === "ml" ? `100 ${s.label}` : `1 ${s.label}`} · P{" "}
           {Math.round((food.per100.protein * s.grams) / 100)} g
         </div>
@@ -346,13 +356,13 @@ function PastEntryRow({ entry, onLog }: { entry: any; onLog: () => void }) {
   return (
     <button
       onClick={onLog}
-      className="flex w-full items-center gap-3 rounded-2xl border border-line bg-surface px-4 py-3 text-left hover:border-accent/40"
+      className="flex w-full items-center gap-2.5 rounded-2xl border border-line bg-surface px-3 py-2.5 text-left hover:border-accent/40"
     >
       <div className="min-w-0 flex-1">
-        <div className="line-clamp-2 text-[13.5px] font-semibold leading-snug">{entry.name}</div>
-        <div className="tabular text-[11.5px] text-muted">
+        <div className="line-clamp-2 text-[13px] font-semibold leading-snug">{entry.name}</div>
+        <div className="tabular truncate text-[11px] text-muted">
           {entry.qty} {entry.unitLabel} · {entry.nutrients.kcal} kcal
-          {entry.timesLogged ? ` · logged ${entry.timesLogged}×` : ""}
+          {entry.timesLogged ? ` · ${entry.timesLogged}×` : ""}
         </div>
       </div>
       <Plus className="h-4 w-4 shrink-0 text-muted" />
@@ -419,17 +429,17 @@ function FoodSheet({
       }
     >
       {food && (
-        <div className="space-y-4">
-          <div className="flex items-center gap-3">
-            <FoodTile category={food.category} size={64} radius={20} />
-            <div className="min-w-0">
-              <div className="line-clamp-2 text-[15px] font-bold leading-snug">{food.name}</div>
-              <div className="text-[12px] text-muted">
+        <div className="space-y-3">
+          <div className="flex min-w-0 items-center gap-2.5">
+            <FoodTile category={food.category} size={48} radius={15} />
+            <div className="min-w-0 flex-1">
+              <div className="line-clamp-2 text-[14px] font-bold leading-tight">{food.name}</div>
+              <div className="truncate text-[11.5px] text-muted">
                 {food.per100.kcal} kcal · P {food.per100.protein} g per 100 g
               </div>
             </div>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-1.5">
             <Pill tone={food.veg ? "mint" : "rose"}>{food.veg ? "Veg" : "Non-veg"}</Pill>
             <Pill>{titleCase(food.category)}</Pill>
             {food.state !== "as_is" && <Pill tone="amber">{food.state}</Pill>}
@@ -437,7 +447,7 @@ function FoodSheet({
           </div>
 
           <div>
-            <div className="mb-1.5 text-[12px] font-semibold text-muted">Serving</div>
+            <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted">Serving</div>
             <div className="flex flex-wrap gap-1.5">
               {food.servings.map((s: any, i: number) => (
                 <Chip key={s.label} active={unit === i} onClick={() => setUnit(i)}>
@@ -447,8 +457,8 @@ function FoodSheet({
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            <span className="text-[13px] font-semibold text-muted">How much</span>
+          <div className="flex min-w-0 items-center gap-2">
+            <span className="shrink-0 text-[12.5px] font-semibold text-muted">How much</span>
             <Stepper
               value={qty}
               onChange={setQty}
@@ -456,16 +466,16 @@ function FoodSheet({
               min={0}
               max={2000}
               suffix={serving?.label}
-              className="flex-1"
+              className="min-w-0 flex-1"
             />
           </div>
 
-          <div className="rounded-2xl border border-line bg-surface-2 p-4">
-            <div className="flex items-baseline justify-between">
-              <span className="text-[13px] font-semibold">{Math.round(grams)} g total</span>
-              <span className="tabular text-[26px] font-bold">{n?.kcal} kcal</span>
+          <div className="rounded-2xl border border-line bg-surface-2 p-3">
+            <div className="flex min-w-0 items-baseline justify-between gap-2">
+              <span className="truncate text-[12.5px] font-semibold">{Math.round(grams)} g total</span>
+              <span className="tabular shrink-0 text-[22px] font-bold">{n?.kcal} kcal</span>
             </div>
-            <div className="mt-3 grid grid-cols-4 gap-2 text-center">
+            <div className="mt-2.5 grid grid-cols-4 gap-1.5 text-center">
               {(
                 [
                   ["Protein", n?.protein, "var(--accent)"],
@@ -474,20 +484,19 @@ function FoodSheet({
                   ["Fiber", n?.fiber, "var(--mint)"],
                 ] as const
               ).map(([label, val, color]) => (
-                <div key={label} className="rounded-xl bg-surface py-2.5">
-                  <div className="tabular text-[15px] font-bold" style={{ color }}>
+                <div key={label} className="min-w-0 rounded-xl bg-surface py-2">
+                  <div className="tabular truncate text-[14px] font-bold" style={{ color }}>
                     {val}
                   </div>
-                  <div className="text-[10.5px] text-muted">{label}</div>
+                  <div className="truncate text-[10px] text-muted">{label}</div>
                 </div>
               ))}
             </div>
           </div>
 
-          <p className="text-[11.5px] leading-relaxed text-muted">
-            Values are per 100 g of the {food.state === "raw" ? "raw" : "prepared"} food from standard
-            composition data. Oil, portion size and recipe change real numbers — treat this as a good
-            estimate.
+          <p className="text-[11px] leading-snug text-muted">
+            Per 100 g of the {food.state === "raw" ? "raw" : "prepared"} food — oil and portion size
+            move the real numbers.
           </p>
         </div>
       )}
@@ -527,15 +536,14 @@ function QuickAdd({ open, onClose, meal, date }: { open: boolean; onClose: () =>
         </Button>
       }
     >
-      <div className="space-y-4">
-        <p className="text-[13px] leading-relaxed text-muted">
-          For when you know the numbers but not the food — a restaurant meal, a label, a rough
-          estimate. It gets marked as estimated.
+      <div className="space-y-3">
+        <p className="text-[11.5px] leading-snug text-muted">
+          For a restaurant meal or a label — it gets marked as estimated.
         </p>
         <Field label="What was it?">
           <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Office lunch thali" />
         </Field>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-2">
           {(["kcal", "protein", "carbs", "fat", "fiber"] as const).map((k) => (
             <Field key={k} label={k === "kcal" ? "Calories" : `${titleCase(k)} (g)`}>
               <Stepper

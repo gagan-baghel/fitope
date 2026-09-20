@@ -14,6 +14,7 @@ import {
   Drumstick,
   Dumbbell,
   EggFried,
+  Flower2,
   Footprints,
   HeartPulse,
   IceCreamCone,
@@ -48,6 +49,7 @@ const MUSCLE_TILE: Record<string, { tile: string; icon: any }> = {
   core: { tile: "var(--tile-4)", icon: Shell },
   cardio: { tile: "var(--tile-3)", icon: HeartPulse },
   mobility: { tile: "var(--tile-1)", icon: Waves },
+  yoga: { tile: "var(--tile-6)", icon: Flower2 },
   forearms: { tile: "var(--tile-5)", icon: Dumbbell },
   traps: { tile: "var(--tile-1)", icon: MoveVertical },
 };
@@ -114,6 +116,8 @@ export function FoodTile({
 }
 
 export function tileFor(muscles?: string[], category?: string) {
+  // Checked before the muscle map so an asana never borrows a dumbbell glyph.
+  if (category === "yoga") return MUSCLE_TILE.yoga;
   for (const m of muscles ?? []) if (MUSCLE_TILE[m]) return MUSCLE_TILE[m];
   if (category === "cardio") return MUSCLE_TILE.cardio;
   if (category === "mobility") return MUSCLE_TILE.mobility;

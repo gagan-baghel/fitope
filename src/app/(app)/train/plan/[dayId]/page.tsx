@@ -76,10 +76,10 @@ export default function PlanDay() {
   }
 
   return (
-    <div className="-mt-5 pb-44">
+    <div className="-mt-3 pb-36">
       {/* Hero */}
       <header
-        className="relative -mx-4 overflow-hidden px-4 pb-6 pt-5 sm:-mx-6 sm:rounded-b-[28px] sm:px-6"
+        className="relative bleed overflow-hidden pb-4 pt-3 sm:rounded-b-2xl"
         style={{ background: "var(--tile-3)", color: "var(--tile-ink)" }}
       >
         <div className="hero-blob -right-12 -top-14 h-44 w-44" />
@@ -101,19 +101,19 @@ export default function PlanDay() {
               <MoreHorizontal className="h-4 w-4" />
             </button>
           </div>
-          <div className="mt-6 flex items-end justify-between gap-4">
+          <div className="mt-4 flex items-end justify-between gap-3">
             <div className="min-w-0">
-              <div className="text-[12px] font-medium opacity-70">{program.name}</div>
-              <h1 className="mt-1 text-[23px] font-bold leading-[1.1] tracking-tight">{day.title}</h1>
-              <p className="mt-1 text-[12.5px] capitalize opacity-75">{day.focus}</p>
+              <div className="truncate text-[11.5px] font-medium opacity-70">{program.name}</div>
+              <h1 className="text-[20px] font-bold leading-tight tracking-tight">{day.title}</h1>
+              <p className="truncate text-[11.5px] capitalize opacity-75">{day.focus}</p>
             </div>
-            <MinutesRing minutes={totalMinutes} progress={0.75} size={56} track="rgba(0,0,0,0.10)" />
+            <MinutesRing minutes={totalMinutes} progress={0.75} size={48} track="rgba(0,0,0,0.10)" />
           </div>
         </div>
       </header>
 
-      <div className="space-y-5 pt-5">
-        <div className="flex flex-wrap gap-2">
+      <div className="space-y-3 pt-3">
+        <div className="flex flex-wrap gap-1.5">
           {chips.map((c) => (
             <TagChip key={c.label} icon={c.icon}>
               {c.label}
@@ -123,7 +123,7 @@ export default function PlanDay() {
 
         <section>
           <SectionTitle>Session details</SectionTitle>
-          <div className="grid grid-cols-2 gap-2.5">
+          <div className="grid grid-cols-2 gap-1.5">
             <MetaCell icon={Timer} value={`${totalMinutes} min`} label="Duration" />
             <MetaCell icon={Gauge} value={day.level} label="Level" />
             <MetaCell icon={Dumbbell} value={day.gear} label="Gear" />
@@ -133,11 +133,11 @@ export default function PlanDay() {
 
         <section>
           <SectionTitle
-            action={<span className="text-[12.5px] text-muted">{items.length} exercises</span>}
+            action={<span className="text-[11.5px] text-muted">{items.length}</span>}
           >
             Exercises
           </SectionTitle>
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             {items.map((it: any, i: number) => (
               <RowCard
                 key={i}
@@ -147,9 +147,18 @@ export default function PlanDay() {
                     {i + 1}
                   </span>
                 }
-                tile={<MediaTile muscles={it.exercise?.primaryMuscles} category={it.exercise?.category} />}
+                tile={<MediaTile muscles={it.exercise?.primaryMuscles} category={it.exercise?.category} size={38} radius={12} />}
                 title={it.exercise?.name ?? "Exercise"}
-                subtitle={`${it.sets} sets × ${it.reps}${it.notes ? ` · ${it.notes}` : ""}`}
+                subtitle={
+                  it.exercise?.sanskrit ? (
+                    <>
+                      <span className="italic">{it.exercise.sanskrit}</span>
+                      {` · ${it.sets > 1 ? `${it.sets} × ` : ""}${it.reps}`}
+                    </>
+                  ) : (
+                    `${it.sets} × ${it.reps}${it.notes ? ` · ${it.notes}` : ""}`
+                  )
+                }
                 trailing={
                   <MinutesRing
                     minutes={Math.max(2, Math.round((it.sets * (it.restSec + 40)) / 60))}
@@ -163,8 +172,8 @@ export default function PlanDay() {
 
         {history.length > 0 && (
           <section>
-            <SectionTitle>Last times you did this</SectionTitle>
-            <div className="space-y-2">
+            <SectionTitle>Last times</SectionTitle>
+            <div className="space-y-1.5">
               {history.map((h: any) => (
                 <Accordion
                   key={h._id}
@@ -185,15 +194,17 @@ export default function PlanDay() {
           </section>
         )}
 
-        <div className="flex items-center gap-2 rounded-2xl border border-line bg-surface-2 px-4 py-3 text-[12.5px] text-muted">
+        <div className="flex items-center gap-2 rounded-2xl border border-line bg-surface-2 px-3 py-2.5 text-[11.5px] text-muted">
           <CalendarDays className="h-4 w-4 shrink-0" />
-          {day.weekday != null ? `Scheduled for ${DAY_NAMES[day.weekday]}` : "Not scheduled to a weekday"}
-          <Pill className="ml-auto">{program.daysPerWeek} d/wk</Pill>
+          <span className="min-w-0 flex-1 truncate">
+            {day.weekday != null ? DAY_NAMES[day.weekday] : "Unscheduled"}
+          </span>
+          <Pill className="shrink-0">{program.daysPerWeek} d/wk</Pill>
         </div>
       </div>
 
       {/* Sticky CTA — the reference's "Join" button. Sits above the floating nav. */}
-      <div className="fixed inset-x-0 bottom-0 z-30 px-4 pb-[calc(var(--safe-bottom)_+_88px)] lg:pb-6">
+      <div className="gutter-x fixed inset-x-0 bottom-0 z-30 pb-[calc(var(--safe-bottom)_+_84px)] lg:pb-6">
         <div className="mx-auto max-w-md">
           <Button size="lg" className="w-full shadow-[var(--shadow-lift)]" loading={busy} onClick={begin}>
             <Play className="h-4 w-4" /> Start workout
@@ -203,24 +214,26 @@ export default function PlanDay() {
 
       <Sheet open={!!info} onClose={() => setInfo(null)} title={info?.exercise?.name}>
         {info && (
-          <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <MediaTile muscles={info.exercise?.primaryMuscles} category={info.exercise?.category} size={64} radius={20} />
-              <div>
-                <div className="text-[13px] font-semibold capitalize">{info.exercise?.primaryMuscles?.join(", ")}</div>
-                <div className="text-[12px] capitalize text-muted">
+          <div className="space-y-3">
+            <div className="flex items-center gap-2.5">
+              <MediaTile muscles={info.exercise?.primaryMuscles} category={info.exercise?.category} size={52} radius={16} />
+              <div className="min-w-0">
+                <div className={`truncate text-[13px] font-semibold ${info.exercise?.sanskrit ? "italic" : "capitalize"}`}>
+                  {info.exercise?.sanskrit ?? info.exercise?.primaryMuscles?.join(", ")}
+                </div>
+                <div className="truncate text-[11.5px] capitalize text-muted">
                   {info.exercise?.equipment?.join(", ") || "bodyweight"} · {info.exercise?.difficulty}
                 </div>
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-3 gap-1.5">
               <MetaCell icon={Dumbbell} value={`${info.sets}`} label="Sets" />
-              <MetaCell icon={Target} value={info.reps} label="Reps" />
+              <MetaCell icon={Target} value={info.reps} label={info.exercise?.holdSec ? "Hold" : "Reps"} />
               <MetaCell icon={Timer} value={`${info.restSec}s`} label="Rest" />
             </div>
-            <ol className="space-y-2.5">
+            <ol className="space-y-2">
               {info.exercise?.instructions?.map((c: string, i: number) => (
-                <li key={i} className="flex gap-3 text-[13.5px] leading-relaxed text-ink-2">
+                <li key={i} className="flex gap-2.5 text-[13px] leading-relaxed text-ink-2">
                   <span className="grid h-5 w-5 shrink-0 place-items-center rounded-md bg-surface-2 text-[11px] font-bold text-muted">
                     {i + 1}
                   </span>
@@ -229,9 +242,9 @@ export default function PlanDay() {
               ))}
             </ol>
             {info.lastDone && (
-              <div className="flex items-center gap-2 rounded-2xl bg-surface-2 p-3.5 text-[12.5px]">
-                <Check className="h-4 w-4 text-mint" />
-                Last time: {info.lastDone}
+              <div className="flex items-center gap-2 rounded-2xl bg-surface-2 p-3 text-[12.5px]">
+                <Check className="h-4 w-4 shrink-0 text-mint" />
+                <span className="min-w-0">Last: {info.lastDone}</span>
               </div>
             )}
           </div>

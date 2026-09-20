@@ -14,6 +14,7 @@ import {
   History,
   Layers,
   Library,
+  Flower2,
   Play,
   Plus,
   Trophy,
@@ -23,6 +24,7 @@ import { cn, prettyDate, todayStr, errorText } from "@/lib/utils";
 const DAY_LETTERS = ["S", "M", "T", "W", "T", "F", "S"];
 const FILTERS = [
   { value: "all", label: "All" },
+  { value: "yoga", label: "Yoga" },
   { value: "strength", label: "Strength" },
   { value: "cardio", label: "Cardio" },
   { value: "core", label: "Core" },
@@ -42,6 +44,7 @@ export default function Train() {
   });
   const start = useMutation(api.workouts.start);
   const skip = useMutation(api.workouts.skip);
+  const generateYoga = useMutation(api.programs.generateYoga);
   const router = useRouter();
   const toast = useToast();
   const [busy, setBusy] = useState(false);
@@ -58,9 +61,9 @@ export default function Train() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <header className="flex min-w-0 items-center justify-between gap-3 pt-1">
-        <h1 className="min-w-0 text-[22px] font-bold tracking-tight sm:text-[26px]">Train</h1>
+        <h1 className="min-w-0 text-[20px] font-bold tracking-tight sm:text-[26px]">Train</h1>
         <div className="flex shrink-0 gap-1.5">
           <Link href="/train/exercises">
             <Button variant="soft" size="sm">
@@ -76,9 +79,9 @@ export default function Train() {
       </header>
 
       {/* Week strip */}
-      <Card className="p-4">
-        <div className="mb-3 flex items-center justify-between">
-          <span className="text-[12px] font-semibold uppercase tracking-wider text-muted">This week</span>
+      <Card>
+        <div className="mb-2 flex items-center justify-between">
+          <span className="text-[11px] font-bold uppercase tracking-wide text-muted">This week</span>
           <Link href="/timeline" className="flex items-center gap-1 text-[12px] font-semibold text-muted hover:text-ink">
             <CalendarDays className="h-3.5 w-3.5" /> Timeline
           </Link>
@@ -114,7 +117,7 @@ export default function Train() {
         <Skeleton className="h-52 w-full" />
       ) : todayWorkout ? (
         <section
-          className="relative -mx-1 overflow-hidden rounded-[28px] p-5 shadow-[var(--shadow)]"
+          className="relative overflow-hidden rounded-[18px] p-4 shadow-[var(--shadow)]"
           style={{ background: "var(--tile-2)", color: "var(--tile-ink)" }}
         >
           <div className="hero-blob -right-12 -top-14 h-48 w-48" />
@@ -128,7 +131,7 @@ export default function Train() {
                       ? "In progress"
                       : "Today"}
                 </span>
-                <h2 className="mt-3 truncate text-[26px] font-bold leading-tight tracking-tight">
+                <h2 className="mt-2 truncate text-[21px] font-bold leading-tight tracking-tight">
                   {todayWorkout.title}
                 </h2>
                 <p className="mt-1 text-[12.5px] capitalize opacity-75">{todayWorkout.focus}</p>
@@ -214,6 +217,45 @@ export default function Train() {
         />
       )}
 
+      {/* Yoga */}
+      <section
+        className="relative overflow-hidden rounded-[18px] p-3.5 text-[color:var(--tile-ink)] shadow-[var(--shadow)]"
+        style={{ background: "var(--tile-6)" }}
+      >
+        <div className="hero-blob -right-10 -top-12 h-32 w-32" />
+        <div className="relative flex items-center gap-3">
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[color:var(--hero-chip)]">
+            <Flower2 className="h-5 w-5" strokeWidth={1.9} />
+          </span>
+          <div className="min-w-0 flex-1">
+            <h2 className="text-[15px] font-bold leading-tight">Yoga</h2>
+            <p className="text-[11.5px] leading-snug opacity-75">60 asanas A–Z, with Sanskrit names and holds</p>
+          </div>
+        </div>
+        <div className="relative mt-3 flex gap-2">
+          <Link href="/train/exercises?category=yoga" className="hero-cta flex-1 justify-center">
+            Browse poses
+          </Link>
+          <button
+            onClick={async () => {
+              setBusy(true);
+              try {
+                const id = await generateYoga({ activate: true });
+                toast({ message: "Yoga Week is now your active plan" });
+                router.push(`/train/programs/${id}`);
+              } catch (e) {
+                toast({ message: errorText(e), tone: "var(--rose)" });
+                setBusy(false);
+              }
+            }}
+            disabled={busy}
+            className="hero-cta shrink-0"
+          >
+            Build a week
+          </button>
+        </div>
+      </section>
+
       {/* Active plan days */}
       {program && (
         <section>
@@ -226,7 +268,7 @@ export default function Train() {
           >
             {program.program.name}
           </SectionTitle>
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             {program.days.map((d) => (
               <RowCard
                 key={d._id}
@@ -252,7 +294,7 @@ export default function Train() {
         >
           Popular exercises
         </SectionTitle>
-        <div className="no-scrollbar -mx-4 mb-3 flex gap-2 overflow-x-auto px-4 sm:-mx-6 sm:px-6">
+        <div className="no-scrollbar bleed mb-2 flex gap-2 overflow-x-auto">
           {FILTERS.map((f) => (
             <Chip key={f.value} active={filter === f.value} onClick={() => setFilter(f.value)}>
               {f.label}

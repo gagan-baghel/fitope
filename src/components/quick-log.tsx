@@ -64,24 +64,22 @@ export function WeightSheet({
         </Button>
       }
     >
-      <div className="space-y-4">
-        <Field
-          label={`Weight (${u.weightUnit})`}
-          hint="Weigh at the same time of day — first thing after waking is the most consistent."
-        >
+      <div className="space-y-3">
+        <Field label={`Weight (${u.weightUnit})`} hint="Same time each day — after waking is most consistent.">
           <Stepper value={weight} onChange={setWeight} step={u.weightStep} min={20} max={900} suffix={u.weightUnit} />
         </Field>
         <Field label="Body fat % (optional)">
           <Stepper value={bf} onChange={setBf} step={0.5} min={2} max={70} suffix="%" />
         </Field>
+        {/* `-my-1.5 py-3` keeps the row visually tight while staying a 40px tap target. */}
         <button
-          className="text-[13px] font-semibold text-accent"
+          className="-my-1.5 py-3 text-[13px] font-semibold text-accent"
           onClick={() => setShowMeasure((s) => !s)}
         >
           {showMeasure ? "Hide" : "Add"} tape measurements
         </button>
         {showMeasure && (
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-2">
             {FIELDS.map((f) => (
               <Field key={f} label={`${f[0].toUpperCase()}${f.slice(1)} (${u.lengthUnit})`}>
                 <Stepper
@@ -148,18 +146,18 @@ export function SleepSheet({ open, onClose, defaults }: { open: boolean; onClose
         </Button>
       }
     >
-      <div className="space-y-4">
-        <div className="grid grid-cols-2 gap-3">
+      <div className="space-y-3">
+        <div className="grid grid-cols-2 gap-2">
           <Field label="Went to bed">
-            <Input type="time" value={bed} onChange={(e) => setBed(e.target.value)} />
+            <Input type="time" value={bed} onChange={(e) => setBed(e.target.value)} className="min-w-0 px-2 text-center" />
           </Field>
           <Field label="Woke up">
-            <Input type="time" value={wake} onChange={(e) => setWake(e.target.value)} />
+            <Input type="time" value={wake} onChange={(e) => setWake(e.target.value)} className="min-w-0 px-2 text-center" />
           </Field>
         </div>
-        <div className="rounded-2xl border border-line bg-surface-2 p-4 text-center">
-          <div className="text-[12px] text-muted">Time in bed</div>
-          <div className="text-[30px] font-bold text-sky">
+        <div className="rounded-2xl border border-line bg-surface-2 p-2.5 text-center">
+          <div className="text-[11px] text-muted">Time in bed</div>
+          <div className="text-[24px] font-bold text-sky">
             {Math.floor(duration / 60)}h {duration % 60 ? `${duration % 60}m` : ""}
           </div>
         </div>
@@ -177,7 +175,7 @@ export function SleepSheet({ open, onClose, defaults }: { open: boolean; onClose
           />
         </Field>
         <Field label="Notes (optional)">
-          <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Woke twice, late caffeine…" />
+          <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Woke twice, late caffeine…" className="min-h-16" />
         </Field>
       </div>
     </Sheet>
@@ -222,7 +220,7 @@ export function CheckinSheet({ open, onClose, initial }: { open: boolean; onClos
         </Button>
       }
     >
-      <div className="space-y-4">
+      <div className="space-y-3">
         <Field label="Energy" hint="1 = flat, 5 = buzzing">
           <Segmented value={energy} onChange={setEnergy} options={scale} />
         </Field>
@@ -233,7 +231,7 @@ export function CheckinSheet({ open, onClose, initial }: { open: boolean; onClos
           <Segmented value={stress} onChange={setStress} options={scale} />
         </Field>
         <Field label="Notes (optional)">
-          <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Anything worth remembering" />
+          <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Anything worth remembering" className="min-h-16" />
         </Field>
       </div>
     </Sheet>

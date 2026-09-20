@@ -4,7 +4,7 @@ import { useConvex, useMutation, useQuery } from "convex/react";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { api } from "../../../../convex/_generated/api";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   Button,
   Card,
@@ -35,7 +35,7 @@ import {
   Trash2,
   User,
 } from "lucide-react";
-import { DAY_LABELS, cn, hhmm, titleCase, errorText, todayStr } from "@/lib/utils";
+import { DAY_LABELS, cn, hhmm, listOf, titleCase, errorText, todayStr } from "@/lib/utils";
 import { useUnits } from "@/lib/units";
 import { InstallRow } from "@/components/install";
 
@@ -82,19 +82,19 @@ export default function Me() {
   const target = me?.targets;
 
   return (
-    <div className="space-y-5">
-      <header className="flex items-center gap-3">
-        <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-accent text-[15px] font-bold text-accent-ink">
+    <div className="space-y-3">
+      <header className="flex items-center gap-2.5">
+        <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-accent text-[14px] font-bold text-accent-ink">
           {(p?.name ?? me?.email ?? "?").slice(0, 1).toUpperCase()}
         </div>
-        <div className="min-w-0">
-          <h1 className="truncate text-[17px] font-bold leading-tight tracking-tight">{p?.name ?? "Your profile"}</h1>
-          <div className="truncate text-[12px] text-muted">{me?.email}</div>
+        <div className="min-w-0 flex-1">
+          <h1 className="truncate text-[15px] font-bold leading-tight tracking-tight">{p?.name ?? "Your profile"}</h1>
+          <div className="truncate text-[11.5px] text-muted">{me?.email}</div>
         </div>
       </header>
 
       {/* Snapshot */}
-      <Card className="grid grid-cols-3 gap-3">
+      <Card className="grid grid-cols-3 gap-2">
         <Stat label="Goal" value={<span className="text-[15px]">{titleCase(p?.goal ?? "–")}</span>} />
         <Stat
           label="Weight"
@@ -122,50 +122,48 @@ export default function Me() {
         >
           Daily targets
         </SectionTitle>
-        {!target ? (
-          <div className="flex items-center gap-3">
-            <p className="flex-1 text-[13px] leading-snug text-muted">
-              Add your height and a weight so we can estimate your daily targets.
-            </p>
-            <Button size="sm" onClick={() => setSheet("profile")}>
-              Add
-            </Button>
-          </div>
-        ) : (
-          <>
-            <div className="grid grid-cols-3 gap-x-3 gap-y-4">
-              <Stat label="Calories" value={target.kcal} unit="kcal" />
-              <Stat label="Protein" value={target.protein} unit="g" tone="var(--accent)" />
-              <Stat label="Fiber" value={target.fiber} unit="g" tone="var(--mint)" />
-              <Stat label="Carbs" value={target.carbs} unit="g" />
-              <Stat label="Fat" value={target.fat} unit="g" />
-              <Stat label="Water" value={target.waterMl} unit="ml" tone="var(--sky)" />
-            </div>
-            <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-line pt-3 text-[11.5px] text-muted">
-              <Pill tone={target?.source === "custom" ? "violet" : "amber"}>
-                {target?.source === "custom" ? "Your numbers" : "Estimated"}
-              </Pill>
-              {target?.basis && (
-                <span>
-                  BMR {target.basis.bmr} · TDEE {target.basis.tdee} · {target.basis.method}
-                </span>
-              )}
-              <button
-                className="ml-auto font-semibold text-accent"
-                onClick={async () => {
-                  try {
-                      await recompute({});
-                      toast({ message: "Targets recalculated from your latest weight" });
-                  } catch (e) {
-                    toast({ message: errorText(e), tone: "var(--rose)" });
-                  }
-                }}
-              >
-                Recalculate
-              </button>
-            </div>
-          </>
+        <div className="grid grid-cols-3 gap-x-2 gap-y-2.5">
+          <Stat label="Calories" value={target.kcal} unit="kcal" />
+          <Stat label="Protein" value={target.protein} unit="g" tone="var(--accent)" />
+          <Stat label="Fiber" value={target.fiber} unit="g" tone="var(--mint)" />
+          <Stat label="Carbs" value={target.carbs} unit="g" />
+          <Stat label="Fat" value={target.fat} unit="g" />
+          <Stat label="Water" value={target.waterMl} unit="ml" tone="var(--sky)" />
+        </div>
+        {/* Provisional means we filled a gap in the profile with a stand-in — say which one. */}
+        {target.source === "provisional" && (
+          <button
+            onClick={() => setSheet("profile")}
+            className="mt-2.5 flex w-full items-center gap-2 rounded-xl bg-amber/[0.1] px-2.5 py-2 text-left text-[11.5px] text-amber"
+          >
+            <Info className="h-3.5 w-3.5 shrink-0" />
+            <span className="min-w-0 flex-1 truncate">Rough estimate — add your {listOf(target.missing)}</span>
+            <ChevronRight className="h-3.5 w-3.5 shrink-0" />
+          </button>
         )}
+        <div className="mt-2.5 flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-line pt-2 text-[11px] text-muted">
+          <Pill tone={target.source === "custom" ? "violet" : target.source === "provisional" ? "rose" : "amber"}>
+            {target.source === "custom" ? "Yours" : target.source === "provisional" ? "Provisional" : "Estimated"}
+          </Pill>
+          {target.basis && (
+            <span className="tabular">
+              BMR {target.basis.bmr} · TDEE {target.basis.tdee}
+            </span>
+          )}
+          <button
+            className="ml-auto font-semibold text-accent"
+            onClick={async () => {
+              try {
+                await recompute({});
+                toast({ message: "Targets recalculated from your latest weight" });
+              } catch (e) {
+                toast({ message: errorText(e), tone: "var(--rose)" });
+              }
+            }}
+          >
+            Recalculate
+          </button>
+        </div>
       </Card>
 
       {/* Goals */}
@@ -188,28 +186,29 @@ export default function Me() {
         {goals && goals.length > 0 ? (
           <Card className="divide-y divide-line p-0">
             {goals.map((g: any) => (
-              <div key={g._id} className="flex items-center gap-3 px-4 py-3">
-                <Target className={cn("h-4 w-4", g.status === "achieved" ? "text-mint" : "text-accent")} />
+              <div key={g._id} className="flex items-center gap-2 px-3 py-2.5">
+                <Target className={cn("h-4 w-4 shrink-0", g.status === "achieved" ? "text-mint" : "text-accent")} />
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-[13.5px] font-semibold">{g.title}</div>
-                  <div className="text-[11.5px] text-muted">
+                  <div className="truncate text-[11px] text-muted">
                     {g.startValue != null && g.targetValue != null
                       ? `${g.startValue} → ${g.targetValue} ${g.unit ?? ""}`
                       : titleCase(g.metric)}
                     {g.targetDate ? ` · by ${g.targetDate}` : ""}
                   </div>
                 </div>
-                <Pill tone={g.status === "achieved" ? "mint" : "muted"}>{g.status}</Pill>
-                <ConfirmButton variant="ghost" onConfirm={() => deleteGoal({ id: g._id })}>
+                <Pill tone={g.status === "achieved" ? "mint" : "muted"} className="shrink-0">
+                  {g.status}
+                </Pill>
+                <ConfirmButton variant="ghost" className="shrink-0" onConfirm={() => deleteGoal({ id: g._id })}>
                   <Trash2 className="h-4 w-4" />
                 </ConfirmButton>
               </div>
             ))}
           </Card>
         ) : (
-          <Card className="text-[13px] text-muted">
-            No explicit goals set. Your training goal ({titleCase(p?.goal ?? "general")}) still drives the plan
-            and targets.
+          <Card className="text-[12.5px] text-muted">
+            No goals yet — {titleCase(p?.goal ?? "General")} still drives your plan.
           </Card>
         )}
       </section>
@@ -235,11 +234,11 @@ export default function Me() {
           {reminders && reminders.length > 0 ? (
             <div className="divide-y divide-line">
               {reminders.map((r: any) => (
-                <div key={r._id} className="flex items-center gap-3 px-4 py-3">
-                  <Bell className={cn("h-4 w-4", r.enabled ? "text-accent" : "text-muted")} />
+                <div key={r._id} className="flex items-center gap-2 px-3 py-2.5">
+                  <Bell className={cn("h-4 w-4 shrink-0", r.enabled ? "text-accent" : "text-muted")} />
                   <div className="min-w-0 flex-1">
-                    <div className="text-[13.5px] font-semibold">{r.label}</div>
-                    <div className="tabular text-[11.5px] text-muted">
+                    <div className="truncate text-[13px] font-semibold">{r.label}</div>
+                    <div className="tabular truncate text-[11px] text-muted">
                       {r.time} · {r.days.map((d: number) => DAY_LABELS[d]).join(" ")}
                     </div>
                   </div>
@@ -255,7 +254,7 @@ export default function Me() {
                       })
                     }
                     className={cn(
-                      "h-6 w-11 rounded-full p-0.5 transition-colors",
+                      "h-6 w-11 shrink-0 rounded-full p-0.5 transition-colors",
                       r.enabled ? "bg-accent" : "bg-surface-3"
                     )}
                     aria-label="Toggle reminder"
@@ -267,22 +266,22 @@ export default function Me() {
                       )}
                     />
                   </button>
-                  <ConfirmButton variant="ghost" onConfirm={() => deleteReminder({ id: r._id })}>
+                  <ConfirmButton variant="ghost" className="shrink-0" onConfirm={() => deleteReminder({ id: r._id })}>
                     <Trash2 className="h-4 w-4" />
                   </ConfirmButton>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="p-4 text-[13px] text-muted">
-              No reminders yet. Due reminders appear on your home screen and clear themselves once you log the thing — nothing is pushed or emailed.
+            <div className="p-3 text-[12.5px] text-muted">
+              No reminders yet — due ones show on Home. Nothing is pushed or emailed.
             </div>
           )}
         </Card>
       </section>
 
       {/* Preferences */}
-      <Card className="space-y-4">
+      <Card className="space-y-3">
         <SectionTitle>Preferences</SectionTitle>
         <Field label="Theme">
           <Segmented
@@ -294,7 +293,7 @@ export default function Me() {
             ]}
           />
         </Field>
-        <Field label="Body measurement units" hint="Training loads stay in kg — that is how plates are marked.">
+        <Field label="Body units" hint="Lifting loads stay in kg.">
           <Segmented
             value={p?.units ?? "metric"}
             onChange={(v) => saveProfile({ units: v })}
@@ -306,24 +305,21 @@ export default function Me() {
         </Field>
         <button
           onClick={() => setSheet("profile")}
-          className="flex w-full items-center gap-3 rounded-2xl bg-surface-2 px-4 py-3 text-left"
+          className="flex w-full items-center gap-2.5 rounded-2xl bg-surface-2 px-3 py-2.5 text-left"
         >
-          <User className="h-4 w-4 text-muted" />
-          <span className="flex-1 text-[13.5px] font-semibold">Edit profile & training setup</span>
-          <ChevronRight className="h-4 w-4 text-muted" />
+          <User className="h-4 w-4 shrink-0 text-muted" />
+          <span className="min-w-0 flex-1 truncate text-[13px] font-semibold">Edit profile & training setup</span>
+          <ChevronRight className="h-4 w-4 shrink-0 text-muted" />
         </button>
         <InstallRow />
       </Card>
 
       {/* Data */}
-      <Card className="space-y-3">
+      <Card className="space-y-2">
         <SectionTitle>Your data</SectionTitle>
-        <div className="flex items-start gap-3 rounded-2xl bg-surface-2 p-3.5">
-          <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-mint" />
-          <p className="text-[12.5px] leading-relaxed text-muted">
-            Everything you log is tied to your account and visible only to you. Meals, weights
-            and workouts are never shared with other users.
-          </p>
+        <div className="flex items-center gap-2 text-[11.5px] text-muted">
+          <ShieldCheck className="h-4 w-4 shrink-0 text-mint" />
+          <span className="min-w-0">Everything you log is private to your account.</span>
         </div>
         <Button
           variant="soft"
@@ -392,13 +388,11 @@ export default function Me() {
         </ConfirmButton>
       </Card>
 
-      <Card className="space-y-3">
-        <div className="flex items-start gap-3">
-          <Info className="mt-0.5 h-4 w-4 shrink-0 text-muted" />
-          <p className="text-[12px] leading-relaxed text-muted">
-            FitOpe is a tracking tool, not a medical device. Calorie and protein figures are estimates
-            from standard formulas and public food composition data. It does not diagnose, treat or
-            give medical advice — talk to a doctor or a registered dietitian for that.
+      <Card className="space-y-2">
+        <div className="flex items-start gap-2">
+          <Info className="mt-px h-4 w-4 shrink-0 text-muted" />
+          <p className="min-w-0 text-[11.5px] leading-snug text-muted">
+            Estimates, not medical advice — see a doctor or dietitian for that.
           </p>
         </div>
         <Button
@@ -441,12 +435,11 @@ export default function Me() {
         }
       >
         {t && (
-          <div className="space-y-4">
-            <p className="text-[12.5px] leading-relaxed text-muted">
-              Overriding these switches your targets to “custom”. Days you already logged keep the
-              targets that were live at the time.
+          <div className="space-y-3">
+            <p className="text-[12px] leading-snug text-muted">
+              Editing these makes them custom. Logged days keep their old targets.
             </p>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-2.5">
               {(
                 [
                   ["kcal", "Calories", 50],
@@ -501,7 +494,7 @@ export default function Me() {
         }
       >
         {goalDraft && (
-          <div className="space-y-4">
+          <div className="space-y-3">
             <Field label="What do you want to achieve?">
               <Input
                 value={goalDraft.title}
@@ -518,7 +511,7 @@ export default function Me() {
                 <option value="custom">Something else</option>
               </Select>
             </Field>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-2.5">
               <Field label="Start value">
                 <Stepper value={goalDraft.startValue} onChange={(v) => setGoalDraft({ ...goalDraft, startValue: v })} step={0.5} />
               </Field>
@@ -557,7 +550,7 @@ export default function Me() {
         }
       >
         {reminderDraft && (
-          <div className="space-y-4">
+          <div className="space-y-3">
             <Field label="What for?">
               <OptionGrid
                 cols={2}
@@ -582,7 +575,7 @@ export default function Me() {
               <Input type="time" value={reminderDraft.time} onChange={(e) => setReminderDraft({ ...reminderDraft, time: e.target.value })} />
             </Field>
             <Field label="Days">
-              <div className="flex gap-1.5">
+              <div className="flex gap-1">
                 {DAY_LABELS.map((l, i) => (
                   <button
                     key={i}
@@ -675,11 +668,11 @@ function ProfileSheet({ open, onClose, profile }: { open: boolean; onClose: () =
         </Button>
       }
     >
-      <div className="space-y-4">
+      <div className="space-y-3">
         <Field label="Name">
           <Input value={d.name ?? ""} onChange={(e) => setD({ ...d, name: e.target.value })} />
         </Field>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-2.5">
           <Field label={`Height (${u.lengthUnit})`}>
             <Stepper
               value={u.outLength(d.heightCm)}
@@ -708,7 +701,7 @@ function ProfileSheet({ open, onClose, profile }: { open: boolean; onClose: () =
             ))}
           </Select>
         </Field>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-2.5">
           <Field label="Experience">
             <Select value={d.experience ?? ""} onChange={(e) => setD({ ...d, experience: e.target.value })}>
               {["beginner", "intermediate", "advanced"].map((g) => (
@@ -728,7 +721,7 @@ function ProfileSheet({ open, onClose, profile }: { open: boolean; onClose: () =
             </Select>
           </Field>
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-2.5">
           <Field label="Sessions per week">
             <Stepper value={d.daysPerWeek} onChange={(v) => setD({ ...d, daysPerWeek: v })} step={1} min={1} max={7} />
           </Field>
@@ -737,7 +730,7 @@ function ProfileSheet({ open, onClose, profile }: { open: boolean; onClose: () =
           </Field>
         </div>
         <Field label="Preferred training days">
-          <div className="flex gap-1.5">
+          <div className="flex gap-1">
             {DAY_LABELS.map((l, i) => (
               <button
                 key={i}
@@ -779,7 +772,7 @@ function ProfileSheet({ open, onClose, profile }: { open: boolean; onClose: () =
             ))}
           </div>
         </Field>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-2.5">
           <Field label="Bedtime">
             <Input type="time" value={d.bedtime ?? "23:00"} onChange={(e) => setD({ ...d, bedtime: e.target.value })} />
           </Field>

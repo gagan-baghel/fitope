@@ -1,8 +1,9 @@
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./lib/functions";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { requireUser, visibleTo, weekday } from "./lib/util";
 import { Doc, Id } from "./_generated/dataModel";
+import { YOGA_SEQUENCES, buildSequence } from "./data/yoga";
 
 /* ------------------------------- generator -------------------------------- */
 
@@ -241,6 +242,75 @@ export const generate = mutation({
         title: day.title,
         focus: day.focus,
         estMinutes: sessionMinutes,
+        items,
+      });
+    }
+    return programId;
+  },
+});
+
+/* ------------------------------ yoga sequences ---------------------------- */
+
+export const generateYoga = mutation({
+  args: { activate: v.optional(v.boolean()) },
+  handler: async (ctx, { activate }) => {
+    const userId = await requireUser(ctx);
+    const profile = await ctx.db
+      .query("profiles")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .unique();
+
+    const poses = [
+      ...(await ctx.db
+        .query("exercises")
+        .withIndex("by_owner", (q) => q.eq("ownerUserId", undefined))
+        .collect()),
+      ...(await ctx.db
+        .query("exercises")
+        .withIndex("by_owner", (q) => q.eq("ownerUserId", userId))
+        .collect()),
+    ].filter((e) => e.category === "yoga" && !e.archived);
+    if (poses.length === 0) throw new ConvexError("The yoga library has not loaded yet — reopen the app and try again");
+
+    if (activate ?? true) {
+      const actives = await ctx.db
+        .query("programs")
+        .withIndex("by_user", (q) => q.eq("userId", userId))
+        .collect();
+      await Promise.all(actives.filter((p) => p.isActive).map((p) => ctx.db.patch(p._id, { isActive: false })));
+    }
+
+    const programId = await ctx.db.insert("programs", {
+      userId,
+      name: "Yoga Week",
+      description: `Three sequences · ${profile?.experience ?? "beginner"} · 20–30 min`,
+      goal: "mobility",
+      daysPerWeek: YOGA_SEQUENCES.length,
+      isActive: activate ?? true,
+      source: "generated",
+      createdAt: Date.now(),
+    });
+
+    // Spread over the week rather than stacking: yoga on back-to-back days is fine, but
+    // a rest day between sessions is what most people actually keep to.
+    const weekdays = [1, 3, 5];
+    for (let i = 0; i < YOGA_SEQUENCES.length; i++) {
+      const seq = YOGA_SEQUENCES[i];
+      const items = buildSequence(poses, seq.shape, profile?.experience ?? "beginner").map((s) => ({
+        exerciseId: s.pose._id,
+        sets: s.sets,
+        reps: s.reps,
+        restSec: s.restSec,
+        notes: s.notes,
+      }));
+      await ctx.db.insert("programDays", {
+        userId,
+        programId,
+        order: i,
+        weekday: weekdays[i],
+        title: seq.title,
+        focus: seq.focus,
+        estMinutes: seq.minutes,
         items,
       });
     }

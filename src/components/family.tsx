@@ -85,37 +85,37 @@ export function NudgeSheet({
         </Button>
       }
     >
-      <div className="grid grid-cols-3 gap-2.5 sm:grid-cols-4">
+      <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
         {(Object.keys(NUDGES) as NudgeKind[]).map((k) => (
           <button
             key={k}
             onClick={() => setKind(k)}
             aria-pressed={kind === k}
             className={cn(
-              "flex flex-col items-center gap-1.5 rounded-2xl border p-3 transition-all active:scale-95",
+              "flex flex-col items-center gap-1 rounded-2xl border px-1.5 py-2.5 transition-all active:scale-95",
               kind === k ? "scale-[1.04] border-transparent bg-accent text-accent-ink shadow-lg" : "border-line bg-surface-2 text-muted"
             )}
           >
-            <span className="text-[34px] leading-none">{NUDGES[k].emoji}</span>
-            <span className="text-[11px] font-medium leading-tight">{NUDGES[k].text}</span>
+            <span className="text-[26px] leading-none">{NUDGES[k].emoji}</span>
+            <span className="w-full truncate text-[11px] font-medium leading-tight">{NUDGES[k].text}</span>
           </button>
         ))}
         <button
           onClick={() => setWriting((w) => !w)}
           aria-pressed={writing}
           className={cn(
-            "flex flex-col items-center justify-center gap-1.5 rounded-2xl border border-dashed p-3 transition-all active:scale-95",
+            "flex flex-col items-center justify-center gap-1 rounded-2xl border border-dashed px-1.5 py-2.5 transition-all active:scale-95",
             writing ? "border-accent text-accent" : "border-line text-muted"
           )}
           aria-label="Add a message"
         >
-          <Pencil className="h-7 w-7" />
+          <Pencil className="h-6 w-6" />
         </button>
       </div>
       {writing && (
         <Input
           autoFocus
-          className="mt-3"
+          className="mt-2"
           maxLength={FAMILY_LIMITS.nudgeMessageMax}
           value={message}
           onChange={(e) => setMessage(e.target.value)}
@@ -124,9 +124,9 @@ export function NudgeSheet({
         />
       )}
       {/* Remaining nudges today, as dots — no reading needed. */}
-      <div className="mt-4 flex justify-center gap-1.5" aria-label={`${to?.nudgesLeft ?? 0} left today`}>
+      <div className="mt-3 flex justify-center gap-1.5" aria-label={`${to?.nudgesLeft ?? 0} left today`}>
         {Array.from({ length: FAMILY_LIMITS.nudgesPerPairPerDay }, (_, i) => (
-          <span key={i} className={cn("h-2.5 w-2.5 rounded-full", i < (to?.nudgesLeft ?? 0) ? "bg-accent" : "bg-surface-3")} />
+          <span key={i} className={cn("h-2 w-2 rounded-full", i < (to?.nudgesLeft ?? 0) ? "bg-accent" : "bg-surface-3")} />
         ))}
       </div>
     </Sheet>
@@ -275,10 +275,10 @@ export function FamilyStrip() {
     return (
       <Link
         href="/family"
-        className="flex items-center gap-3 rounded-[22px] border border-dashed border-line px-4 py-3 active:scale-[0.99]"
+        className="flex items-center gap-2 rounded-2xl border border-dashed border-line px-3 py-2 active:scale-[0.99]"
       >
-        <span className="text-[26px] leading-none">👨‍👩‍👧‍👦</span>
-        <span className="flex-1 text-[14px] font-semibold">Family</span>
+        <span className="text-[22px] leading-none">👨‍👩‍👧‍👦</span>
+        <span className="flex-1 text-[13.5px] font-semibold">Family</span>
         <span className="grid h-9 w-9 place-items-center rounded-full bg-accent text-accent-ink">
           <Plus className="h-5 w-5" />
         </span>
@@ -286,15 +286,15 @@ export function FamilyStrip() {
     );
   }
   return (
-    <div className="no-scrollbar -mx-4 flex gap-3 overflow-x-auto px-4 sm:-mx-6 sm:px-6">
+    <div className="no-scrollbar bleed flex gap-2 overflow-x-auto">
       {data.members.map((m: any) => (
-        <Link key={m.userId} href={m.isMe ? "/family" : `/family/${m.userId}`} className="flex w-16 shrink-0 flex-col items-center gap-1">
-          <Avatar name={m.name} size={56} ring={dayProgress(m.summary) ?? 0} />
-          <span className="w-full truncate text-center text-[11.5px] font-medium">{m.isMe ? "You" : m.name.split(" ")[0]}</span>
+        <Link key={m.userId} href={m.isMe ? "/family" : `/family/${m.userId}`} className="flex w-14 shrink-0 flex-col items-center gap-1">
+          <Avatar name={m.name} size={52} ring={dayProgress(m.summary) ?? 0} />
+          <span className="w-full truncate text-center text-[11px] font-medium">{m.isMe ? "You" : m.name.split(" ")[0]}</span>
         </Link>
       ))}
-      <Link href="/family" className="flex w-16 shrink-0 flex-col items-center gap-1" aria-label="Family">
-        <span className="grid h-14 w-14 place-items-center rounded-full border border-dashed border-line text-muted">
+      <Link href="/family" className="flex w-14 shrink-0 flex-col items-center gap-1" aria-label="Family">
+        <span className="grid h-[52px] w-[52px] place-items-center rounded-full border border-dashed border-line text-muted">
           <Users className="h-5 w-5" />
         </span>
       </Link>

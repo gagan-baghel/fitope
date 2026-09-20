@@ -87,12 +87,13 @@ export function CreateFood({
         </Button>
       }
     >
-      <div className="space-y-4">
+      <div className="space-y-3">
         <Field label="Name">
           <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Mum's rajma" />
         </Field>
 
-        <div className="grid grid-cols-2 gap-3">
+        {/* Stacked at 320px: side by side, a three-option Segmented clips "Cooked" to "Cook…". */}
+        <div className="grid grid-cols-1 gap-2 min-[360px]:grid-cols-2">
           <Field label="Veg or non-veg">
             <Segmented
               value={veg}
@@ -117,7 +118,7 @@ export function CreateFood({
         </div>
 
         <Field label="Category">
-          <div className="no-scrollbar flex flex-wrap gap-1.5">
+          <div className="flex flex-wrap gap-1">
             {CATEGORIES.map((c) => (
               <Chip key={c} active={category === c} onClick={() => setCategory(c)}>
                 {titleCase(c)}
@@ -127,8 +128,8 @@ export function CreateFood({
         </Field>
 
         <div>
-          <div className="mb-2 text-[12px] font-semibold text-muted">Nutrition per 100 g / 100 ml</div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted">Per 100 g / ml</div>
+          <div className="grid grid-cols-2 gap-2">
             {(["kcal", "protein", "carbs", "fat", "fiber"] as const).map((k) => (
               <Field key={k} label={k === "kcal" ? "Calories" : `${titleCase(k)} (g)`}>
                 <Stepper
@@ -143,27 +144,31 @@ export function CreateFood({
         </div>
 
         <div>
-          <div className="mb-2 text-[12px] font-semibold text-muted">Serving sizes</div>
+          <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted">Serving sizes</div>
           <div className="space-y-1.5">
             {servings.map((s, i) => (
-              <div key={i} className="flex items-center gap-2 rounded-xl bg-surface-2 px-3.5 py-2.5">
-                <span className="flex-1 text-[13.5px] font-semibold">
+              <div key={i} className="flex min-h-[40px] min-w-0 items-center gap-1.5 rounded-xl bg-surface-2 px-3 py-1.5">
+                <span className="min-w-0 flex-1 truncate text-[12.5px] font-semibold">
                   1 {s.label} <span className="font-normal text-muted">= {s.grams} g</span>
                 </span>
                 {servings.length > 1 && (
-                  <button onClick={() => setServings((p) => p.filter((_, x) => x !== i))} className="text-muted hover:text-rose">
+                  <button
+                    onClick={() => setServings((p) => p.filter((_, x) => x !== i))}
+                    className="grid h-10 w-8 shrink-0 place-items-center text-muted hover:text-rose"
+                    aria-label={`Remove ${s.label}`}
+                  >
                     <X className="h-4 w-4" />
                   </button>
                 )}
               </div>
             ))}
           </div>
-          <div className="mt-2 flex gap-2">
+          <div className="mt-2 flex min-w-0 gap-1.5">
             <Input
               value={newUnit}
               onChange={(e) => setNewUnit(e.target.value)}
               placeholder="katori"
-              className="flex-1"
+              className="min-w-0 flex-1"
               list="units"
             />
             <datalist id="units">
@@ -171,10 +176,11 @@ export function CreateFood({
                 <option key={u} value={u} />
               ))}
             </datalist>
-            <Stepper value={newGrams} onChange={setNewGrams} step={10} max={2000} suffix="g" className="w-28 sm:w-32" />
+            <Stepper value={newGrams} onChange={setNewGrams} step={10} max={2000} suffix="g" className="w-32 shrink-0" />
             <Button
               variant="soft"
               size="icon"
+              className="shrink-0"
               onClick={() => {
                 if (!newUnit.trim() || !newGrams) return;
                 setServings((p) => [{ label: newUnit.trim(), grams: newGrams }, ...p]);
@@ -185,7 +191,7 @@ export function CreateFood({
               <Plus className="h-4 w-4" />
             </Button>
           </div>
-          <div className="mt-1.5 flex flex-wrap gap-1.5">
+          <div className="mt-1.5 flex flex-wrap gap-1">
             {COMMON_UNITS.filter((u) => !servings.some((s) => s.label === u)).slice(0, 6).map((u) => (
               <Chip key={u} onClick={() => setNewUnit(u)}>
                 {u}
@@ -194,9 +200,8 @@ export function CreateFood({
           </div>
         </div>
 
-        <p className="text-[11.5px] leading-relaxed text-muted">
-          Your food stays private to your account. Editing it later will not change meals you have
-          already logged — those keep the values they had when you ate them.
+        <p className="text-[11px] leading-snug text-muted">
+          Private to your account. Editing it later leaves meals you already logged untouched.
         </p>
       </div>
     </Sheet>

@@ -110,9 +110,15 @@ export default defineSchema({
     primaryMuscles: v.array(v.string()),
     secondaryMuscles: v.array(v.string()),
     equipment: v.array(v.string()),
-    category: v.string(), // strength | cardio | mobility | core
-    pattern: v.string(), // push | pull | squat | hinge | carry | core | conditioning | isolation
+    category: v.string(), // strength | cardio | mobility | core | yoga
+    // strength/cardio: push | pull | squat | hinge | carry | core | conditioning | isolation
+    // yoga: standing | balance | seated | forward-fold | backbend | twist | inversion | restorative | flow
+    pattern: v.string(),
     difficulty: v.string(),
+    /** Yoga only: the asana's Sanskrit name, shown under the English one and searchable. */
+    sanskrit: v.optional(v.string()),
+    /** Yoga only: the default hold, in seconds — poses are timed, not repped. */
+    holdSec: v.optional(v.number()),
     unilateral: v.optional(v.boolean()),
     instructions: v.array(v.string()),
     isSample: v.optional(v.boolean()),

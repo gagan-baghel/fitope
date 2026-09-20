@@ -3,9 +3,10 @@
  * (or `npm run check`). No framework — asserts only.
  */
 import assert from "node:assert/strict";
-import { bmr, computeTargets, e1rm, trendSeries, linearSlopePerWeek, readiness, bmi } from "../convex/lib/fitness";
+import { bmr, computeTargets, e1rm, trendSeries, linearSlopePerWeek, readiness, bmi, PROFILE_DEFAULTS } from "../convex/lib/fitness";
 import { SEED_FOODS } from "../convex/data/foods";
 import { SEED_EXERCISES } from "../convex/data/exercises";
+import { SEED_YOGA, YOGA_SEQUENCES, YOGA_PATTERNS, YOGA_SUPERSEDES, buildSequence } from "../convex/data/yoga";
 import { isQuiet, normalizeCode, randomToken } from "../convex/lib/family";
 import { guardArgs } from "../convex/lib/guard";
 import { addDays as serverAddDays, daysBetween, localDate, weekday } from "../convex/lib/dates";
@@ -84,6 +85,61 @@ for (const e of SEED_EXERCISES) {
   assert.ok(e.instructions.length >= 2, `${e.name}: needs cues`);
 }
 
+/* A half-finished profile still gets usable targets instead of a screen full of "0 g" */
+const provisional = computeTargets({ ...PROFILE_DEFAULTS, goal: "fat_loss" });
+for (const [k, v] of Object.entries(provisional)) {
+  if (k === "basis") continue;
+  assert.ok((v as number) > 0, `provisional target ${k} must be positive, got ${v}`);
+}
+assert.ok(provisional.kcal > 1200, "a provisional cut must not prescribe a crash diet");
+
+/* Yoga library: the same integrity rules as the lifting library, plus its own fields */
+assert.ok(SEED_YOGA.length >= 55, "yoga library should cover the common asanas");
+const yogaNames = new Set<string>();
+for (const y of SEED_YOGA) {
+  assert.ok(!yogaNames.has(y.name), `duplicate pose: ${y.name}`);
+  yogaNames.add(y.name);
+  assert.ok(y.sanskrit.length > 2, `${y.name}: needs a Sanskrit name`);
+  assert.ok(y.primaryMuscles.length > 0, `${y.name}: no primary muscle`);
+  assert.ok(y.instructions.length >= 2, `${y.name}: needs cues`);
+  assert.ok(YOGA_PATTERNS.includes(y.pattern as any), `${y.name}: unknown shape "${y.pattern}"`);
+  assert.ok(["beginner", "intermediate", "advanced"].includes(y.difficulty), `${y.name}: bad difficulty`);
+  assert.ok(Number.isFinite(y.holdSec) && y.holdSec >= 0, `${y.name}: bad hold`);
+  // Search has to find a pose by either name — people look up "pigeon" and "kapotasana".
+  assert.ok(y.searchName.includes(y.sanskrit.toLowerCase()), `${y.name}: Sanskrit not searchable`);
+}
+assert.ok(SEED_YOGA.every((y, i) => i === 0 || SEED_YOGA[i - 1].name.localeCompare(y.name) <= 0), "yoga list is A-Z");
+
+/* The two libraries must not both define the same movement, except where yoga supersedes it */
+const superseded = new Set(Object.values(YOGA_SUPERSEDES));
+for (const y of SEED_YOGA) {
+  assert.ok(!exNames.has(y.name) || superseded.has(y.name), `${y.name} exists in both libraries`);
+}
+for (const [oldName, newName] of Object.entries(YOGA_SUPERSEDES)) {
+  assert.ok(exNames.has(oldName), `supersedes maps from "${oldName}", which is not in the exercise library`);
+  assert.ok(yogaNames.has(newName), `supersedes maps to "${newName}", which is not in the yoga library`);
+}
+
+/* Every sequence must fill completely at every experience level, or a generated plan is short */
+for (const experience of ["beginner", "intermediate", "advanced"]) {
+  for (const seq of YOGA_SEQUENCES) {
+    const wanted = seq.shape.reduce((a, s) => a + s.count, 0);
+    const items = buildSequence(SEED_YOGA, seq.shape, experience);
+    assert.equal(items.length, wanted, `${seq.title} (${experience}): ${items.length}/${wanted} poses`);
+    assert.equal(new Set(items.map((i) => i.pose.name)).size, wanted, `${seq.title}: repeats a pose`);
+    assert.ok(items.every((i) => i.reps.length > 0 && i.sets >= 1), `${seq.title}: bad prescription`);
+    // A beginner must never be handed an advanced pose while easier ones are still unused.
+    if (experience === "beginner") {
+      for (const i of items) {
+        const easier = SEED_YOGA.some(
+          (p) => p.pattern === i.pose.pattern && p.difficulty === "beginner" && !items.some((x) => x.pose.name === p.name)
+        );
+        assert.ok(i.pose.difficulty === "beginner" || !easier, `${seq.title}: gave a beginner ${i.pose.name}`);
+      }
+    }
+  }
+}
+
 /* family: quiet hours wrap past midnight, codes are unambiguous and normalise */
 assert.equal(isQuiet(23 * 60 + 30), true);
 assert.equal(isQuiet(3 * 60), true);
@@ -121,4 +177,6 @@ assert.equal(localDate("Not/AZone", Date.UTC(2026, 8, 18, 20, 0)), "2026-09-18")
 const now = new Date();
 assert.equal(todayStr(), `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`);
 
-console.log(`✓ fitness math, ${SEED_FOODS.length} foods and ${SEED_EXERCISES.length} exercises all check out`);
+console.log(
+  `✓ fitness math, ${SEED_FOODS.length} foods, ${SEED_EXERCISES.length} exercises and ${SEED_YOGA.length} asanas all check out`
+);

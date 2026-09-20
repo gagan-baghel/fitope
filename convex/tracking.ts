@@ -3,7 +3,7 @@ import { mutation, query } from "./lib/functions";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { requireUser, todayFor, addDays, daysBetween } from "./lib/util";
 import { trendSeries, linearSlopePerWeek, readiness } from "./lib/fitness";
-import { currentTargets, recalcTargets, targetsOn } from "./profiles";
+import { storedTargets, recalcTargets, targetsOn } from "./profiles";
 import { reminderKind } from "./schema";
 
 const measurements = v.object({
@@ -51,7 +51,7 @@ export const logBody = mutation({
       id = await ctx.db.insert("bodyMetrics", { userId, date: d, ...clean });
     }
     // A first weight is what unlocks estimated targets for users who skipped it in onboarding.
-    if (rest.weightKg != null && !(await currentTargets(ctx, userId))) await recalcTargets(ctx, userId, "estimated");
+    if (rest.weightKg != null && !(await storedTargets(ctx, userId))) await recalcTargets(ctx, userId, "estimated");
     return id!;
   },
 });
