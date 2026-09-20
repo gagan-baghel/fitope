@@ -65,6 +65,9 @@ export default defineSchema({
     units: v.optional(v.string()), // metric | imperial
     theme: v.optional(v.string()),
     timezone: v.optional(v.string()), // IANA; "today" is computed in this zone
+    /** Which circle the Family screen is showing. Circles are fully isolated from each
+        other, so this is only a "what am I looking at", never a permission. */
+    activeCircleId: v.optional(v.id("circles")),
     onboardingComplete: v.boolean(),
     onboardingStep: v.optional(v.number()),
     hasSampleData: v.optional(v.boolean()),

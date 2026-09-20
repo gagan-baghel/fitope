@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
+import type { Id } from "../../../../convex/_generated/dataModel";
 import { useEffect, useState } from "react";
 import { Bar, Button, Card, ConfirmButton, Input, Sheet, Skeleton, useToast } from "@/components/ui";
 import { Avatar, NudgeSheet, dayProgress, usePush } from "@/components/family";
@@ -185,9 +186,11 @@ function Waiting({ name }: { name: string }) {
 
 function FamilyHome({ data }: { data: any }) {
   const respond = useMutation(api.family.respondToRequest);
+  const switchCircle = useMutation(api.family.switchCircle);
   const [nudgeTo, setNudgeTo] = useState<any>(null);
   const [sheet, setSheet] = useState<null | "invite" | "settings">(null);
   const isOwner = data.me.role === "owner";
+  const multiCircle = (data.myCircles?.length ?? 0) > 1;
 
   return (
     <div className="space-y-3">
@@ -201,6 +204,26 @@ function FamilyHome({ data }: { data: any }) {
           <UserPlus className="h-4 w-4" /> <span className="max-[359px]:hidden">Invite</span>
         </Button>
       </header>
+
+      {/* Circle switcher — only visible when the user belongs to more than one circle */}
+      {multiCircle && (
+        <div className="flex gap-1.5 overflow-x-auto pb-0.5 no-scrollbar">
+          {(data.myCircles as { circleId: Id<"circles">; name: string; isActive: boolean }[]).map((c) => (
+            <button
+              key={c.circleId}
+              onClick={() => { if (!c.isActive) switchCircle({ circleId: c.circleId }); }}
+              className={cn(
+                "shrink-0 rounded-full px-3.5 py-1.5 text-[12.5px] font-semibold transition-colors",
+                c.isActive
+                  ? "bg-accent text-accent-ink"
+                  : "bg-surface-2 text-ink-2 active:bg-surface-3"
+              )}
+            >
+              {c.name}
+            </button>
+          ))}
+        </div>
+      )}
 
       {data.pending.map((p: any) => (
         <Card key={p.memberId} className="flex items-center gap-2 border-amber/40 bg-amber/[0.08]">
@@ -236,10 +259,11 @@ function FamilyHome({ data }: { data: any }) {
 
       <NudgeSheet key={nudgeTo?.userId ?? "none"} to={nudgeTo} onClose={() => setNudgeTo(null)} />
       {sheet === "invite" && <InviteSheet open onClose={() => setSheet(null)} invites={data.invites} />}
-      {sheet === "settings" && <SettingsSheet open onClose={() => setSheet(null)} me={data.me} isOwner={isOwner} circleName={data.circle.name} />}
+      {sheet === "settings" && <SettingsSheet open onClose={() => setSheet(null)} me={data.me} isOwner={isOwner} circleName={data.circle.name} circleCount={data.myCircles?.length ?? 1} />}
     </div>
   );
 }
+
 
 /**
  * One member's day. Every row names what it is and what the goal is: the previous version
@@ -579,12 +603,32 @@ function Toggle({ on }: { on: boolean }) {
   );
 }
 
-function SettingsSheet({ open, onClose, me, isOwner, circleName }: { open: boolean; onClose: () => void; me: any; isOwner: boolean; circleName: string }) {
+function SettingsSheet({
+  open,
+  onClose,
+  me,
+  isOwner,
+  circleName,
+  circleCount,
+}: {
+  open: boolean;
+  onClose: () => void;
+  me: any;
+  isOwner: boolean;
+  circleName: string;
+  circleCount: number;
+}) {
   const update = useMutation(api.family.updateMySharing);
   const rename = useMutation(api.family.renameCircle);
   const leave = useMutation(api.family.leaveCircle);
+  const create = useMutation(api.family.createCircle);
   const push = usePush();
+  const toast = useToast();
+  const me2 = useQuery(api.profiles.me, {});
   const [name, setName] = useState(circleName);
+  const [addSheet, setAddSheet] = useState<null | "create" | "join">(null);
+  const [newName, setNewName] = useState("");
+  const canAdd = circleCount < FAMILY_LIMITS.maxCircles;
 
   return (
     <Sheet open={open} onClose={onClose} title="⚙️ Family settings">
@@ -658,10 +702,65 @@ function SettingsSheet({ open, onClose, me, isOwner, circleName }: { open: boole
           </div>
         )}
 
+        {/* Add another circle */}
+        {canAdd && (
+          <div>
+            <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted">Add another circle</div>
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                variant="soft"
+                size="sm"
+                className="h-10"
+                onClick={() => {
+                  const first = me2?.profile?.name?.split(" ")[0];
+                  setNewName(first ? `${first}'s circle` : "");
+                  setAddSheet("create");
+                }}
+              >
+                <UserPlus className="h-4 w-4" /> Create
+              </Button>
+              <Button variant="soft" size="sm" className="h-10" onClick={() => setAddSheet("join")}>
+                <KeyRound className="h-4 w-4" /> Join
+              </Button>
+            </div>
+          </div>
+        )}
+
         <ConfirmButton className="w-full" size="md" onConfirm={() => { leave({}); onClose(); }} confirmLabel="Tap again to leave">
           <LogOut className="h-4 w-4" /> Leave family
         </ConfirmButton>
       </div>
+
+      {/* Nested sheets for adding a circle */}
+      <Sheet
+        open={addSheet === "create"}
+        onClose={() => setAddSheet(null)}
+        title="➕ Create circle"
+        footer={
+          <Button
+            className="w-full"
+            size="lg"
+            disabled={!newName.trim()}
+            onClick={async () => {
+              try {
+                await create({ name: newName, timezone: tz() });
+                setAddSheet(null);
+                onClose();
+              } catch (e: any) {
+                toast({ message: errorText(e), tone: "var(--rose)" });
+              }
+            }}
+          >
+            <Check className="h-5 w-5" /> Create
+          </Button>
+        }
+      >
+        <Input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Partner circle" maxLength={40} aria-label="Circle name" />
+        <p className="mt-2 text-[11.5px] text-muted">People in this circle won&apos;t know about your other circles.</p>
+      </Sheet>
+
+      <JoinSheet open={addSheet === "join"} onClose={() => { setAddSheet(null); onClose(); }} initialCode="" />
     </Sheet>
   );
 }
+

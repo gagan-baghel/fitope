@@ -13,6 +13,8 @@ export type NudgeKind = keyof typeof NUDGES;
 
 export const FAMILY_LIMITS = {
   maxMembers: 8,
+  /** Circles one account can belong to. Separate circles never see each other. */
+  maxCircles: 3,
   nudgesPerPairPerDay: 3,
   nudgeMessageMax: 80,
   inviteHours: 48,
