@@ -30,7 +30,7 @@ export function SectionTitle({
 }) {
   return (
     <div className={cn("mb-2.5 flex min-w-0 items-end justify-between gap-2", className)}>
-      <h2 className="min-w-0 text-[12.5px] font-bold uppercase tracking-[0.05em] leading-tight text-muted">{children}</h2>
+      <h2 className="min-w-0 text-[15px] font-semibold leading-tight tracking-tight text-ink">{children}</h2>
       {/* Text links here are ~18px tall; pad the hit area to ~44px without moving anything. */}
       {action && (
         <div className="shrink-0 [&>a]:-my-3 [&>a]:inline-flex [&>a]:py-3 [&>button]:-my-3 [&>button]:py-3">{action}</div>
@@ -212,7 +212,7 @@ export function Segmented<T extends string>({
                320px phone. `truncate` is the backstop if a label still won't fit;
                the tighter phone padding/size is what keeps it from ever engaging. */
             "min-w-0 flex-1 truncate rounded-xl px-1 py-2 text-[12px] font-semibold transition-all min-[360px]:px-2 sm:px-3 sm:text-[13px]",
-            value === o.value ? "bg-ink text-ground shadow-sm" : "text-muted hover:text-ink"
+            value === o.value ? "bg-surface text-ink shadow-sm" : "text-muted hover:text-ink"
           )}
         >
           {o.label}
@@ -375,15 +375,26 @@ export function Sheet({
       document.body.style.overflow = "";
     };
   }, [open, onClose]);
-  if (!open) return null;
+  // Stay mounted for the slide-out instead of vanishing mid-frame.
+  const [mounted, setMounted] = React.useState(open);
+  if (open && !mounted) setMounted(true);
+  if (!mounted) return null;
+  const closing = !open;
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
-      <div className="absolute inset-0 animate-fade bg-black/60 backdrop-blur-sm" onClick={onClose} />
+    <div
+      className={cn("fixed inset-0 z-50 flex items-end justify-center sm:items-center", closing && "pointer-events-none")}
+      onAnimationEnd={(e) => closing && e.target === e.currentTarget.lastChild && setMounted(false)}
+    >
+      <div
+        className={cn("absolute inset-0 bg-black/60 backdrop-blur-sm", closing ? "animate-fade-out" : "animate-fade")}
+        onClick={onClose}
+      />
       <div
         role="dialog"
         aria-modal="true"
         className={cn(
-          "relative flex max-h-[92dvh] w-full animate-sheet flex-col overflow-hidden border border-line bg-surface shadow-2xl",
+          "relative flex max-h-[92dvh] w-full flex-col overflow-hidden border border-line bg-surface shadow-2xl",
+          closing ? "animate-sheet-out" : "animate-sheet",
           "rounded-t-[20px] sm:rounded-[20px]",
           size === "lg" ? "sm:max-w-2xl" : size === "full" ? "sm:max-w-4xl" : "sm:max-w-md"
         )}

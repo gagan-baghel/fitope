@@ -141,7 +141,7 @@ export function InstallCard({ className }: { className?: string }) {
         <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-accent text-accent-ink">
           <Smartphone className="h-5 w-5" />
         </span>
-        <span className="min-w-0 flex-1 truncate text-[13px] font-semibold leading-tight">Add to home screen</span>
+        <span className="min-w-0 flex-1 truncate text-[13px] font-semibold leading-tight">Get the app</span>
         <Button size="sm" onClick={install}>
           <Download className="h-4 w-4" /> Install
         </Button>

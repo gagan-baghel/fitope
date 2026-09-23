@@ -157,7 +157,8 @@ export const loadSampleHistory = mutation({
         await ctx.db.insert("bodyMetrics", {
           userId,
           date,
-          weightKg: Math.round((startWeight + drift * i + (rand() - 0.5) * 0.8) * 10) / 10,
+          // The trend arrives at the onboarding weight (already logged for today) instead of leaving from it.
+          weightKg: Math.round((startWeight + drift * (i - days + 1) + (rand() - 0.5) * 0.8) * 10) / 10,
           measurements:
             i % 14 === 0
               ? {

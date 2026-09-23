@@ -131,8 +131,8 @@ export default function Progress() {
                     contentStyle={{ background: "var(--surface-3)", border: "1px solid var(--line)", borderRadius: 12, fontSize: 12 }}
                     formatter={(v: any, k: any) => [`${v} ${u.weightUnit}`, k === "trend" ? "Trend" : "Logged"]}
                   />
-                  <Area type="monotone" dataKey="trend" stroke="var(--data)" strokeWidth={2.5} fill="url(#wg)" />
-                  <Line type="monotone" dataKey="weight" stroke="var(--muted)" strokeWidth={0} dot={{ r: 1.8, fill: "var(--muted)" }} />
+                  <Area isAnimationActive={false} type="monotone" dataKey="trend" stroke="var(--data)" strokeWidth={2.5} fill="url(#wg)" />
+                  <Line isAnimationActive={false} type="monotone" dataKey="weight" stroke="var(--muted)" strokeWidth={0} dot={{ r: 1.8, fill: "var(--muted)" }} />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
@@ -198,7 +198,7 @@ export default function Progress() {
                           contentStyle={{ background: "var(--surface-3)", border: "1px solid var(--line)", borderRadius: 12, fontSize: 12 }}
                           formatter={(v: any) => [`${v} kg`, "est. 1RM"]}
                         />
-                        <Line type="monotone" dataKey="value" stroke="var(--data)" strokeWidth={2} dot={false} />
+                        <Line isAnimationActive={false} type="monotone" dataKey="value" stroke="var(--data)" strokeWidth={2} dot={false} />
                         <YAxis hide domain={["dataMin - 5", "dataMax + 5"]} />
                         <XAxis dataKey="date" hide />
                       </LineChart>
@@ -231,7 +231,7 @@ export default function Progress() {
                   contentStyle={{ background: "var(--surface-3)", border: "1px solid var(--line)", borderRadius: 12, fontSize: 12 }}
                   formatter={(v: any) => [`${v} sets`, "Logged"]}
                 />
-                <Bar dataKey="sets" fill="var(--data)" radius={[0, 6, 6, 0]} barSize={10} />
+                <Bar isAnimationActive={false} dataKey="sets" fill="var(--data)" radius={[0, 6, 6, 0]} barSize={10} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -270,7 +270,7 @@ export default function Progress() {
                     cursor={{ fill: "var(--surface-2)" }}
                     contentStyle={{ background: "var(--surface-3)", border: "1px solid var(--line)", borderRadius: 12, fontSize: 12 }}
                   />
-                  <Bar dataKey="protein" fill="var(--data)" radius={[3, 3, 0, 0]} />
+                  <Bar isAnimationActive={false} dataKey="protein" fill="var(--data)" radius={[3, 3, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -293,7 +293,7 @@ export default function Progress() {
                   contentStyle={{ background: "var(--surface-3)", border: "1px solid var(--line)", borderRadius: 12, fontSize: 12 }}
                   formatter={(v: any, k: any) => (k === "tonnes" ? [`${v} t`, "Volume"] : [v, "Sessions"])}
                 />
-                <Bar dataKey="tonnes" fill="var(--sky)" radius={[4, 4, 0, 0]} />
+                <Bar isAnimationActive={false} dataKey="tonnes" fill="var(--sky)" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>

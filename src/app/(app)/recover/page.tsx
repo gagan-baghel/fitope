@@ -146,7 +146,7 @@ export default function Recover() {
                 formatter={(v: any) => [`${v} h`, "Sleep"]}
               />
               <ReferenceLine y={sleep.target / 60} stroke="var(--data)" strokeDasharray="4 4" />
-              <Bar dataKey="hours" fill="var(--violet)" radius={[4, 4, 0, 0]} />
+              <Bar isAnimationActive={false} dataKey="hours" fill="var(--violet)" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -175,9 +175,9 @@ export default function Recover() {
                 <Tooltip
                   contentStyle={{ background: "var(--surface-3)", border: "1px solid var(--line)", borderRadius: 12, fontSize: 12 }}
                 />
-                <Line type="monotone" dataKey="energy" stroke="var(--data)" strokeWidth={2} dot={false} />
-                <Line type="monotone" dataKey="soreness" stroke="var(--rose)" strokeWidth={2} dot={false} />
-                <Line type="monotone" dataKey="stress" stroke="var(--amber)" strokeWidth={2} dot={false} />
+                <Line isAnimationActive={false} type="monotone" dataKey="energy" stroke="var(--data)" strokeWidth={2} dot={false} />
+                <Line isAnimationActive={false} type="monotone" dataKey="soreness" stroke="var(--rose)" strokeWidth={2} dot={false} />
+                <Line isAnimationActive={false} type="monotone" dataKey="stress" stroke="var(--amber)" strokeWidth={2} dot={false} />
               </LineChart>
             </ResponsiveContainer>
           </div>
