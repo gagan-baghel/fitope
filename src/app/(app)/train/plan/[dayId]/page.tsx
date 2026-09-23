@@ -82,8 +82,6 @@ export default function PlanDay() {
         className="relative bleed overflow-hidden pb-4 pt-3 sm:rounded-b-2xl"
         style={{ background: "var(--tile-3)", color: "var(--tile-ink)" }}
       >
-        <div className="hero-blob -right-12 -top-14 h-44 w-44" />
-        <div className="hero-blob-2 -bottom-16 right-8 h-36 w-36" />
         <div className="relative">
           <div className="flex items-center justify-between">
             <button

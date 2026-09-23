@@ -92,7 +92,6 @@ export default function Eat() {
         className="relative overflow-hidden rounded-2xl p-3 shadow-[var(--shadow)]"
         style={{ background: over > 0 ? "var(--tile-4)" : "var(--tile-2)", color: "var(--tile-ink)" }}
       >
-        <div className="hero-blob -right-10 -top-12 h-32 w-32" />
         <div className="relative flex items-center gap-3">
           <Ring
             value={day.totals.kcal}
@@ -221,15 +220,18 @@ export default function Eat() {
                   <span className="min-w-0 truncate">
                     P {Math.round(m.totals.protein)} g · Fib {Math.round(m.totals.fiber)} g
                   </span>
-                  <button
-                    className="flex shrink-0 items-center gap-1 py-1 font-semibold text-ink"
-                    onClick={async () => {
-                      const n = await repeat({ fromDate: date, meal: m.meal, toDate: todayStr() });
-                      toast({ message: `Copied ${n} items to today` });
-                    }}
-                  >
-                    <Copy className="h-3 w-3" /> Repeat today
-                  </button>
+                  {/* On today itself this would only duplicate what was just eaten. */}
+                  {date < todayStr() && (
+                    <button
+                      className="-my-3 flex shrink-0 items-center gap-1 py-3 font-semibold text-ink"
+                      onClick={async () => {
+                        const n = await repeat({ fromDate: date, meal: m.meal, toDate: todayStr() });
+                        toast({ message: `Copied ${n} items to today` });
+                      }}
+                    >
+                      <Copy className="h-3 w-3" /> Repeat today
+                    </button>
+                  )}
                 </div>
               </div>
             )}

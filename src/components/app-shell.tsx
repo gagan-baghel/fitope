@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useEffect, useRef, useState } from "react";
-import { cn, deviceTimezone } from "@/lib/utils";
+import { cn, deviceTimezone, todayStr } from "@/lib/utils";
 import {
   Activity,
   Apple,
@@ -54,20 +54,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const toast = useToast();
   const focus = FOCUS_ROUTES.some((r) => pathname.startsWith(r));
   const initial = (me?.profile?.name ?? me?.email ?? "?").slice(0, 1).toUpperCase();
-
-  // Top bar slides away while scrolling down and returns on any scroll up.
-  const [barHidden, setBarHidden] = useState(false);
-  useEffect(() => {
-    let last = window.scrollY;
-    const onScroll = () => {
-      const y = window.scrollY;
-      if (Math.abs(y - last) < 6) return;
-      setBarHidden(y > last && y > 56);
-      last = y;
-    };
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) router.replace("/welcome");
@@ -122,7 +108,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="lg:flex">
-      <NudgeBanner />
+      {me?.profile?.onboardingComplete && <KeepTabsWarm />}
+      {/* Never over a task screen's back button, and never mid-set. */}
+      {!focus && <NudgeBanner />}
       {/* Desktop rail */}
       <aside className="sticky top-0 hidden h-dvh w-60 shrink-0 flex-col border-r border-line px-4 py-6 lg:flex">
         <Link href="/home" className="mb-8 flex items-center gap-2.5 px-2">
@@ -190,8 +178,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         {!focus && (
           <header
             className={cn(
-              "sticky top-0 z-40 border-b border-line bg-bg/90 pt-[var(--safe-top)] backdrop-blur-xl transition-transform duration-300 lg:hidden",
-              barHidden && !more && "-translate-y-full"
+              "sticky top-0 z-40 border-b border-line bg-bg/90 pt-[var(--safe-top)] backdrop-blur-xl lg:hidden"
             )}
           >
             <div className="gutter-x mx-auto flex h-12 max-w-2xl items-center justify-between">
@@ -309,6 +296,25 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <CheckinSheet open={sheet === "checkin"} onClose={() => setSheet(null)} />
     </div>
   );
+}
+
+/**
+ * Holds the first screen of every tab subscribed, so switching tabs paints cached data
+ * instead of dropping back to skeletons while the page re-subscribes.
+ * ponytail: a fixed list; add a query here when a tab's first paint starts to flash.
+ */
+function KeepTabsWarm() {
+  useQuery(api.dashboard.home, {});
+  useQuery(api.analytics.insights, {});
+  useQuery(api.family.overview, {});
+  useQuery(api.workouts.weekOverview, {});
+  useQuery(api.workouts.forDate, {});
+  useQuery(api.programs.activeProgram, {});
+  useQuery(api.workouts.history, { limit: 8 });
+  useQuery(api.nutrition.day, { date: todayStr() });
+  useQuery(api.analytics.overview, { days: 90 });
+  useQuery(api.tracking.bodyHistory, { days: 90 });
+  return null;
 }
 
 function TabButton({ href, icon: Icon, label, active }: { href: string; icon: any; label: string; active: boolean }) {

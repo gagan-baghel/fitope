@@ -11,6 +11,7 @@ import {
   CalendarDays,
   ChevronRight,
   Dumbbell,
+  Moon,
   History,
   Layers,
   Library,
@@ -120,7 +121,6 @@ export default function Train() {
           className="relative overflow-hidden rounded-[18px] p-4 shadow-[var(--shadow)]"
           style={{ background: "var(--tile-2)", color: "var(--tile-ink)" }}
         >
-          <div className="hero-blob -right-12 -top-14 h-48 w-48" />
           <div className="relative">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
@@ -199,6 +199,20 @@ export default function Train() {
             </div>
           </div>
         </section>
+      ) : program ? (
+        /* A rest day inside a plan: one row, not a "set up a plan" pitch for a plan that exists. */
+        <div className="flex items-center gap-3 rounded-2xl border border-line bg-surface p-3">
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-surface-2 text-violet">
+            <Moon className="h-5 w-5" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <div className="text-[14px] font-bold leading-tight">Rest day</div>
+            <div className="text-[11.5px] text-muted">Recover, or train anyway</div>
+          </div>
+          <Button size="sm" variant="soft" onClick={() => begin()} loading={busy}>
+            <Plus className="h-4 w-4" /> Freestyle
+          </Button>
+        </div>
       ) : (
         <EmptyState
           icon={<Dumbbell className="h-5 w-5" />}
@@ -222,7 +236,6 @@ export default function Train() {
         className="relative overflow-hidden rounded-[18px] p-3.5 text-[color:var(--tile-ink)] shadow-[var(--shadow)]"
         style={{ background: "var(--tile-6)" }}
       >
-        <div className="hero-blob -right-10 -top-12 h-32 w-32" />
         <div className="relative flex items-center gap-3">
           <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[color:var(--hero-chip)]">
             <Flower2 className="h-5 w-5" strokeWidth={1.9} />
@@ -249,7 +262,7 @@ export default function Train() {
               }
             }}
             disabled={busy}
-            className="hero-cta shrink-0"
+            className="hero-inset shrink-0 rounded-full px-4 text-[13px] font-semibold"
           >
             Build a week
           </button>

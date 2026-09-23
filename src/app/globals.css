@@ -37,8 +37,8 @@
   --amber: #e0900d;
   --rose: #e2566a;
   --violet: #7b5cf0;
-  --shadow: 0 18px 40px -24px rgba(16, 26, 45, 0.28);
-  --shadow-lift: 0 26px 60px -32px rgba(16, 26, 45, 0.4);
+  --shadow: 0 1px 2px rgba(16, 26, 45, 0.05);
+  --shadow-lift: 0 8px 24px -12px rgba(16, 26, 45, 0.18);
 
   /* Pastel tile ramp — the coloured thumbnails on list rows. */
   --tile-1: #e4dcfb;
@@ -49,8 +49,6 @@
   --tile-6: #fbdde6;
   --tile-ink: #16202c;
   /* Overlays used inside pastel hero cards. */
-  --hero-veil: rgba(255, 255, 255, 0.4);
-  --hero-veil-2: rgba(255, 255, 255, 0.22);
   --hero-chip: rgba(255, 255, 255, 0.72);
   --hero-rule: rgba(0, 0, 0, 0.1);
   --hero-cta-bg: #11151b;
@@ -81,8 +79,8 @@
   --amber: #ffbe4d;
   --rose: #ff7a7a;
   --violet: #b79bff;
-  --shadow: 0 24px 60px -30px rgba(0, 0, 0, 0.85);
-  --shadow-lift: 0 30px 70px -34px rgba(0, 0, 0, 0.95);
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-lift: 0 10px 30px -14px rgba(0, 0, 0, 0.7);
 
   --tile-1: #2b2440;
   --tile-2: #1d3529;
@@ -91,8 +89,6 @@
   --tile-5: #37341a;
   --tile-6: #3a2029;
   --tile-ink: #eef2ea;
-  --hero-veil: rgba(255, 255, 255, 0.05);
-  --hero-veil-2: rgba(255, 255, 255, 0.03);
   --hero-chip: rgba(255, 255, 255, 0.1);
   --hero-rule: rgba(255, 255, 255, 0.12);
   --hero-cta-bg: #c9f24e;
@@ -259,19 +255,6 @@
   transform: scale(0.97);
 }
 
-/** Decorative discs behind hero content — invisible-ish in dark, soft in light. */
-@utility hero-blob {
-  position: absolute;
-  border-radius: 999px;
-  background: var(--hero-veil);
-  pointer-events: none;
-}
-@utility hero-blob-2 {
-  position: absolute;
-  border-radius: 999px;
-  background: var(--hero-veil-2);
-  pointer-events: none;
-}
 @utility hero-chip {
   display: inline-flex;
   align-items: center;
@@ -305,16 +288,33 @@
   }
 }
 @keyframes pop {
-  0% {
-    transform: scale(0.94);
+  from {
+    transform: translateY(6px) scale(0.98);
     opacity: 0;
   }
-  60% {
-    transform: scale(1.02);
-  }
-  100% {
-    transform: scale(1);
+  to {
+    transform: none;
     opacity: 1;
+  }
+}
+@keyframes drop {
+  from {
+    transform: translateY(-110%);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+@keyframes sheetDown {
+  to {
+    transform: translateY(100%);
+  }
+}
+@keyframes fadeOut {
+  to {
+    opacity: 0;
   }
 }
 @keyframes sheetUp {
@@ -350,6 +350,16 @@
 }
 .animate-fade {
   animation: fade 0.25s ease both;
+}
+/* Lets the page settle before a notification slides over it. */
+.animate-drop {
+  animation: drop 0.36s cubic-bezier(0.22, 1, 0.36, 1) 0.8s both;
+}
+.animate-sheet-out {
+  animation: sheetDown 0.2s cubic-bezier(0.4, 0, 1, 1) both;
+}
+.animate-fade-out {
+  animation: fadeOut 0.2s ease both;
 }
 
 .skeleton {

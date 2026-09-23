@@ -103,7 +103,6 @@ export default function Home() {
       </header>
 
       <FamilyStrip />
-      <InstallCard />
 
       {/* Due reminders */}
       {data.dueReminders?.map((r: any) => (
@@ -125,7 +124,7 @@ export default function Home() {
         <HeroCard
           tone="var(--tile-3)"
           chip={done ? "Completed" : planned ? "Today" : "Rest day"}
-          chipIcon={done ? Check : Play}
+          chipIcon={done ? Check : planned || w ? Play : Moon}
           eyebrow={planned?.programName ?? (w ? "Logged session" : "No session scheduled")}
           title={w?.title ?? planned?.title ?? "Recovery day"}
           meta={
@@ -147,12 +146,14 @@ export default function Home() {
             )
           }
           ring={
-            <MinutesRing
-              minutes={planned?.estMinutes ?? w?.durationMin ?? 0}
-              progress={done ? 1 : 0.35}
-              size={50}
-              track="rgba(0,0,0,0.10)"
-            />
+            (planned || w) && (
+              <MinutesRing
+                minutes={planned?.estMinutes ?? w?.durationMin ?? 0}
+                progress={done ? 1 : 0.35}
+                size={50}
+                track="rgba(0,0,0,0.10)"
+              />
+            )
           }
         />
 
@@ -313,31 +314,6 @@ export default function Home() {
         />
       </div>
 
-      {/* Readiness — one row, not a whole card: the score and what to do about it */}
-      <Link
-        href="/recover"
-        className="flex items-center gap-3 rounded-2xl border border-line bg-surface p-3 active:scale-[0.99]"
-      >
-        <Ring
-          value={data.readiness.score}
-          max={100}
-          size={40}
-          stroke={4}
-          color="var(--data)"
-          track="var(--surface-3)"
-          className="shrink-0"
-        >
-          <span className="tabular text-[12px] font-bold">{data.readiness.score}</span>
-        </Ring>
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-1.5 text-[13px] font-bold">
-            <HeartPulse className="h-3.5 w-3.5 shrink-0 text-rose" /> Readiness
-          </div>
-          <div className="line-clamp-2 text-[11.5px] leading-snug text-muted">{data.readiness.advice}</div>
-        </div>
-        <ChevronRight className="h-4 w-4 shrink-0 text-muted" />
-      </Link>
-
       {/* Today's plan */}
       {hasPlan && (
         <section>
@@ -390,17 +366,7 @@ export default function Home() {
           </SectionTitle>
           <div className="space-y-2">
             {insights.slice(0, 3).map((i: any, idx: number) => (
-              <div
-                key={idx}
-                className={cn(
-                  "rounded-2xl border p-3.5",
-                  i.tone === "good"
-                    ? "border-mint/30 bg-mint/[0.07]"
-                    : i.tone === "warn"
-                      ? "border-amber/30 bg-amber/[0.07]"
-                      : "border-line bg-surface"
-                )}
-              >
+              <div key={idx} className="card-flat p-3.5">
                 <div className="flex items-center gap-1.5">
                   <Sparkles
                     className={cn(
@@ -416,6 +382,9 @@ export default function Home() {
           </div>
         </section>
       )}
+
+      {/* Last, so it never shoves the page down when the browser reports it can install. */}
+      <InstallCard />
 
       <WeightSheet open={sheet === "weight"} onClose={() => setSheet(null)} initial={data.weight?.latest} />
       <SleepSheet
@@ -495,8 +464,6 @@ function HeroCard({
       className="relative w-[84%] shrink-0 snap-start overflow-hidden rounded-[22px] p-4 text-[color:var(--tile-ink)] shadow-[var(--shadow)] sm:w-[380px]"
       style={{ background: tone }}
     >
-      <div className="hero-blob -right-8 -top-10 h-36 w-36" />
-      <div className="hero-blob-2 -bottom-12 -right-3 h-32 w-32" />
       <div className="relative">
         <div className="flex items-start justify-between gap-3">
           <span className="hero-chip">

@@ -170,8 +170,8 @@ export function NudgeBanner() {
   const preset = NUDGES[n.kind as NudgeKind] ?? NUDGES.cheer;
 
   return (
-    <div className="fixed inset-x-0 top-0 z-[55] px-2.5 pt-[calc(var(--safe-top)_+_0.375rem)] lg:left-60">
-      <div className="mx-auto flex max-w-md animate-pop items-center gap-2.5 rounded-2xl border border-line bg-surface py-1.5 pl-1.5 pr-1.5 shadow-xl">
+    <div className="pointer-events-none fixed inset-x-0 top-0 z-[55] px-2.5 pt-[calc(var(--safe-top)_+_0.375rem)] lg:left-60">
+      <div className="pointer-events-auto mx-auto flex max-w-md animate-drop items-center gap-2.5 rounded-2xl border border-line bg-surface py-1.5 pl-1.5 pr-1.5 shadow-xl">
         <div className="relative shrink-0">
           <Avatar name={n.fromName} size={36} />
           <span className="absolute -bottom-1 -right-1 text-[16px] leading-none">{preset.emoji}</span>
