@@ -15,6 +15,7 @@ import type * as crons from "../crons.js";
 import type * as dashboard from "../dashboard.js";
 import type * as data_exercises from "../data/exercises.js";
 import type * as data_foods from "../data/foods.js";
+import type * as data_yoga from "../data/yoga.js";
 import type * as exercises from "../exercises.js";
 import type * as family from "../family.js";
 import type * as foods from "../foods.js";
@@ -49,6 +50,7 @@ declare const fullApi: ApiFromModules<{
   dashboard: typeof dashboard;
   "data/exercises": typeof data_exercises;
   "data/foods": typeof data_foods;
+  "data/yoga": typeof data_yoga;
   exercises: typeof exercises;
   family: typeof family;
   foods: typeof foods;

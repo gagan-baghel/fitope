@@ -41,6 +41,31 @@ The shared exercise and food libraries seed themselves on first sign-in; `npm ru
 npm run check   # asserts the nutrition/strength math and the seed data
 ```
 
+## Release
+
+Vercel builds the frontend from `main`; the Convex backend is deployed separately. Ship the
+backend first so the new frontend never calls a function production doesn't have yet:
+
+```bash
+npx convex deploy
+```
+
+```bash
+git push origin main
+```
+
+**Password reset** emails an 8-digit code through [Resend](https://resend.com). It stays hidden
+until both variables are set on the production deployment (the sender's domain must be verified
+in Resend):
+
+```bash
+npx convex env set --prod RESEND_API_KEY re_...
+```
+
+```bash
+npx convex env set --prod AUTH_EMAIL_FROM "FitOpe <no-reply@your-domain>"
+```
+
 ## What's in it
 
 **Onboarding** collects only what changes the maths — age, height, weight, goal, experience,
@@ -59,7 +84,7 @@ per-serving maths, saved meals, recents, favourites, repeat-yesterday, and a fre
 Protein and fiber are the two macros given visual priority.
 
 **Body, sleep and recovery.** Weight with an exponentially-weighted trend line (so a heavy dinner
-does not read as fat gain), tape measurements, private progress photos, manual sleep logging with a
+does not read as fat gain), tape measurements, manual sleep logging with a
 consistency score, and a readiness score built from sleep, soreness, energy, stress and recent
 training load.
 

@@ -12,6 +12,15 @@ export const metadata: Metadata = {
   applicationName: "FitOpe",
   appleWebApp: { capable: true, title: "FitOpe", statusBarStyle: "black-translucent" },
   formatDetection: { telephone: false },
+  // Link previews in WhatsApp & co. The base URL falls back to Vercel's production domain.
+  openGraph: {
+    title: "FitOpe — train, eat, recover",
+    description: "Training, Indian food logging, sleep and recovery — with your family.",
+    siteName: "FitOpe",
+    type: "website",
+    images: [{ url: "/icons/512.png", width: 512, height: 512, alt: "FitOpe" }],
+  },
+  twitter: { card: "summary" },
 };
 
 export const viewport: Viewport = {

@@ -4,6 +4,7 @@ import { useConvex, useMutation, useQuery } from "convex/react";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { api } from "../../../../convex/_generated/api";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useState } from "react";
 import {
   Button,
@@ -392,7 +393,8 @@ export default function Me() {
         <div className="flex items-start gap-2">
           <Info className="mt-px h-4 w-4 shrink-0 text-muted" />
           <p className="min-w-0 text-[11.5px] leading-snug text-muted">
-            Estimates, not medical advice — see a doctor or dietitian for that.
+            Estimates, not medical advice — see a doctor or dietitian for that.{" "}
+            <Link href="/privacy" className="font-semibold underline underline-offset-2">Privacy & terms</Link>
           </p>
         </div>
         <Button
