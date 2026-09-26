@@ -54,18 +54,6 @@ npx convex deploy
 git push origin main
 ```
 
-**Password reset** emails an 8-digit code through [Resend](https://resend.com). It stays hidden
-until both variables are set on the production deployment (the sender's domain must be verified
-in Resend):
-
-```bash
-npx convex env set --prod RESEND_API_KEY re_...
-```
-
-```bash
-npx convex env set --prod AUTH_EMAIL_FROM "FitOpe <no-reply@your-domain>"
-```
-
 ## What's in it
 
 **Onboarding** collects only what changes the maths — age, height, weight, goal, experience,

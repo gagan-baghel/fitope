@@ -1,14 +1,13 @@
 "use client";
 
 import { useAuthActions } from "@convex-dev/auth/react";
-import { useConvexAuth, useQuery } from "convex/react";
+import { useConvexAuth } from "convex/react";
 import Link from "next/link";
-import { api } from "../../../convex/_generated/api";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { Button, Input, Logo, Segmented, useToast } from "@/components/ui";
 import { InstallCard } from "@/components/install";
-import { Apple, Dumbbell, Eye, EyeOff, KeyRound, Lock, Mail, Moon, TrendingUp, User } from "lucide-react";
+import { Apple, Dumbbell, Eye, EyeOff, Lock, Mail, Moon, TrendingUp, User } from "lucide-react";
 
 const PILLARS = [
   { icon: Dumbbell, title: "Train", body: "Plans that adapt to what you actually lifted last time." },
@@ -29,8 +28,6 @@ export default function Welcome() {
   // Invited people are almost always new, so default them to Create account.
   const [chosen, setMode] = useState<"signIn" | "signUp" | null>(null);
   const mode = chosen ?? (invited ? "signUp" : "signIn");
-  const resetOn = useQuery(api.auth.resetEnabled, {});
-  const [resetting, setResetting] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated) router.replace("/home");
@@ -99,10 +96,6 @@ export default function Welcome() {
           </div>
         )}
         <div className="card p-3 sm:p-6">
-          {resetting ? (
-            <ResetForm onBack={() => setResetting(false)} />
-          ) : (
-          <>
           <Segmented
             value={mode}
             onChange={setMode}
@@ -156,13 +149,6 @@ export default function Welcome() {
               {mode === "signUp" ? "Create account" : "Sign in"}
             </Button>
           </form>
-          {mode === "signIn" && resetOn && (
-            <button type="button" onClick={() => setResetting(true)} className="mt-2 w-full py-2 text-center text-[12.5px] font-semibold text-accent">
-              Forgot password?
-            </button>
-          )}
-          </>
-          )}
           <p className="mt-3 text-center text-[11px] leading-snug text-muted">
             Not a medical device. Your data stays private to you.{" "}
             <Link href="/privacy" className="underline underline-offset-2">Privacy</Link>
@@ -182,82 +168,6 @@ export default function Welcome() {
         </div>
       </section>
     </main>
-  );
-}
-
-/** Email a code, then set a new password with it. Signs the user in on success. */
-function ResetForm({ onBack }: { onBack: () => void }) {
-  const { signIn } = useAuthActions();
-  const router = useRouter();
-  const toast = useToast();
-  const [email, setEmail] = useState<string | null>(null); // set once a code is on its way
-  const [busy, setBusy] = useState(false);
-  const [showPw, setShowPw] = useState(false);
-
-  async function submit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setBusy(true);
-    const form = new FormData(e.currentTarget);
-    try {
-      if (!email) {
-        const address = String(form.get("email") ?? "").trim().toLowerCase();
-        try {
-          await signIn("password", { flow: "reset", email: address });
-        } catch (err: any) {
-          // Our own errors (send failed) carry a message. Anything else is almost always "no
-          // such account", which we don't reveal: the next step reads the same either way.
-          if (typeof err?.data === "string") throw err;
-        }
-        setEmail(address);
-      } else {
-        await signIn("password", {
-          flow: "reset-verification",
-          email,
-          code: String(form.get("code") ?? "").trim(),
-          newPassword: String(form.get("newPassword") ?? ""),
-        });
-        router.replace("/home");
-      }
-    } catch (err: any) {
-      toast({ message: typeof err?.data === "string" ? err.data : "That code is wrong or has expired.", tone: "var(--rose)" });
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  return (
-    <form onSubmit={submit} className="space-y-2.5">
-      <div className="text-[15px] font-bold">Reset your password</div>
-      {!email ? (
-        <>
-          <p className="text-[12.5px] leading-snug text-muted">We&apos;ll email you an 8-digit code.</p>
-          <IconInput key="email" icon={Mail}>
-            <Input name="email" type="email" required maxLength={254} placeholder="you@email.com" autoComplete="email" inputMode="email" autoCapitalize="none" className="pl-11" aria-label="Email" />
-          </IconInput>
-          <Button type="submit" size="lg" className="w-full" loading={busy}>Email me a code</Button>
-        </>
-      ) : (
-        <>
-          <p className="text-[12.5px] leading-snug text-muted">
-            If <span className="font-semibold text-ink">{email}</span> has an account, a code is on its way. Check spam too.
-          </p>
-          {/* Keyed so the email field's typed value isn't carried over into this one. */}
-          <IconInput key="code" icon={KeyRound}>
-            <Input name="code" required inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{8}" maxLength={8} placeholder="8-digit code" className="pl-11 tabular tracking-widest" aria-label="Code" />
-          </IconInput>
-          <IconInput icon={Lock}>
-            <Input name="newPassword" type={showPw ? "text" : "password"} required minLength={8} maxLength={128} placeholder="New password (8+)" autoComplete="new-password" className="px-11" aria-label="New password" />
-            <button type="button" onClick={() => setShowPw((v) => !v)} className="absolute right-1 top-1/2 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-xl text-muted hover:text-ink" aria-label={showPw ? "Hide password" : "Show password"}>
-              {showPw ? <EyeOff className="h-[18px] w-[18px]" /> : <Eye className="h-[18px] w-[18px]" />}
-            </button>
-          </IconInput>
-          <Button type="submit" size="lg" className="w-full" loading={busy}>Set new password</Button>
-        </>
-      )}
-      <button type="button" onClick={onBack} className="w-full py-2 text-center text-[12.5px] font-semibold text-muted">
-        Back to sign in
-      </button>
-    </form>
   );
 }
 

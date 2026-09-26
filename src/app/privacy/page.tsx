@@ -26,8 +26,7 @@ const SECTIONS: [string, React.ReactNode][] = [
   [
     "Where it lives",
     <>
-      In our database on Convex (servers in Ireland, EU), served through Vercel. Password-reset codes are emailed
-      through Resend. These companies process data for us and don&apos;t use it for anything else. On your device we
+      In our database on Convex (servers in Ireland, EU), served through Vercel. These companies process data for us and don&apos;t use it for anything else. On your device we
       keep only your sign-in session and small settings like theme.
     </>,
   ],
