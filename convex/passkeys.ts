@@ -3,7 +3,8 @@
  * its biometric lock; we store only the public key and verify signatures against it.
  * Sign-in itself goes through the "passkey" provider in auth.ts, which calls `verifySignIn`.
  */
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
+import { getAuthUserId, retrieveAccount } from "@convex-dev/auth/server";
 import {
   generateAuthenticationOptions,
   generateRegistrationOptions,
@@ -11,9 +12,10 @@ import {
   verifyRegistrationResponse,
 } from "@simplewebauthn/server";
 import { isoBase64URL } from "@simplewebauthn/server/helpers";
-import { internalMutation, MutationCtx, QueryCtx } from "./_generated/server";
+import { internalMutation, internalQuery, MutationCtx, QueryCtx } from "./_generated/server";
+import { internal } from "./_generated/api";
 import { Id } from "./_generated/dataModel";
-import { mutation, query, MINUTE } from "./lib/functions";
+import { action, mutation, query, MINUTE } from "./lib/functions";
 import { requireUser } from "./lib/util";
 
 const CHALLENGE_TTL = 5 * MINUTE;
@@ -51,13 +53,41 @@ export const list = query({
   },
 });
 
-export const registerOptions = mutation({
-  args: {},
-  handler: async (ctx) => {
-    const userId = await requireUser(ctx);
+/**
+ * Adding a key asks for the password again, so a borrowed, signed-in phone can't plant a
+ * fingerprint that outlives the session. Wrong guesses count toward the sign-in lockout.
+ */
+export const registerOptions = action({
+  args: { password: v.string() },
+  handler: async (ctx, { password }): Promise<RegistrationOptions> => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new ConvexError("Not signed in");
+    const email = await ctx.runQuery(internal.passkeys.emailOf, { userId });
+    try {
+      if (!email || password.length > 128) throw new Error("InvalidSecret");
+      const { user } = await retrieveAccount(ctx, { provider: "password", account: { id: email, secret: password } });
+      if (user._id !== userId) throw new Error("InvalidSecret");
+    } catch (e: any) {
+      throw new ConvexError(
+        String(e?.message).includes("TooManyFailedAttempts") ? "Too many tries. Wait a few minutes." : "Wrong password"
+      );
+    }
+    return await ctx.runMutation(internal.passkeys.createRegisterOptions, { userId });
+  },
+});
+type RegistrationOptions = Awaited<ReturnType<typeof generateRegistrationOptions>>;
+
+export const emailOf = internalQuery({
+  args: { userId: v.id("users") },
+  handler: async (ctx, { userId }) => (await ctx.db.get(userId))?.email ?? null,
+});
+
+export const createRegisterOptions = internalMutation({
+  args: { userId: v.id("users") },
+  handler: async (ctx, { userId }) => {
     const user = await ctx.db.get(userId);
     const keys = await keysOf(ctx, userId);
-    if (keys.length >= MAX_KEYS) throw new Error("Remove an old fingerprint key first");
+    if (keys.length >= MAX_KEYS) throw new ConvexError("Remove an old fingerprint key first");
     const options = await generateRegistrationOptions({
       rpName: "FitOpe",
       rpID: site().rpID,

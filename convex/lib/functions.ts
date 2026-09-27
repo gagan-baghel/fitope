@@ -5,9 +5,10 @@
  * 1. Argument guard: bounded strings/arrays/payload, finite numbers, real YYYY-MM-DD dates.
  *    Convex validators check types; this checks sizes and sanity, which is what abuse needs.
  * 2. Write throttle: each signed-in user gets a per-minute budget of mutations. Sensitive
- *    mutations add a tighter named limit via `throttle()`.
+ *    mutations add a tighter named limit via `throttle()`. Actions get the argument guard only
+ *    (they have no db); anything they write goes through a mutation.
  */
-import { mutation as rawMutation, query as rawQuery, MutationCtx } from "../_generated/server";
+import { action as rawAction, mutation as rawMutation, query as rawQuery, ActionCtx, MutationCtx } from "../_generated/server";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { ConvexError } from "convex/values";
 import { Id } from "../_generated/dataModel";
@@ -86,3 +87,16 @@ export const query = ((def: any) =>
       }
     },
   })) as typeof rawQuery;
+
+export const action = ((def: any) =>
+  rawAction({
+    ...def,
+    handler: async (ctx: ActionCtx, args: any) => {
+      try {
+        guardPayload(args);
+        return await def.handler(ctx, args);
+      } catch (e) {
+        expose(e);
+      }
+    },
+  })) as typeof rawAction;

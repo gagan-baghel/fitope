@@ -11,7 +11,8 @@ const SECTIONS: [string, React.ReactNode][] = [
   [
     "What we store",
     <>
-      Your email, name and a scrambled (hashed) password. Then whatever you choose to log: profile details like
+      Your email, name and a scrambled (hashed) password. If you turn on fingerprint sign-in, also a public key
+      for that device — never your fingerprint or face, which stay on your phone. Then whatever you choose to log: profile details like
       height, weight, birth year and goal; workouts, meals, water, sleep, check-ins, body measurements, goals and
       reminders; your time zone; and, if you turn on notifications, your browser&apos;s push address.
     </>,

@@ -1,6 +1,6 @@
 "use client";
 
-import { useConvex, useMutation, useQuery } from "convex/react";
+import { useAction, useConvex, useMutation, useQuery } from "convex/react";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { api } from "../../../../convex/_generated/api";
 import { useRouter } from "next/navigation";
@@ -617,23 +617,42 @@ const shortDate = (ts: number) => new Date(ts).toLocaleDateString("en-IN", { day
 /** Fingerprint / Face ID sign-in: one key per device, each removable. */
 function FingerprintRow() {
   const keys = useQuery(api.passkeys.list, {});
-  const registerOptions = useMutation(api.passkeys.registerOptions);
+  const registerOptions = useAction(api.passkeys.registerOptions);
   const register = useMutation(api.passkeys.register);
   const remove = useMutation(api.passkeys.remove);
   const supported = useSyncExternalStore(noSubscribe, browserSupportsWebAuthn, () => false);
   const toast = useToast();
+  const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
+  // Fetched once the password checks out. The scan then gets its own tap: iOS drops a
+  // fingerprint prompt that opens too long after the last touch, and the password check is slow.
+  const [options, setOptions] = useState<Awaited<ReturnType<typeof registerOptions>> | null>(null);
   if (!supported && !keys?.length) return null;
 
-  async function add() {
+  async function confirm(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
     setBusy(true);
     try {
-      const response = await startRegistration(await registerOptions({}));
-      await register({ response });
+      setOptions(await registerOptions({ password: String(new FormData(e.currentTarget).get("password") ?? "") }));
+    } catch (err) {
+      toast({ message: errorText(err), tone: "var(--rose)" });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function scan() {
+    if (!options) return;
+    setBusy(true);
+    try {
+      await register({ response: await startRegistration(options) });
       toast({ message: "Fingerprint sign-in is on" });
+      setOpen(false);
     } catch (e: any) {
-      if (e?.name === "InvalidStateError") toast({ message: "This device is already added" });
-      else if (e?.name !== "NotAllowedError" && e?.name !== "AbortError")
+      if (e?.name === "InvalidStateError") {
+        toast({ message: "This device is already added" });
+        setOpen(false);
+      } else if (e?.name !== "NotAllowedError" && e?.name !== "AbortError")
         toast({ message: errorText(e, "Could not add fingerprint — try again"), tone: "var(--rose)" });
     } finally {
       setBusy(false);
@@ -643,10 +662,16 @@ function FingerprintRow() {
   return (
     <div className="rounded-2xl bg-surface-2">
       {supported && (
-        <button onClick={add} disabled={busy} className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left">
+        <button
+          onClick={() => {
+            setOptions(null);
+            setOpen(true);
+          }}
+          className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left"
+        >
           <Fingerprint className="h-4 w-4 shrink-0 text-muted" />
           <span className="min-w-0 flex-1 truncate text-[13px] font-semibold">Add fingerprint sign-in</span>
-          {busy ? <Loader2 className="h-4 w-4 shrink-0 animate-spin text-muted" /> : <Plus className="h-4 w-4 shrink-0 text-muted" />}
+          <Plus className="h-4 w-4 shrink-0 text-muted" />
         </button>
       )}
       {keys?.map((k) => (
@@ -661,6 +686,40 @@ function FingerprintRow() {
           </ConfirmButton>
         </div>
       ))}
+      <Sheet
+        open={open}
+        onClose={() => setOpen(false)}
+        title="Add fingerprint"
+        footer={
+          !options && (
+            <Button type="submit" form="fingerprint-password" size="lg" className="w-full" loading={busy}>
+              Continue
+            </Button>
+          )
+        }
+      >
+        {options ? (
+          <button onClick={scan} disabled={busy} className="mx-auto flex flex-col items-center gap-2 py-4">
+            <span className="grid h-20 w-20 place-items-center rounded-full bg-surface-2">
+              {busy ? <Loader2 className="h-8 w-8 animate-spin text-muted" /> : <Fingerprint className="h-10 w-10" />}
+            </span>
+            <span className="text-[13px] font-semibold">Tap to scan</span>
+          </button>
+        ) : (
+          <form id="fingerprint-password" onSubmit={confirm} className="space-y-2.5">
+            <p className="text-[12.5px] text-muted">Enter your password to confirm it&apos;s you.</p>
+            <Input
+              name="password"
+              type="password"
+              required
+              maxLength={128}
+              autoComplete="current-password"
+              placeholder="Password"
+              aria-label="Password"
+            />
+          </form>
+        )}
+      </Sheet>
     </div>
   );
 }
