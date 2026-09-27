@@ -29,6 +29,7 @@ import type * as lib_util from "../lib/util.js";
 import type * as maintenance from "../maintenance.js";
 import type * as notifications from "../notifications.js";
 import type * as nutrition from "../nutrition.js";
+import type * as passkeys from "../passkeys.js";
 import type * as profiles from "../profiles.js";
 import type * as programs from "../programs.js";
 import type * as push from "../push.js";
@@ -64,6 +65,7 @@ declare const fullApi: ApiFromModules<{
   maintenance: typeof maintenance;
   notifications: typeof notifications;
   nutrition: typeof nutrition;
+  passkeys: typeof passkeys;
   profiles: typeof profiles;
   programs: typeof programs;
   push: typeof push;

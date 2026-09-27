@@ -1,13 +1,15 @@
 "use client";
 
 import { useAuthActions } from "@convex-dev/auth/react";
-import { useConvexAuth } from "convex/react";
+import { useConvexAuth, useMutation } from "convex/react";
+import { browserSupportsWebAuthn, startAuthentication } from "@simplewebauthn/browser";
+import { api } from "../../../convex/_generated/api";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { Button, Input, Logo, Segmented, useToast } from "@/components/ui";
 import { InstallCard } from "@/components/install";
-import { Apple, Dumbbell, Eye, EyeOff, Lock, Mail, Moon, TrendingUp, User } from "lucide-react";
+import { Apple, Dumbbell, Eye, EyeOff, Fingerprint, Lock, Mail, Moon, TrendingUp, User } from "lucide-react";
 
 const PILLARS = [
   { icon: Dumbbell, title: "Train", body: "Plans that adapt to what you actually lifted last time." },
@@ -23,6 +25,9 @@ export default function Welcome() {
   const toast = useToast();
   const [busy, setBusy] = useState(false);
   const [showPw, setShowPw] = useState(false);
+  const [fpBusy, setFpBusy] = useState(false);
+  const signInOptions = useMutation(api.passkeys.signInOptions);
+  const canFingerprint = useSyncExternalStore(noSubscribe, browserSupportsWebAuthn, () => false);
   // Set by /join/CODE when the invite link was opened signed out. Server render: false.
   const invited = useSyncExternalStore(noSubscribe, readInvited, () => false);
   // Invited people are almost always new, so default them to Create account.
@@ -59,6 +64,21 @@ export default function Welcome() {
       });
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function fingerprint() {
+    setFpBusy(true);
+    try {
+      const response = await startAuthentication(await signInOptions({}));
+      await signIn("passkey", { response: JSON.stringify(response) });
+      router.replace("/home");
+    } catch (err: any) {
+      // Closing the fingerprint prompt, or no key on this device, is the user's choice — not an error.
+      if (err?.name !== "NotAllowedError" && err?.name !== "AbortError")
+        toast({ message: "Fingerprint not recognised. Sign in with your password.", tone: "var(--rose)" });
+    } finally {
+      setFpBusy(false);
     }
   }
 
@@ -148,6 +168,11 @@ export default function Welcome() {
             <Button type="submit" size="lg" className="w-full" loading={busy}>
               {mode === "signUp" ? "Create account" : "Sign in"}
             </Button>
+            {mode === "signIn" && canFingerprint && (
+              <Button type="button" variant="soft" size="lg" className="w-full" loading={fpBusy} onClick={fingerprint}>
+                <Fingerprint className="h-5 w-5" /> Sign in with fingerprint
+              </Button>
+            )}
           </form>
           <p className="mt-3 text-center text-[11px] leading-snug text-muted">
             Not a medical device. Your data stays private to you.{" "}

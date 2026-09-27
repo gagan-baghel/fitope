@@ -1,6 +1,9 @@
 import { convexAuth } from "@convex-dev/auth/server";
 import { Password } from "@convex-dev/auth/providers/Password";
+import { ConvexCredentials } from "@convex-dev/auth/providers/ConvexCredentials";
 import { ConvexError } from "convex/values";
+import { internal } from "./_generated/api";
+import { Id } from "./_generated/dataModel";
 
 const DAY = 86400000;
 const EMAIL = /^[^\s@]{1,64}@[^\s@]{1,190}\.[^\s@]{2,}$/;
@@ -25,6 +28,22 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
         if (password.length < 8 || password.length > 128) throw new ConvexError("Password must be 8–128 characters");
         if (COMMON.has(password.toLowerCase()) || /^(.)\1+$/.test(password))
           throw new ConvexError("That password is too easy to guess");
+      },
+    }),
+    // Fingerprint / Face ID. Keys are added from Me while signed in; see passkeys.ts.
+    ConvexCredentials({
+      id: "passkey",
+      authorize: async (credentials, ctx): Promise<{ userId: Id<"users"> } | null> => {
+        const raw = credentials.response;
+        if (typeof raw !== "string" || raw.length > 8000) return null;
+        let response;
+        try {
+          response = JSON.parse(raw);
+        } catch {
+          return null;
+        }
+        const userId = await ctx.runMutation(internal.passkeys.verifySignIn, { response });
+        return userId ? { userId } : null;
       },
     }),
   ],

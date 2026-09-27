@@ -5,7 +5,8 @@ import { useAuthActions } from "@convex-dev/auth/react";
 import { api } from "../../../../convex/_generated/api";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
+import { browserSupportsWebAuthn, startRegistration } from "@simplewebauthn/browser";
 import {
   Button,
   Card,
@@ -28,8 +29,11 @@ import {
   Bell,
   ChevronRight,
   Download,
+  Fingerprint,
   Info,
+  Loader2,
   LogOut,
+  Plus,
   ShieldCheck,
   Sparkles,
   Target,
@@ -312,6 +316,7 @@ export default function Me() {
           <span className="min-w-0 flex-1 truncate text-[13px] font-semibold">Edit profile & training setup</span>
           <ChevronRight className="h-4 w-4 shrink-0 text-muted" />
         </button>
+        <FingerprintRow />
         <InstallRow />
       </Card>
 
@@ -602,6 +607,60 @@ export default function Me() {
           </div>
         )}
       </Sheet>
+    </div>
+  );
+}
+
+const noSubscribe = () => () => {};
+const shortDate = (ts: number) => new Date(ts).toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+
+/** Fingerprint / Face ID sign-in: one key per device, each removable. */
+function FingerprintRow() {
+  const keys = useQuery(api.passkeys.list, {});
+  const registerOptions = useMutation(api.passkeys.registerOptions);
+  const register = useMutation(api.passkeys.register);
+  const remove = useMutation(api.passkeys.remove);
+  const supported = useSyncExternalStore(noSubscribe, browserSupportsWebAuthn, () => false);
+  const toast = useToast();
+  const [busy, setBusy] = useState(false);
+  if (!supported && !keys?.length) return null;
+
+  async function add() {
+    setBusy(true);
+    try {
+      const response = await startRegistration(await registerOptions({}));
+      await register({ response });
+      toast({ message: "Fingerprint sign-in is on" });
+    } catch (e: any) {
+      if (e?.name === "InvalidStateError") toast({ message: "This device is already added" });
+      else if (e?.name !== "NotAllowedError" && e?.name !== "AbortError")
+        toast({ message: errorText(e, "Could not add fingerprint — try again"), tone: "var(--rose)" });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="rounded-2xl bg-surface-2">
+      {supported && (
+        <button onClick={add} disabled={busy} className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left">
+          <Fingerprint className="h-4 w-4 shrink-0 text-muted" />
+          <span className="min-w-0 flex-1 truncate text-[13px] font-semibold">Add fingerprint sign-in</span>
+          {busy ? <Loader2 className="h-4 w-4 shrink-0 animate-spin text-muted" /> : <Plus className="h-4 w-4 shrink-0 text-muted" />}
+        </button>
+      )}
+      {keys?.map((k) => (
+        <div key={k._id} className="flex items-center gap-2.5 border-t border-line py-1 pl-3 pr-1">
+          <Fingerprint className="h-4 w-4 shrink-0 text-mint" />
+          <span className="min-w-0 flex-1 text-[12px] text-muted">
+            Added {shortDate(k.createdAt)}
+            {k.lastUsedAt ? ` · used ${shortDate(k.lastUsedAt)}` : ""}
+          </span>
+          <ConfirmButton variant="ghost" size="sm" confirmLabel="Remove" onConfirm={() => remove({ id: k._id })}>
+            <Trash2 className="h-4 w-4" />
+          </ConfirmButton>
+        </div>
+      ))}
     </div>
   );
 }

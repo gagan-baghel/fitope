@@ -6,7 +6,8 @@ const BATCH = 500;
 
 /**
  * Daily housekeeping so tables that only ever grow stay small: old nudges (the inbox only shows
- * 2 days), invites long expired, and throttle windows nobody has touched for a day.
+ * 2 days), invites long expired, throttle windows nobody has touched for a day, and abandoned
+ * passkey challenges.
  * Deletes in batches and re-schedules itself until done.
  */
 export const prune = internalMutation({
@@ -25,8 +26,12 @@ export const prune = internalMutation({
       .query("rateLimits")
       .withIndex("by_window", (q) => q.lt("windowStart", now - DAY))
       .take(BATCH);
-    for (const r of [...nudges, ...invites, ...limits]) await ctx.db.delete(r._id);
-    if (nudges.length === BATCH || invites.length === BATCH || limits.length === BATCH)
+    const challenges = await ctx.db
+      .query("passkeyChallenges")
+      .withIndex("by_expires", (q) => q.lt("expiresAt", now))
+      .take(BATCH);
+    for (const r of [...nudges, ...invites, ...limits, ...challenges]) await ctx.db.delete(r._id);
+    if ([nudges, invites, limits, challenges].some((rows) => rows.length === BATCH))
       await ctx.scheduler.runAfter(0, internal.maintenance.prune, {});
   },
 });

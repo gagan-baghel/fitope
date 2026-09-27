@@ -6,6 +6,7 @@ import { Id } from "./_generated/dataModel";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { requireUser } from "./lib/util";
 import { eraseFamilyData } from "./family";
+import { erasePasskeys } from "./passkeys";
 
 /** Everything the user has ever logged, as one JSON blob they can keep. */
 export const exportData = query({
@@ -122,6 +123,7 @@ export const deleteAccount = mutation({
         await ctx.db.delete(t._id);
       await ctx.db.delete(s._id);
     }
+    await erasePasskeys(ctx, userId);
     const user = await ctx.db.get(userId);
     for (const a of await ctx.db.query("authAccounts").withIndex("userIdAndProvider", (q) => q.eq("userId", userId)).collect()) {
       for (const c of await ctx.db.query("authVerificationCodes").withIndex("accountId", (q) => q.eq("accountId", a._id)).collect())

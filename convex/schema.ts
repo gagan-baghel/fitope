@@ -401,6 +401,27 @@ export default defineSchema({
     .index("by_key", ["key"])
     .index("by_window", ["windowStart"]),
 
+  /** Fingerprint / Face ID sign-in (WebAuthn passkeys). Only the public key is stored. */
+  passkeys: defineTable({
+    userId: v.id("users"),
+    credentialId: v.string(), // base64url
+    publicKey: v.string(), // base64url COSE key
+    counter: v.number(),
+    createdAt: v.number(),
+    lastUsedAt: v.optional(v.number()),
+  })
+    .index("by_user", ["userId"])
+    .index("by_credential", ["credentialId"]),
+
+  /** Single-use WebAuthn challenges. `userId` set = adding a key; unset = signing in. */
+  passkeyChallenges: defineTable({
+    challenge: v.string(),
+    userId: v.optional(v.id("users")),
+    expiresAt: v.number(),
+  })
+    .index("by_challenge", ["challenge"])
+    .index("by_expires", ["expiresAt"]),
+
   pushSubscriptions: defineTable({
     userId: v.id("users"),
     endpoint: v.string(),
